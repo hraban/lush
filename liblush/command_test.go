@@ -149,7 +149,7 @@ func TestCommandPipe(t *testing.T) {
 	if testing.Short() {
 		LEN_PIPELINE = 3
 	} else {
-		LEN_PIPELINE = 1000
+		LEN_PIPELINE = 500
 	}
 	cmds := make([]*cmd, LEN_PIPELINE)
 	// the > also verifies that exec.Command is not secretly passed through a
