@@ -32,10 +32,19 @@ import (
 	"time"
 )
 
+func echoCmd(args ...string) *cmd {
+	path := os.Getenv("ECHOBIN")
+	if path == "" {
+		path = "echo"
+	}
+	// TODO what's the deal with these explicit IDs? I vaguely recall something
+	// about pre-allocation, but Im not sure if it wasn't just laziness.
+	return newcmdPanicOnError(0, exec.Command(path, args...))
+}
+
 func TestCommandOutput(t *testing.T) {
 	// extra spaces and a 4-byte UTF-8 char (FO9F98AC)
-	execcmd := exec.Command("echo", "look,", "unicode   smiley:", "😬")
-	c := newcmdPanicOnError(1, execcmd)
+	c := echoCmd("look,", "unicode   smiley:", "😬")
 	var b bytes.Buffer
 	c.Stdout().SetListener(&b)
 	err := c.Run()
@@ -91,7 +100,7 @@ func (l *blockedWriter) UnlockWrites() {
 func TestCommandBlockedOutput(t *testing.T) {
 	var err error
 	var allGoRoutines sync.WaitGroup
-	hraban := newcmdPanicOnError(0, exec.Command("echo", "bla", "bla", "bla"))
+	hraban := echoCmd("bla", "bla", "bla")
 	l := newBlockedWriter()
 	hraban.Stdout().SetListener(l)
 	err = hraban.Start()
@@ -145,16 +154,11 @@ func waitAll(cmds ...*cmd) error {
 }
 
 func TestCommandPipe(t *testing.T) {
-	var LEN_PIPELINE int
-	if testing.Short() {
-		LEN_PIPELINE = 3
-	} else {
-		LEN_PIPELINE = 500
-	}
+	LEN_PIPELINE := 10
 	cmds := make([]*cmd, LEN_PIPELINE)
 	// the > also verifies that exec.Command is not secretly passed through a
 	// shell
-	cmds[0] = newcmdPanicOnError(0, exec.Command("echo", "batman", ">", "superman"))
+	cmds[0] = echoCmd("batman", ">", "superman")
 	for i := 1; i < LEN_PIPELINE; i++ {
 		cmds[i] = newcmdPanicOnError(CmdId(i), exec.Command("cat"))
 		cmds[i-1].Stdout().SetListener(cmds[i].Stdin())
@@ -179,10 +183,7 @@ func TestCommandPipe(t *testing.T) {
 //
 // https://github.com/hraban/lush/issues/43
 func TestCommandDeadPipe(t *testing.T) {
-	// TODO ok im just gonna go ahead and say it: what's the deal with these
-	// explicit IDs? I vaguely recall something about pre-allocation, but Im
-	// not sure if it wasn't just laziness.
-	c1 := newcmdPanicOnError(0, exec.Command("echo", "hello"))
+	c1 := echoCmd("hello")
 	c2 := newcmdPanicOnError(1, exec.Command("nonexistingcmd"))
 	c1.Stdout().SetListener(c2.Stdin())
 	var err error
@@ -226,7 +227,7 @@ func TestCommandNotFound(t *testing.T) {
 }
 
 func TestCommandIllegalAPIUse(t *testing.T) {
-	c := newcmdPanicOnError(0, exec.Command("echo"))
+	c := echoCmd()
 	err := c.Wait()
 	if err == nil {
 		t.Errorf("expected error calling .Wait() without .Start()")
