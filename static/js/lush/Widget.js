@@ -247,8 +247,7 @@ define(["jquery",
         var node = widget.node;
         var cmd = widget.cmd;
         // static parts of the UI (depend on constant cmd property "nid")
-        $(node).find('.link').attr('href', '/' + cmd.nid + '/')
-               .find('.linktext').text(cmd.nid + ': ');
+        $(node).find('.id').text(cmd.nid);
         // when clicked will prepare this command for repeating (argv ->
         // prompt, focus prompt)
         $(node).find('.repeat').click(function (e) {
