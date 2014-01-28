@@ -477,7 +477,14 @@ define(["jquery",
                 $node.addClass(clsName);
             }
         });
-        $('#sidepane').tabs();
+        // tabs for the left pane
+        $("#left").tabs();
+        // fix the classes
+        $(".tabs-bottom .ui-tabs-nav, .tabs-bottom .ui-tabs-nav > *")
+          .removeClass("ui-corner-all ui-corner-top")
+          .addClass("ui-corner-bottom");
+        // move the nav to the bottom
+        $(".tabs-bottom .ui-tabs-nav").appendTo(".tabs-bottom");
         // I hate this class
         $('.ui-widget').removeClass('ui-widget');
         $('body').attr('data-status', 'ok');

@@ -79,7 +79,7 @@ define(["jquery",
         }
         var cli = new Cli(processCmd);
         var latestParseError;
-        var $term = $('.terminal').terminal(function (x) {
+        var $term = $('#terminal').terminal(function (x) {
             if (x.trim() == "") {
                 return;
             }
