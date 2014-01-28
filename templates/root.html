@@ -35,83 +35,106 @@
 </head>
 <body data-status=loading>
 
+<!-- boxing terminal and widgets allows aligning their bottom borders -->
+<div id=tophalf>
 
-<div id=sidepane>
-  <ul>
-    <li><a href="#history">history</a></li>
-    <li><a href="#config">config</a></li>
-  </ul>
-  <div id=history>
-    <ul ></ul>
+  <!-- TERMINAL -->
+  <div class=terminalwrap1>
+    <div class=terminalwrap2>
+      <div class=terminal ></div>
+    </div>
   </div>
-  <div id=config>
-    <strong>global config</strong><br>
-    <button id=newcmd>new command</button>
-    <p>Path: <a data-toggle-class="hidden"  href="#pathcontainer">(toggle)</a>
-    <div id=pathcontainer class=hidden>
-      <form id=path>
-      <ol class="sortable"></ol>
+
+  <!-- COMMAND WIDGETS -->
+  <div id="cmds"></div>
+
+</div> <!-- #tophalf -->
+
+
+<!-- the configuration widgets at the bottom (not really "half") -->
+<div id=bottomhalf>
+
+  <!-- MAIN CONFIG -->
+  <div id=sidepane>
+    <ul>
+      <li><a href="#history">history</a></li>
+      <li><a href="#config">config</a></li>
+    </ul>
+    <div id=history>
+      <ul ></ul>
+    </div>
+    <div id=config>
+      <strong>global config</strong><br>
+      <button id=newcmd>new command</button>
+      <p>Path: <a data-toggle-class="hidden"  href="#pathcontainer">(toggle)</a>
+      <div id=pathcontainer class=hidden>
+        <form id=path>
+        <ol class="sortable"></ol>
+        </form>
+      </div>
+      <a href=# id=delete_archived>Delete all archived commands</a>
+      <p><a href=#history data-toggle-class=hide_archived >show / hide archived history</a>
+    </div>
+  </div>
+
+  <!-- PER-COMMAND CONFIG -->
+  <div id=cmddetailarea>
+
+    <ul>
+      <li><a href="#cmdedit">edit</a></li>
+      <li><a href="#cmdstdout">stdout</a></li>
+      <li><a href="#cmdstderr">stderr</a></li>
+      <li><a href="#cmdhelp">help</a></li>
+    </ul>
+
+    <div id=cmdedit>
+      <form>
+       name <input name=cmd><br>
+       args:
+         <input size=10 name=arg1>
+         <br>
+       <button>save</button>
+       <button class=cancelbtn type=button>cancel</button>
+
+      <h2>Configuration</h2>
+      <p>stdout scrollback: <input size=4 name=stdoutScrollback value=1000> bytes<br>
+      stderr scrollback: <input size=4 name=stderrScrollback value=1000> bytes
       </form>
     </div>
-    <a href=# id=delete_archived>Delete all archived commands</a>
-    <p><a href=#history data-toggle-class=hide_archived >show / hide archived history</a>
-  </div>
-</div>
 
-<div id=cmddetailarea>
+    <div id=cmdstdout>
+      <span class=forwarded>forwarded to: <span id=stdouttoid></span> <a href="">(disconnect)</a></span>
+      <pre class=streamdata></pre>
+    </div>
 
-  <ul>
-    <li><a href="#cmdedit">edit</a></li>
-    <li><a href="#cmdstdout">stdout</a></li>
-    <li><a href="#cmdstderr">stderr</a></li>
-    <li><a href="#cmdhelp">help</a></li>
-  </ul>
+    <div id=cmdstderr>
+      <span class=forwarded>forwarded to: <span id=stderrtoid></span> <a href="">(disconnect)</a></span>
+      <pre class=streamdata></pre>
+    </div>
 
-  <div id=cmdedit>
-    <form>
-     name <input name=cmd><br>
-     args:
-       <input size=10 name=arg1>
-       <br>
-     <button>save</button>
-     <button class=cancelbtn type=button>cancel</button>
+    <div id=cmdhelp>
+    </div>
 
-    <h2>Configuration</h2>
-    <p>stdout scrollback: <input size=4 name=stdoutScrollback value=1000> bytes<br>
-    stderr scrollback: <input size=4 name=stderrScrollback value=1000> bytes
-    </form>
   </div>
 
-  <div id=cmdstdout>
-    <span class=forwarded>forwarded to: <span id=stdouttoid></span> <a href="">(disconnect)</a></span>
-    <pre class=streamdata></pre>
-  </div>
+</div> <!-- #bottomhalf -->
 
-  <div id=cmdstderr>
-    <span class=forwarded>forwarded to: <span id=stderrtoid></span> <a href="">(disconnect)</a></span>
-    <pre class=streamdata></pre>
-  </div>
-
-  <div id=cmdhelp>
-  </div>
-
-</div>
-
-<div class=terminalwrap1>
-  <div class=terminalwrap2>
-    <div class=terminal ></div>
-  </div>
-</div>
-
-
-<div id="cmds"></div>
-
-
-<!-- HTML template for a command widget -->
+<!--
+HTML template for a command widget. The rootcontainer node is never moved
+around: it remains as a direct child of #cmds.
+-->
 <div id=rootcontainer_template class=rootcontainer>
 <button class=archivegroup>_</button>
+<!--
+This is the groupwidget: it contains the cmd widget (directly), and all
+children of this command (in .children). Those children are contained in their
+respective group widgets. Accordingly, this groupwidget can, itself, be moved to
+the .children node of another command when it becomes its child, leaving this
+.rootcontainer empty.
+-->
 <div id=groupwidget class=groupwidget>
 
+  <!-- this is the widget that you actually see -->
   <div  class='cmdwidget'>
     <button class=close>×</button>
     <span class=id></span>:

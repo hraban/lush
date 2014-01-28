@@ -1,29 +1,35 @@
 /*
-// Copyright © 2013, 2014 Hraban Luyat <hraban@0brg.net>
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to
-// deal in the Software without restriction, including without limitation the
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-// IN THE SOFTWARE.
+Copyright © 2013, 2014 Hraban Luyat <hraban@0brg.net>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
 */
 
 * { -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box; }
 
+html {
+    height: 100%;
+}
+
 body {
-    margin-top: 20em;
+    min-height: 100%;
+    margin: 0;
 }
 
 .start-cmd {
@@ -34,30 +40,32 @@ body {
     display: none;
 }
 
-/* Command container div constrains the positioning of all root commands so
- * must be sized appropriately */
-div#cmds {
-    position: absolute;
-    left: 592px; /* .terminalwrap.width + some */
-    bottom: 212px;
-    top: 6px;
-    width: 5000px; /* how do you stretch width to contents, past viewport? */
+div#tophalf {
+    width: 100%;
 }
 
+div#tophalf > div {
+    display: inline-block;
+}
+
+/* contains all #roots, stretches vertically to fit them. */
+div#cmds {
+    right: 6px;
+    width: 500px;
+}
 
 /* root is positioned absolute in the document */
 div.rootcontainer {
-    width: 200px;
-    height: 100%;
-    border-right: solid thin #446;
-    float: left;
+    width: 100%;
+    height: 150px;
+    border-top: solid thin #446;
     padding: 2px;
     background-color: #d3d3cf;
-    padding-top: 26px;
+    padding-right: 26px;
 }
 
 button.archivegroup {
-    margin-top: -24px;
+    margin-right: -24px;
     float: right;
 }
 
@@ -78,6 +86,7 @@ div.cmdwidget {
     border: solid black thin;
     padding: 0.5em;
     font-size: 10pt;
+    width: 200px;
 }
 
 div.cmdwidget.selected {
@@ -91,27 +100,69 @@ div.cmdwidget button.close {
 
 /* terminal window */
 .terminalwrap1 {
-    position: absolute;
-    left: 6px;
-    top: 6px;
-    bottom: 212px;
     width: 580px;
+    height: 500px;
 }
 .terminalwrap2 {
-    position: relative;
     width: 100%;
     height: 100%;
-}
-.termdraghandle {
-    position: absolute;
-    right: .3em;
-    top: .3em;
-    z-index: 10;
 }
 .terminal {
     width: 100%;
     height: 100%;
 }
+
+
+
+/**********************************************************************/
+
+
+
+/*
+ * THE BOTTOM HALF
+ */
+
+div#bottomhalf {
+    position: relative;
+    height: 200px;
+    bottom: 6px;
+    right: 6px;
+    left: 6px;
+}
+
+div#bottomhalf > div {
+    overflow: auto;
+    height: 100%;
+}
+
+/*
+ * COMMAND DETAIL AREA
+ */
+
+#cmddetailarea {
+    left: 6px;
+    right: 6px;
+    height: 100%;
+}
+
+/*
+ * GLOBAL CONFIGURATION SIDEPANE
+ */
+
+div#sidepane {
+    width: 256px;
+    float: left;
+}
+
+#config {
+    padding: .2em;
+}
+
+#config h1 a {
+    color: #000;
+}
+
+
 
 /*
  * HISTORY
@@ -120,7 +171,6 @@ div.cmdwidget button.close {
 #history {
     overflow: auto;
     padding: 6px;
-    height: 164px;
 }
 
 #history ul {
@@ -186,29 +236,12 @@ div.cmdwidget button.close {
 }
 
 
-/*
- * COMMAND DETAIL AREA
- */
-
-#cmddetailarea {
-    position: absolute;
-    bottom: 6px;
-    height: 200px;
-    left: 268px;
-    right: 6px;
-    overflow: auto;
-}
 
 
-/* Holy schmoly jquery ui tabs are big.. */
-.ui-tabs-nav {
-    font-size: 10pt;
-    border-radius: 0;
-    background: 0;
-}
-.ui-tabs .ui-tabs-nav li a {
-    padding: .1em .2em;
-}
+
+
+
+
 
 
 /*
@@ -261,22 +294,13 @@ body:not([data-status=connection_error]) #connection_error {
     display: none;
 }
 
-/*
- * GLOBAL CONFIGURATION SIDEPANE
- */
 
-div#sidepane {
-    position: absolute;
-    bottom: 6px;
-    height: 200px;
-    left: 6px;
-    width: 256px;
+/* Holy schmoly jquery ui tabs are big.. */
+.ui-tabs-nav {
+    font-size: 10pt;
+    border-radius: 0;
+    background: 0;
 }
-
-#config {
-    padding: .2em;
-}
-
-#config h1 a {
-    color: #000;
+.ui-tabs .ui-tabs-nav li a {
+    padding: .1em .2em;
 }

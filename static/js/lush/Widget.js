@@ -144,13 +144,15 @@ define(["jquery",
         // reside as a direct child of <div id=cmds>, the widget will move
         // around depending on its hierarchy. if it is root, it is here, if it
         // is a child, it is in another element's <div class=children>.
-        var groupnode = $('#rootcontainer_template')
+        var rootnode = $('#rootcontainer_template')
             .clone()
             .attr('id', 'root' + cmd.nid)
-            .prependTo('#cmds')
+            .appendTo('#cmds')
             .find('.groupwidget')
                 .attr("id", "group" + cmd.nid)[0];
-        widget.node = $(groupnode).find('.cmdwidget')
+        // the new widget causes the bottom of the page to scroll away:
+        document.getElementById('bottomhalf').scrollIntoView();
+        widget.node = $(rootnode).find('.cmdwidget')
               .attr("id", cmd.htmlid)[0];
         widget.cmd = cmd;
         widget._initDom();
