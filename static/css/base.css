@@ -95,29 +95,23 @@ div#cmddetailarea {
 
 /* root is positioned absolute in the document */
 div.rootcontainer {
-    width: 100%;
-    height: 150px;
+    margin-right: 36px;
     border-top: solid thin #446;
     padding: 2px;
     background-color: #d3d3cf;
-    padding-right: 26px;
+    margin-top: 6px;
 }
 
+/*
 button.archivegroup {
     margin-right: -24px;
     float: right;
 }
+*/
 
 div.rootcontainer.empty,
 div.rootcontainer.archived {
     display: none;
-}
-div.children {
-    margin-top: 32px;
-}
-/* children are positioned relative within root */
-div.groupwidget {
-    position: relative;
 }
 
 div.cmdwidget {
@@ -134,7 +128,6 @@ div.cmdwidget.selected {
 
 div.cmdwidget button.close {
     font-size: 9pt;
-    float: right;
 }
 
 #config {

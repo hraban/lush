@@ -45,7 +45,7 @@
 //
 // WIDGETS
 //
-// thats what I call those draggable boxes that represent a command in the UI
+// thats what I call those small cmd boxes that represent a command in the UI
 //
 // CONTROL STREAM
 //
