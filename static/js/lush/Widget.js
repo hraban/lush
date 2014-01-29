@@ -262,6 +262,9 @@ define(["jquery",
         $(cmd).on('updated.status', function () {
             var cmd = this;
             setStatNode(cmd, $(node).find('.status'));
+            // releasing a command is not allowed while it is running
+            $(node).find('button.close')
+                .prop('disabled', cmd.status.code === 1);
         });
         $(cmd).on('updated.cmd.args', function () {
             var cmd = this;

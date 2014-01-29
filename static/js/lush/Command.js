@@ -113,7 +113,7 @@ define(["jquery"], function ($) {
             var cmd = this;
             // these event handlers only make sense for running commands
             // TODO: this list is bound to grow out of sync. How to fix?
-            $(cmd).off('.stream childAdded childRemoved parentAdded parentRemoved done');
+            $(cmd).off('.stream childAdded childRemoved parentAdded parentRemoved done updated.status updated.args updated.cmd');
         });
         $(cmd).on('updated.status', function (e) {
             var cmd = this;
