@@ -68,7 +68,7 @@ div#cmds {
     top: 6px;
     right: 6px;
     left: 512px;
-    bottom: 212px;
+    bottom: 412px;
 }
 
 div#cmddetailarea {
@@ -76,7 +76,7 @@ div#cmddetailarea {
     right: 6px;
     left: 512px;
     bottom: 6px;
-    height: 200px;
+    height: 400px;
 }
 
 #terminalwrap {

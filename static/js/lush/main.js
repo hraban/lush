@@ -328,11 +328,28 @@ define(["jquery",
         var confwin = new CmdConfig();
         // associate clicked command widget with confwin
         $('#cmds').on('click', '.cmdwidget', function (e) {
+            e.preventDefault();
             var nid = /\d+$/.exec(this.id)[0];
             selectCommand(+nid, confwin);
+            // really, this is not a click
+            return false;
         }).on('click', 'button.archivegroup', function (e) {
+            e.preventDefault();
             var gid = /\d+$/.exec(this.parentNode.id)[0];
             cmds[+gid].setArchivalState(true);
+            // this isn't really a "click" on this object so don't bubble
+            return false;
+            // (that comment actually makes no sense to me I just felt the need
+            // to justify return false even though I have none)
+            // (you know what? "I don't want the 'activate command' handler to
+            // trigger and preventing bubbling is the easiest way to achieve
+            // that". there.)
+        }).on('click', '.rootcontainer', function (e) {
+            // clicking in the general container area activates the first
+            // command
+            e.preventDefault();
+            $(this).find('> .groupwidget > .cmdwidget').click();
+            return false; // why not
         });
         // jQuery terminal plugin object
         var term = terminal(processCmd, ctrl);
