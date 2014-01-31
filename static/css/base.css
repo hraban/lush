@@ -52,31 +52,37 @@ body {
 .tabs-bottom .ui-tabs-nav li { top: auto; bottom: 0; margin: 0 .2em 1px 0; border-bottom: auto; border-top: 0; }
 .tabs-bottom .ui-tabs-nav li.ui-tabs-active { margin-top: -1px; padding-top: 1px; }
 
+div#bodycontainer {
+}
+
+div#left, div#right {
+    display: inline-block;
+    margin: 6px;
+}
+
 div#left {
-    position: absolute;
-    left: 6px;
-    bottom: 6px;
-    top: 6px;
     width: 500px;
+    height: 500px; // TODO: stretch vertically to contents, min-height = viewport height
     overflow: auto;
+}
+
+div#right {
+    margin-left: 0;
+    height: 100%;
+    width: 400px; // TODO: stretch horizontally to fill remainder of window
 }
 
 /* contains all #roots, stretches vertically to fit them. */
 div#cmds {
-    position: absolute;
-    overflow: auto;
-    top: 6px;
-    right: 6px;
-    left: 512px;
-    bottom: 412px;
 }
 
 div#cmddetailarea {
-    position: absolute;
-    right: 6px;
-    left: 512px;
-    bottom: 6px;
-    height: 400px;
+}
+
+div#cmddetailarea > div {
+    max-height: 400px;
+    overflow: auto;
+    margin-bottom: 28px;
 }
 
 #terminalwrap {

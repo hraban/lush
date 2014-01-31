@@ -35,78 +35,84 @@ SOFTWARE.
 </head>
 <body data-status=loading>
 
-<!-- the left column, tabbed: terminal, config, history -->
+<!-- all visible content. divided in two columns: #left and #right. -->
+<div id=bodycontainer>
 
-<div id=left class=tabs-bottom>
-  <ul>
-    <li><a href="#terminalwrap">terminal</a></li>
-    <li><a href="#history">history</a></li>
-    <li><a href="#config">config</a></li>
-  </ul>
-  <!-- jquery ui tabs don't play too nicely with jquery.terminal plugin -->
-  <div id=terminalwrap>
-    <div id=terminal></div>
-  </div>
-  <div id=history>
-    <ul ></ul>
-  </div>
-  <div id=config>
-    <strong>global config</strong><br>
-    <button id=newcmd>new command</button>
-    <p>Path: <a data-toggle-class="hidden"  href="#pathcontainer">(toggle)</a>
-    <div id=pathcontainer class=hidden>
-      <form id=path>
-      <ol class="sortable"></ol>
-      </form>
+  <!-- the left column. tabbed: terminal, config, history -->
+  <div id=left class=tabs-bottom>
+    <ul>
+      <li><a href="#terminalwrap">terminal</a></li>
+      <li><a href="#history">history</a></li>
+      <li><a href="#config">config</a></li>
+    </ul>
+    <!-- jquery ui tabs don't play too nicely with jquery.terminal plugin -->
+    <div id=terminalwrap>
+      <div id=terminal></div>
     </div>
-    <a href=# id=delete_archived_and_completed>
-      Delete all archived & completed commands</a>
-    <p><a href=#history data-toggle-class=hide_archived >show / hide archived history</a>
-  </div>
-</div>
-
-<!-- command widgets -->
-<div id="cmds"></div>
-
-<!-- PER-COMMAND CONFIG -->
-<div id=cmddetailarea class=tabs-bottom>
-
-  <ul>
-    <li><a href="#cmdedit">edit</a></li>
-    <li><a href="#cmdstdout">stdout</a></li>
-    <li><a href="#cmdstderr">stderr</a></li>
-    <li><a href="#cmdhelp">help</a></li>
-  </ul>
-
-  <div id=cmdedit>
-    <form>
-     name <input name=cmd><br>
-     args:
-       <input size=10 name=arg1>
-       <br>
-     <button>save</button>
-     <button class=cancelbtn type=button>cancel</button>
-
-    <h2>Configuration</h2>
-    <p>stdout scrollback: <input size=4 name=stdoutScrollback value=1000> bytes<br>
-    stderr scrollback: <input size=4 name=stderrScrollback value=1000> bytes
-    </form>
+    <div id=history>
+      <ul ></ul>
+    </div>
+    <div id=config>
+      <strong>global config</strong><br>
+      <button id=newcmd>new command</button>
+      <p>Path: <a data-toggle-class="hidden"  href="#pathcontainer">(toggle)</a>
+      <div id=pathcontainer class=hidden>
+        <form id=path>
+        <ol class="sortable"></ol>
+        </form>
+      </div>
+      <a href=# id=delete_archived_and_completed>
+        Delete all archived & completed commands</a>
+      <p><a href=#history data-toggle-class=hide_archived >show / hide archived history</a>
+    </div>
   </div>
 
-  <div id=cmdstdout>
-    <span class=forwarded>forwarded to: <span id=stdouttoid></span> <a href="">(disconnect)</a></span>
-    <pre class=streamdata></pre>
-  </div>
+  <div id=right>
 
-  <div id=cmdstderr>
-    <span class=forwarded>forwarded to: <span id=stderrtoid></span> <a href="">(disconnect)</a></span>
-    <pre class=streamdata></pre>
-  </div>
+    <!-- command widgets -->
+    <div id="cmds"></div>
 
-  <div id=cmdhelp>
-  </div>
+    <!-- PER-COMMAND CONFIG -->
+    <div id=cmddetailarea class=tabs-bottom>
 
-</div>
+      <ul>
+        <li><a href="#cmdedit">edit</a></li>
+        <li><a href="#cmdstdout">stdout</a></li>
+        <li><a href="#cmdstderr">stderr</a></li>
+        <li><a href="#cmdhelp">help</a></li>
+      </ul>
+
+      <div id=cmdedit>
+        <form>
+         name <input name=cmd><br>
+         args:
+           <input size=10 name=arg1>
+           <br>
+         <button>save</button>
+         <button class=cancelbtn type=button>cancel</button>
+        <h2>Configuration</h2>
+        stderr scrollback: <input size=4 name=stderrScrollback value=1000> bytes
+        </form>
+      </div>
+
+      <div id=cmdstdout>
+        <span class=forwarded>forwarded to: <span id=stdouttoid></span> <a href="">(disconnect)</a></span>
+        <pre class=streamdata></pre>
+      </div>
+
+      <div id=cmdstderr>
+        <span class=forwarded>forwarded to: <span id=stderrtoid></span> <a href="">(disconnect)</a></span>
+        <pre class=streamdata></pre>
+      </div>
+
+      <div id=cmdhelp>
+      </div>
+
+    </div> <!-- /#cmddetailarea -->
+
+  </div> <!-- /# right -->
+
+</div> <!-- /#bodycontainer -->
 
 <!--
 HTML template for a command widget. The rootcontainer node is never moved
