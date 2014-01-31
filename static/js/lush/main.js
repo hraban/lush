@@ -326,6 +326,7 @@ define(["jquery",
         globals.ctrl = ctrl;
         globals.moi = moi;
         var confwin = new CmdConfig();
+        var term = terminal(processCmd, ctrl);
         // turn DOM node's ID into a numerical one (strip off leading "cmd")
         function getNidFromNode(node) {
             return +(/\d+$/.exec(node.id)[0]);
@@ -343,19 +344,23 @@ define(["jquery",
             selectCommand(nid, confwin);
             // really, this is not a click
             return false;
+        }).on('click', 'button.repeatgroup', function (e) {
+            // set prompt to this pipeline's textual representation
+            e.preventDefault();
+            var cmd = cmds[getGidFromCtrlButton(this)];
+            term.set_command(cmdChainToPrompt(cmd)).focus();
+            return false;
         }).on('click', 'button.startgroup', function (e) {
             e.preventDefault();
             var cmd = cmds[getGidFromCtrlButton(this)];
             function isCmdStarted(cmd) {
                 return cmd.status.code > 0;
             }
-            mapCmds(function (cmd) {
+            mapCmdTree(cmd, function (cmd) {
                 if (!isCmdStarted(cmd)) {
                     cmd.start()
                 }
-                // no need to start synchronously, so no need for real deferred
-                return $.Deferred().resolve();
-            }, cmd);
+            });
             return false;
         }).on('click', 'button.archivegroup', function (e) {
             e.preventDefault();
@@ -387,8 +392,6 @@ define(["jquery",
             $(this).find('> .groupwidget > .cmdwidget').click();
             return false; // why not
         });
-        // jQuery terminal plugin object
-        var term = terminal(processCmd, ctrl);
         $(ctrl).on('error', function (e, json) {
             var msg = JSON.parse(json);
             term.error(msg);

@@ -241,12 +241,6 @@ define(["jquery",
         var cmd = widget.cmd;
         // static parts of the UI (depend on constant cmd property "nid")
         $(node).find('.id').text(cmd.nid);
-        // when clicked will prepare this command for repeating (argv ->
-        // prompt, focus prompt)
-        $(node).find('.repeat').click(function (e) {
-            e.preventDefault();
-            term.set_command(cmd.getArgv().join(' ')).focus();
-        });
         // dynamic parts of the UI
         $(cmd).on('updated.status', function () {
             var cmd = this;

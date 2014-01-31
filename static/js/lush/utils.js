@@ -21,7 +21,19 @@
 "use strict";
 
 
+// TODO: seriously, AMD
+
 // GENERIC UTILITIES
+
+// prefix all special chars in arg by backslash
+function parserEscape(txt) {
+    return txt.replace(/([\\?*\s"'])/g, "\\$1");
+};
+
+// undo parserEscape
+function parserUnescape(txt) {
+    return txt.replace(/\\(.)/g, "$1");
+};
 
 
 // tries to parse JSON returns null on any failure
@@ -216,6 +228,34 @@ function mapf(f, l, nextkey, reversed) {
 
 function mapCmds(f, cmd, reverse) {
     return mapf(f, cmd, function (cmd) { return cmd.stdoutCmd(); }, reverse);
+}
+
+// execute f on cmd and all its children, serially and top-down (not too happy
+// about the code dupe with mapCmds but hey)
+function mapCmdTree(cmd, f) {
+    if (cmd === undefined) {
+        return;
+    }
+    // TODO: if cmd not instanceof Command yada yada dynamic typing suck bla bla
+    if (!$.isFunction(f)) {
+        throw "f must be a function";
+    }
+    f(cmd);
+    mapCmdTree(cmd.stdoutCmd(), f);
+}
+
+// serialize a pipeline
+function cmdChainToPrompt(cmd) {
+    var argvs = [];
+    // couldn't resist.
+    mapCmdTree(cmd, function (cmd) {
+        var argv = cmd.getArgv().map(parserEscape);
+        argvs.push.apply(argvs, argv);
+        if (cmd.stdoutto > 0) {
+            argvs.push('|');
+        }
+    });
+    return argvs.join(' ');
 }
 
 // store position of this DOM node on the server as userdata.

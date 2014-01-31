@@ -147,16 +147,8 @@ define(["lush/Ast",
     // to behave the same way, but in lala-land, they're different concepts.
 
     // CLASS METHOD (blegh)
-    // prefix all special chars in arg by backslash
-    Parser.Escape = function (txt) {
-        return txt.replace(/([\\?*\s"'])/g, "\\$1");
-    };
-
-    // CLASS METHOD
-    // undo Parser.Escape
-    Parser.Unescape = function (txt) {
-        return txt.replace(/\\(.)/g, "$1");
-    };
+    Parser.Escape = parserEscape;
+    Parser.Unescape = parserUnescape;
 
     return Parser;
 });

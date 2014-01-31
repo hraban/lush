@@ -110,18 +110,6 @@ define(["jquery",
         return def;
     };
 
-    // execute f on cmd and all its children
-    function mapCmdTree(cmd, f) {
-        if (cmd === undefined) {
-            return;
-        }
-        if (!(cmd instanceof Command)) {
-            throw "mapCmdTree: cmd must be a Command instance";
-        }
-        f(cmd);
-        mapCmdTree(cmd.stdoutCmd(), f);
-    }
-
     // propagate changes in the prompt to the given cmd tree.
     //
     // returns a Deferred that will be called with a (possibly fresh) cmd object
@@ -234,20 +222,6 @@ define(["jquery",
             return undefined;
         });
     };
-
-    // serialize a pipeline
-    function cmdChainToPrompt(cmd) {
-        var argvs = [];
-        // couldn't resist.
-        mapCmdTree(cmd, function (cmd) {
-            var argv = cmd.getArgv().map(Parser.Escape);
-            argvs.push.apply(argvs, argv);
-            if (cmd.stdoutto > 0) {
-                argvs.push('|');
-            }
-        });
-        return argvs.join(' ');
-    }
 
     function stopMonitoringCmd(cmd) {
         if (!(cmd instanceof Command)) {
