@@ -347,3 +347,15 @@ if (!$.fn.serializeObject) {
         return o;
     };
 }
+
+// hehehe
+if (!document.scrollToBottom) {
+    document.scrollToBottom = function () {
+        var el = document.getElementById('bottomofpage');
+        if (el) {
+            el.scrollIntoView();
+        } else {
+            throw "scrollToBottom() needs an element with id 'bottomofpage'";
+        }
+    };
+}
