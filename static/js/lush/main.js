@@ -335,7 +335,7 @@ define(["jquery",
             return false;
         }).on('click', 'button.archivegroup', function (e) {
             e.preventDefault();
-            var gid = /\d+$/.exec(this.parentNode.id)[0];
+            var gid = /\d+$/.exec(this.parentNode.parentNode.id)[0];
             cmds[+gid].setArchivalState(true);
             // this isn't really a "click" on this object so don't bubble
             return false;
@@ -344,6 +344,19 @@ define(["jquery",
             // (you know what? "I don't want the 'activate command' handler to
             // trigger and preventing bubbling is the easiest way to achieve
             // that". there.)
+        }).on('click', 'button.releasegroup', function (e) {
+            e.preventDefault();
+            var gid = /\d+$/.exec(this.parentNode.parentNode.id)[0];
+            // delete command tree bottom-up
+            mapCmds(function (cmd) {
+                var d = $.Deferred();
+                // when the command is released, continue to parent
+                $(cmd).on('wasreleased', d.resolve.bind(d));
+                // stdoutto must be unset, or releasing will fail
+                cmd.update({stdoutto: 0}, undefined, cmd.release.bind(cmd));
+                return d;
+            }, cmds[+gid], true);
+            return false; // I think we're getting the idea by now
         }).on('click', '.rootcontainer', function (e) {
             // clicking in the general container area activates the first
             // command

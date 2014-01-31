@@ -404,6 +404,9 @@ define(["jquery"], function ($) {
 
     Command.prototype.release = function () {
         var cmd = this;
+        if (cmd.stdoutto || cmd.stderrto) {
+            throw "Cannot release command with child nodes";
+        }
         cmd.ctrl.send('release', cmd.nid);
     };
 

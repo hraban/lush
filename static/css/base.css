@@ -126,7 +126,9 @@ div.cmdwidget.selected {
     background-color: rgb(255, 206, 187);
 }
 
-div.cmdwidget button.close {
+.windowbuttons button {
+    display: inline-block;
+    float: right;
     font-size: 9pt;
 }
 

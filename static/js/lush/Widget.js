@@ -158,7 +158,6 @@ define(["jquery",
         widget.node.scrollIntoView();
         widget.cmd = cmd;
         widget._initDom();
-        widget._initCloseButton();
         widget._initJsPlumb(ctrl);
         $(cmd).on('archival', function (_, archived) {
             var cmd = this;
@@ -262,25 +261,12 @@ define(["jquery",
         $(cmd).on('updated.status', function () {
             var cmd = this;
             setStatNode(cmd, $(node).find('.status'));
-            // releasing a command is not allowed while it is running
-            $(node).find('button.close')
-                .prop('disabled', cmd.status.code === 1);
         });
         $(cmd).on('updated.cmd.args', function () {
             var cmd = this;
             var argvtxt = cmd.getArgv().join(' ');
             $(node).find('.argv').text(argvtxt);
             $(node).find('.bookmark').attr('href', '#prompt;' + argvtxt);
-        });
-    };
-
-    Widget.prototype._initCloseButton = function () {
-        var cmd = this.cmd;
-        $(this.node).find('.close').one('click', function (e) {
-            e.preventDefault();
-            // TODO: are you sure? Y/N
-            cmd.release();
-            $(this).prop('disabled', true);
         });
     };
 

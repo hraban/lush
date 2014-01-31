@@ -196,6 +196,28 @@ var groupname = function (cmd, _inner) {
     return name;
 };
 
+// f acts on l, which is a tree with implicit nodes, the next node is extracted
+// using nextkey, which returns undefined if there is no next node. also f
+// returns a deferred and this function only progresses on success. as does this
+// function. if reversed is true, call last element first.
+function mapf(f, l, nextkey, reversed) {
+    if (l === undefined) {
+        return $.Deferred().resolve();
+    }
+    if (!$.isFunction(nextkey)) {
+        throw "mapf: nextkey MUST be a function";
+    }
+    if (reversed) {
+        return mapf(f, nextkey(l), nextkey, true).then(f.bind(this, l))
+    } else {
+        return f(l).then(mapf.bind(this, f, nextkey(l), nextkey));
+    }
+}
+
+function mapCmds(f, cmd, reverse) {
+    return mapf(f, cmd, function (cmd) { return cmd.stdoutCmd(); }, reverse);
+}
+
 // store position of this DOM node on the server as userdata.
 //
 // call this whenever a synced node moved. can't do that automatically because
@@ -246,6 +268,7 @@ var syncPositionWithServer = function (node, ctrl, extraCallback) {
 // Feeling strong? Try looking at the unit tests and implement a version that
 // works without looking at the implementation.
 
+// haha stupid phantomjs
 if (!Function.prototype.bind) {
   Function.prototype.bind = function (oThis) {
     if (typeof this !== "function") {

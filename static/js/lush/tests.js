@@ -536,4 +536,26 @@ define(["jquery",
             equal(stack, "afgj", "running wrapped function crash does not prevent pending call");
         }).always(function () { start(); });
     });
+
+    asyncTest("mapf", function () {
+        expect(2);
+        // 1536 = 3 * 2^9
+        var last;
+        var str = "";
+        mapf(function (i) {
+            last = i;
+            return $.Deferred().resolve();
+        }, 1536, function (i) { if (i % 2 == 0) return i / 2; })
+        .then(function () {
+            equal(last, 3, "last call was on first odd number");
+            return mapf(function (s) {
+                str += s[0];
+                return $.Deferred().resolve();
+            }, "abcd", function (s) { return s.substr(1) || undefined; }, true);
+        }, function () {
+            throw "deferred should have completed succesfully"
+        }).done(function () {
+            equal(str, "dcba", "reverse order flag respected");
+        }).always(function () { start(); });
+    });
 });

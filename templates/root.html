@@ -112,7 +112,10 @@ HTML template for a command widget. The rootcontainer node is never moved
 around: it remains as a direct child of #cmds.
 -->
 <div id=rootcontainer_template class=rootcontainer>
-<button class=archivegroup>_</button>
+<div class=windowbuttons>
+  <button class=archivegroup>_</button>
+  <button class=releasegroup>x</button>
+</div>
 <!--
 This is the groupwidget: it contains the cmd widget (directly), and all
 children of this command (in .children). Those children are contained in their
@@ -124,7 +127,6 @@ the .children node of another command when it becomes its child, leaving this
 
   <!-- this is the widget that you actually see -->
   <div  class='cmdwidget'>
-    <button class=close>×</button>
     <span class=id></span>:
     <tt class=argv></tt>
     <span class=status></span>
