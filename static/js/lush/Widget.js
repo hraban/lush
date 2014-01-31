@@ -69,15 +69,6 @@ define(["jquery",
         }, ms);
     }
 
-    // build jquery node containing [▶] button that starts cmd in background
-    var makeStartButton = function (cmd) {
-        return $('<button class=start>▶</button>').click(function (e) {
-            e.preventDefault();
-            disableAWhile(this);
-            cmd.start();
-        });
-    };
-
     // build jquery node containing [◼] button that stops the cmd in background
     var makeStopButton = function (cmd) {
         return $('<button class=stop>◼</button>').click(function (e) {
@@ -92,7 +83,6 @@ define(["jquery",
         var content;
         switch (cmd.status.code) {
         case 0:
-            content = makeStartButton(cmd);
             break;
         case 1:
             content = makeStopButton(cmd);

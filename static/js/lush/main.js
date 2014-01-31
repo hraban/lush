@@ -326,17 +326,40 @@ define(["jquery",
         globals.ctrl = ctrl;
         globals.moi = moi;
         var confwin = new CmdConfig();
+        // turn DOM node's ID into a numerical one (strip off leading "cmd")
+        function getNidFromNode(node) {
+            return +(/\d+$/.exec(node.id)[0]);
+        }
+        // this... well this is just a doozie. or it helps you getting the group
+        // ID (i.e. nid of the root cmd) of the pipeline that the button element
+        // (arg) belongs to.
+        function getGidFromCtrlButton(node) {
+            return getNidFromNode(node.parentNode.parentNode);
+        }
         // associate clicked command widget with confwin
         $('#cmds').on('click', '.cmdwidget', function (e) {
             e.preventDefault();
-            var nid = /\d+$/.exec(this.id)[0];
-            selectCommand(+nid, confwin);
+            var nid = getNidFromNode(this);
+            selectCommand(nid, confwin);
             // really, this is not a click
+            return false;
+        }).on('click', 'button.startgroup', function (e) {
+            e.preventDefault();
+            var cmd = cmds[getGidFromCtrlButton(this)];
+            function isCmdStarted(cmd) {
+                return cmd.status.code > 0;
+            }
+            mapCmds(function (cmd) {
+                if (!isCmdStarted(cmd)) {
+                    cmd.start()
+                }
+                // no need to start synchronously, so no need for real deferred
+                return $.Deferred().resolve();
+            }, cmd);
             return false;
         }).on('click', 'button.archivegroup', function (e) {
             e.preventDefault();
-            var gid = /\d+$/.exec(this.parentNode.parentNode.id)[0];
-            cmds[+gid].setArchivalState(true);
+            cmds[getGidFromCtrlButton(this)].setArchivalState(true);
             // this isn't really a "click" on this object so don't bubble
             return false;
             // (that comment actually makes no sense to me I just felt the need
@@ -346,7 +369,7 @@ define(["jquery",
             // that". there.)
         }).on('click', 'button.releasegroup', function (e) {
             e.preventDefault();
-            var gid = /\d+$/.exec(this.parentNode.parentNode.id)[0];
+            var cmd = cmds[getGidFromCtrlButton(this)];
             // delete command tree bottom-up
             mapCmds(function (cmd) {
                 var d = $.Deferred();
@@ -355,7 +378,7 @@ define(["jquery",
                 // stdoutto must be unset, or releasing will fail
                 cmd.update({stdoutto: 0}, undefined, cmd.release.bind(cmd));
                 return d;
-            }, cmds[+gid], true);
+            }, cmd, true);
             return false; // I think we're getting the idea by now
         }).on('click', '.rootcontainer', function (e) {
             // clicking in the general container area activates the first
