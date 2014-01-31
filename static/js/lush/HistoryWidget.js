@@ -33,12 +33,14 @@ define(["jquery", "lush/utils"], function ($) {
         if (numInstances++ > 0) {
             throw "HistoryWidget must not be instanciated more than once";
         }
-        $('#delete_archived').click(function (e) {
+        $('#delete_archived_and_completed').click(function (e) {
             e.preventDefault();
             $('#history .archived').each(function () {
                 var gid = $(this).data('gid');
                 var cmd = cmds[gid];
-                cmd.release();
+                if (cmd.status.code > 1) {
+                    cmd.release();
+                }
             });
         });
     };
