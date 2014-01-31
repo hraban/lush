@@ -541,8 +541,10 @@ define(["jquery",
         $(".tabs-bottom .ui-tabs-nav, .tabs-bottom .ui-tabs-nav > *")
           .removeClass("ui-corner-all ui-corner-top")
           .addClass("ui-corner-bottom");
-        // move the nav to the bottom
-        $(".tabs-bottom .ui-tabs-nav").appendTo(".tabs-bottom");
+        // move the nav DOM node to the bottom of its parent
+        $(".tabs-bottom .ui-tabs-nav").each(function () {
+            $(this).appendTo($(this).closest('.tabs-bottom'));
+        });
         // I hate this class
         $('.ui-widget').removeClass('ui-widget');
         $('body').attr('data-status', 'ok');
