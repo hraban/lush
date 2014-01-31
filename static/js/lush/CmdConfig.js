@@ -202,7 +202,7 @@ define(["jquery",
     CmdConfig.prototype._assocHelp = function () {
         var conf = this;
         var cmd = conf._cmd;
-        $(cmd).on('updated.cmd.cmdconfig', function () {
+        $(cmd).on('updated.cmd.args.cmdconfig', function () {
             var cmd = this;
             var $help = $('#cmdhelp');
             // clean out help div
