@@ -31,19 +31,28 @@ define(["jquery",
         "jquery.terminal",
         "jquery.ui"],
        function ($, Cli, Ctrl, Parser, U) {
+
     // Print text to this terminal. Ensures the text always ends in newline.
-    $.fn.termPrintln = function (text, finalize) {
-        // term.echo will always append newline so strip one off if exists
-        if (U.hassuffix(text, '\r\n')) {
-            text = text.slice(0, -2);
-        } else if (U.hassuffix(text, '\n')) {
-            text = text.slice(0, -1);
-        }
-        text = U.escapeHTML(text);
-        // jquery.terminal interprets square brackets
-        text = text.replace(/\[/g, '&#91;');
-        return this.echo(text, finalize);
-    };
+    // defined as a jQuery extension because the terminal object is actually a
+    // jquery object (you know, what with it being a jquery plugin and all).
+    if (!$.fn.termPrintln) {
+        $.fn.termPrintln = function (text, finalize) {
+            // term.echo will always append newline (which, by the way, really
+            // messes up commands that write lines to stdout in multiple chunks,
+            // see https://github.com/hraban/lush/issues/67) so strip one off
+            // the end of the output if there already is one.
+            if (U.hassuffix(text, '\r\n')) {
+                text = text.slice(0, -2);
+            } else if (U.hassuffix(text, '\n')) {
+                text = text.slice(0, -1);
+            }
+            text = U.escapeHTML(text);
+            // jquery.terminal interprets square brackets
+            text = text.replace(/\[/g, '&#91;');
+            this.echo(text, finalize);
+            document.scrollToBottom();
+        };
+    }
 
     // send what is currently on the prompt to the terminal output
     var echoInput = function (term) {
@@ -142,4 +151,5 @@ define(["jquery",
         globals.terminal = $term;
         return $term;
     };
+
 });
