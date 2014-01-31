@@ -41,7 +41,10 @@ define(["jquery",
             // up, and eat your cereal.
         }
         $('#cmdedit input[name=cmd]').autocomplete({source: "/new/names.json"});
-        $('#cmddetailarea').tabs();
+        $('#cmddetailarea').tabs({
+            collapsible: true,
+            selected: -1,
+        });
         $('#cmdedit form').on('keydown', 'input[name^=arg]', function (e) {
             // if typing in the last argument field
             if ($(this).nextAll('input[name^=arg]').length == 0) {
