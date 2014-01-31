@@ -162,9 +162,9 @@ define(["jquery",
         "lush/HistoryWidget",
         "lush/terminal",
         "lush/path",
+        "lush/utils",
         "jsPlumb",
-        "jquery.ui",
-        "lush/utils"],
+        "jquery.ui"],
        function ($,
                  Ctrl,
                  Command,
@@ -172,7 +172,8 @@ define(["jquery",
                  CmdConfig,
                  HistoryWidget,
                  terminal,
-                 path) {
+                 path,
+                 U) {
 
     // print text to this terminal's output and mark it as coming from this
     // command. sets a class in the div that holds the output in the terminal.
@@ -202,7 +203,7 @@ define(["jquery",
             // namespace. every new command will trigger the
             // "newcmdcallback" event (without namespace), which will
             // trigger all callbacks, including this one.
-            var cbid = 'newcmdcallback.' + guid();
+            var cbid = 'newcmdcallback.' + U.guid();
             options.userdata.callback = cbid;
             $(window).on(cbid, function (e, cmd) {
                 if (cmd === undefined) {
@@ -349,7 +350,7 @@ define(["jquery",
             // set prompt to this pipeline's textual representation
             e.preventDefault();
             var cmd = cmds[getGidFromCtrlButton(this)];
-            term.set_command(cmdChainToPrompt(cmd)).focus();
+            term.set_command(U.cmdChainToPrompt(cmd)).focus();
             return false;
         }).on('click', 'button.startgroup', function (e) {
             e.preventDefault();
@@ -357,7 +358,7 @@ define(["jquery",
             function isCmdStarted(cmd) {
                 return cmd.status.code > 0;
             }
-            mapCmdTree(cmd, function (cmd) {
+            U.mapCmdTree(cmd, function (cmd) {
                 if (!isCmdStarted(cmd)) {
                     cmd.start()
                 }
@@ -377,7 +378,7 @@ define(["jquery",
             e.preventDefault();
             var cmd = cmds[getGidFromCtrlButton(this)];
             // delete command tree bottom-up
-            mapCmds(function (cmd) {
+            U.mapCmds(function (cmd) {
                 var d = $.Deferred();
                 // when the command is released, continue to parent
                 $(cmd).on('wasreleased', d.resolve.bind(d));

@@ -19,11 +19,11 @@
 // IN THE SOFTWARE.
 
 
-define(["jquery", "lush/utils"], function ($) {
+define(["jquery", "lush/utils"], function ($, U) {
     $(document).ready(function () {
         $('.monitor-stream').each(function () {
             var $p = $(this);
-            monitorstream($p.data('sysid'), $p.data('stream'), function (data) {
+            U.monitorstream($p.data('sysid'), $p.data('stream'), function (data) {
                 $p.text($p.text() + data);
             });
         });

@@ -30,16 +30,16 @@ define(["jquery",
         "lush/utils",
         "jquery.terminal",
         "jquery.ui"],
-       function ($, Cli, Ctrl, Parser) {
+       function ($, Cli, Ctrl, Parser, U) {
     // Print text to this terminal. Ensures the text always ends in newline.
     $.fn.termPrintln = function (text, finalize) {
         // term.echo will always append newline so strip one off if exists
-        if (hassuffix(text, '\r\n')) {
+        if (U.hassuffix(text, '\r\n')) {
             text = text.slice(0, -2);
-        } else if (hassuffix(text, '\n')) {
+        } else if (U.hassuffix(text, '\n')) {
             text = text.slice(0, -1);
         }
-        text = escapeHTML(text);
+        text = U.escapeHTML(text);
         // jquery.terminal interprets square brackets
         text = text.replace(/\[/g, '&#91;');
         return this.echo(text, finalize);
@@ -61,7 +61,7 @@ define(["jquery",
             term.insert(files[0].slice(partial.length) + " ");
             return;
         }
-        var pref = lcp(files);
+        var pref = U.lcp(files);
         if (pref.length > partial.length) {
             // all possible completions share a prefix longer than current partial
             term.insert(pref.slice(partial.length));

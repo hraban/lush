@@ -24,8 +24,9 @@
 // PROMPT PARSING
 
 define(["lush/Ast",
-        "lush/Lexer",],
-       function (Ast, Lexer) {
+        "lush/Lexer",
+        "lush/utils"],
+       function (Ast, Lexer, U) {
 
     function startsWithDot(str) {
         return str[0] == ".";
@@ -147,8 +148,8 @@ define(["lush/Ast",
     // to behave the same way, but in lala-land, they're different concepts.
 
     // CLASS METHOD (blegh)
-    Parser.Escape = parserEscape;
-    Parser.Unescape = parserUnescape;
+    Parser.Escape = U.parserEscape;
+    Parser.Unescape = U.parserUnescape;
 
     return Parser;
 });

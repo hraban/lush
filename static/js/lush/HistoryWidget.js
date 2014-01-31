@@ -23,7 +23,7 @@
 
 // The logic behind the control window for active commands.
 
-define(["jquery", "lush/utils"], function ($) {
+define(["jquery", "lush/utils"], function ($, U) {
 
     var numInstances = 0;
 
@@ -54,7 +54,7 @@ define(["jquery", "lush/utils"], function ($) {
     //
     // calling updateHistoryLiName(3) will refresh the entire second line
     function updateHistoryLiName(gid) {
-        $('#history_group' + gid + ' .name').text(gid + ': ' + cmdChainToPrompt(cmds[gid]));
+        $('#history_group' + gid + ' .name').text(gid + ': ' + U.cmdChainToPrompt(cmds[gid]));
     };
 
     // build a <li> for this command

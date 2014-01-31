@@ -30,14 +30,14 @@ define(["jquery",
         "lush/Parser",
         "lush/Pool",
         "lush/utils"],
-       function ($, Ast, Cli, Command, Lexer, Parser, Pool) {
+       function ($, Ast, Cli, Command, Lexer, Parser, Pool, U) {
 
     test("lcp(): longest common prefix", function () {
-        equal(lcp(["abcd", "abab", "abba"]), "ab");
-        equal(lcp([]), "", "common prefix of 0 strings");
-        equal(lcp(["foo", "bar"]), "");
-        equal(lcp(["", "foo"]), "");
-        equal(lcp(["burt", "burt"]), "burt");
+        equal(U.lcp(["abcd", "abab", "abba"]), "ab");
+        equal(U.lcp([]), "", "common prefix of 0 strings");
+        equal(U.lcp(["foo", "bar"]), "");
+        equal(U.lcp(["", "foo"]), "");
+        equal(U.lcp(["burt", "burt"]), "burt");
     });
 
     test("splitn(): split string with limit", function () {
@@ -427,7 +427,7 @@ define(["jquery",
         }).always(start); // qunit
     });
 
-    asyncTest("pipeDeferred: success", function () {
+    asyncTest("U.pipeDeferred: success", function () {
         expect(1);
         var d1 = $.Deferred();
         var d2 = $.Deferred().done(function (x, y) {
@@ -435,11 +435,11 @@ define(["jquery",
         }).fail(function () {
             throw "failure handler called";
         }).always(function () { start(); });
-        pipeDeferred(d1, d2);
+        U.pipeDeferred(d1, d2);
         d1.resolve(3, 5);
     });
 
-    asyncTest("pipeDeferred: failure", function () {
+    asyncTest("U.pipeDeferred: failure", function () {
         expect(1);
         var d3 = $.Deferred().reject(2, 10);
         var d4 = $.Deferred().done(function () {
@@ -447,10 +447,10 @@ define(["jquery",
         }).fail(function (x, y) {
             equal(x * y, 20, "pass arguments to failure handler");
         }).always(function () { start(); });
-        pipeDeferred(d3, d4);
+        U.pipeDeferred(d3, d4);
     });
 
-    asyncTest("noConcurrentCalls()", function () {
+    asyncTest("U.noConcurrentCalls()", function () {
         expect(6);
         var stack = "";
         function push(c, crash) {
@@ -465,7 +465,7 @@ define(["jquery",
             }, 10);
             return d;
         }
-        var f = noConcurrentCalls(push);
+        var f = U.noConcurrentCalls(push);
         f("a").done(function (j) {
             equal(stack, "a", "first deferred done before pending call");
             equal(stack, j, "argument passed to direct success handler");
@@ -497,13 +497,13 @@ define(["jquery",
         // 1536 = 3 * 2^9
         var last;
         var str = "";
-        mapf(function (i) {
+        U.mapf(function (i) {
             last = i;
             return $.Deferred().resolve();
         }, 1536, function (i) { if (i % 2 == 0) return i / 2; })
         .then(function () {
             equal(last, 3, "last call was on first odd number");
-            return mapf(function (s) {
+            return U.mapf(function (s) {
                 str += s[0];
                 return $.Deferred().resolve();
             }, "abcd", function (s) { return s.substr(1) || undefined; }, true);

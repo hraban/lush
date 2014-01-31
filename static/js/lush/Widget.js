@@ -53,9 +53,9 @@
 // all this is wrapped in a <div class=rootcontainer>
 
 define(["jquery",
-        'jsPlumb',
-        "lush/utils"],
-       function ($) {
+        "lush/utils",
+        'jsPlumb'],
+       function ($, U) {
 
     // disable this dom element a specified amount of time (prevent double
     // click)

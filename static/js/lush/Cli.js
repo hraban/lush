@@ -36,7 +36,7 @@ define(["jquery",
         "lush/Parser",
         "lush/Pool",
         "lush/utils"],
-       function ($, Ast, Command, Lexer, Parser, Pool) {
+       function ($, Ast, Command, Lexer, Parser, Pool, U) {
 
     // Manage context of a command line interface. purely conceptual, no UI.
     // processCmd arg is a function, called by the cli to actually invoke a
@@ -62,7 +62,7 @@ define(["jquery",
     var Cli = function (processCmd) {
         var cli = this;
         // Locally identify this specific command line
-        cli._guid = guid();
+        cli._guid = U.guid();
         cli._processCmd = processCmd;
         cli._parser = new Parser();
         // Prepared commands pool for quicker turn-around after hitting enter
@@ -76,7 +76,7 @@ define(["jquery",
         // a Deferred that resolves when the command tree is synced with the
         // latest call to setprompt()
         cli._syncingPrompt = $.Deferred().resolve();
-        cli._setprompt_safe = noConcurrentCalls(cli._setprompt_aux.bind(cli));
+        cli._setprompt_safe = U.noConcurrentCalls(cli._setprompt_aux.bind(cli));
     };
 
     // ask the server for a new command and put it in "CLI mode"
@@ -156,7 +156,7 @@ define(["jquery",
             // of detaching.
             $(cmd).one('parentRemoved', function () {
                 var cmd = this;
-                mapCmdTree(cmd, function (cmd) { cmd.release(); });
+                U.mapCmdTree(cmd, function (cmd) { cmd.release(); });
             });
             // inform the parent that his child died (hopefully he will
             // disconnect) (otherwise we're in trouble)
@@ -232,7 +232,7 @@ define(["jquery",
     }
 
     function stopMonitoringTree(root) {
-        mapCmdTree(root, stopMonitoringCmd);
+        U.mapCmdTree(root, stopMonitoringCmd);
     }
 
     // (One-way) sync a command to this cli object: cmd changes -> update me.
@@ -245,7 +245,7 @@ define(["jquery",
                 // ignore init and myself
                 return;
             }
-            var newprompt = cmdChainToPrompt(cli._cmd);
+            var newprompt = U.cmdChainToPrompt(cli._cmd);
             // not a jQuery event because I want to crash if unhandled
             cli.onUpdatedPrompt(newprompt);
         });
@@ -348,7 +348,7 @@ define(["jquery",
         } catch (e) {
             return d.reject(e);
         }
-        pipeDeferred(cli._syncPrompt(ast), d);
+        U.pipeDeferred(cli._syncPrompt(ast), d);
         return d;
     };
 
@@ -382,7 +382,7 @@ define(["jquery",
         };
         return cli._syncingPrompt.done(function () {
             // when the prompt has been set, all commands can be started.
-            mapCmdTree(root, function (cmd) {
+            U.mapCmdTree(root, function (cmd) {
                 cmd.start();
                 runningCmds += 1;
                 $(cmd).one('done', cmdDone);

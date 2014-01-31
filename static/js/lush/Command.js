@@ -70,7 +70,7 @@
 //
 // TODO: This should be a Deferred object not an Event, for obvious reasons
 
-define(["jquery"], function ($) {
+define(["jquery", "lush/utils"], function ($, U) {
 
     // third arg is a uuid identifying this session
     var Command = function (ctrl, init, moi) {
@@ -264,7 +264,7 @@ define(["jquery"], function ($) {
         }
         // actual function is hooked up to this command client-side, an id local
         // to this function is sent to server instead
-        var callbackId = callback ? guid() : null;
+        var callbackId = callback ? U.guid() : null;
         var reqs = [];
         $.each(updata, function (key, val) {
             var req = {

@@ -23,11 +23,11 @@
 
 // control stream related scripting
 
-define(["jquery", "lush/utils"], function ($) {
+define(["jquery", "lush/utils"], function ($, U) {
 
     var Ctrl = function () {
         var ctrl = this;
-        ctrl.ws = new WebSocket(wsURI('/ctrl'));
+        ctrl.ws = new WebSocket(U.wsURI('/ctrl'));
         ctrl.streamhandlers = {};
         ctrl.ws.onmessage = function (e) {
             // First message MUST be a clientid event

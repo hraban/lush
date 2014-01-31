@@ -26,7 +26,7 @@
 define(["jquery",
         'lush/help',
         "lush/utils"],
-       function ($, help) {
+       function ($, help, U) {
 
     var numInstances = 0;
 
@@ -79,8 +79,8 @@ define(["jquery",
             });
             // arg1="foo", arg2="bar", ... => ["foo", "bar", ...]
             var $args = $(this).find('input[name^=arg]');
-            var args = $.map($args, attrgetter('value'));
-            args = removeFalse(args);
+            var args = $.map($args, U.attrgetter('value'));
+            args = U.removeFalse(args);
             o.args = args;
             // delete old arg properties
             for (var k in o) {

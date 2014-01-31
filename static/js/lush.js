@@ -49,7 +49,6 @@ requirejs.config({
       "jsPlumb": "jquery.jsPlumb-1.5.3-min",
     },
     "shim": {
-        "lush/utils": ["jquery"],
         "jquery.terminal": ["jquery"],
         "jsPlumb": ["jquery"],
         "jquery.ui": ["jquery"],

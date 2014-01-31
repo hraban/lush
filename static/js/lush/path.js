@@ -53,9 +53,9 @@ define(["jquery"], function ($) {
     return function initPathUI($form, ctrl) {
         // Hook up form submission to ctrl channel
         $form.submit(function () {
-                var paths = $.map($('input', $form), attrgetter('value'));
+                var paths = $.map($('input', $form), U.attrgetter('value'));
                 // filter out empty paths
-                paths = $.grep(paths, identity);
+                paths = $.grep(paths, U.identity);
                 ctrl.send('setpath', JSON.stringify(paths));
                 return false;
             })
