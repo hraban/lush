@@ -52,7 +52,7 @@ define(["jquery", "lush/utils"], function ($) {
     //
     // calling updateHistoryLiName(3) will refresh the entire second line
     function updateHistoryLiName(gid) {
-        $('#history_group' + gid + ' .name').text(gid + ': ' + groupname(cmds[gid]));
+        $('#history_group' + gid + ' .name').text(gid + ': ' + cmdChainToPrompt(cmds[gid]));
     };
 
     // build a <li> for this command

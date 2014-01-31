@@ -191,23 +191,6 @@ var monitorstream = function (sysid, stream, callback) {
     return ws;
 };
 
-// the name of a group (bash style: parent | child)
-var groupname = function (cmd, _inner) {
-    var name = cmd.name;
-    var c1 = cmd.child('stdout');
-    var c2 = cmd.child('stderr');
-    if (c1) {
-        name += ' | ' + groupname(c1, c2);
-    }
-    if (c2) {
-        name += ' 2| ' + groupname(c2);
-    }
-    if (_inner && (c1 || c2)) {
-        name = '(' + name + ')';
-    }
-    return name;
-};
-
 // f acts on l, which is a tree with implicit nodes, the next node is extracted
 // using nextkey, which returns undefined if there is no next node. also f
 // returns a deferred and this function only progresses on success. as does this
@@ -257,50 +240,6 @@ function cmdChainToPrompt(cmd) {
     });
     return argvs.join(' ');
 }
-
-// store position of this DOM node on the server as userdata.
-//
-// call this whenever a synced node moved. can't do that automatically because
-// there was some whining about cross browser ladida idk just hook this in the
-// postMove handlers manually.
-//
-// assuming a <div id=myhtmlid> at x=123 and y=58008
-//
-// generated event:
-//
-// setuserdata;position_myhtmlid;{"left": 123, "top": 58008}
-//
-// causes the server to broadcast a userdata event to all connected websocket
-// clients (including this one!), as it is wont to do:
-//
-// userdata.position.myhtmlid;{"left": 123, "top": 58008}
-var storePositionOnServer = function (node, ctrl) {
-    var posjson = JSON.stringify($(node).offset());
-    ctrl.send("setuserdata", 'position_' + node.id, posjson);
-};
-
-// when the server says this DOM node was moved, actually move the node in the
-// UI.  also asks the server what the current position is to initialize the
-// position correctly.
-//
-// first argument is a DOM node (must have an id attribute set).
-//
-// second argument is a websocket control stream instance
-//
-// if a third argument is supplied it is called every time the position
-// changes. it is passed the node as the first argument.
-var syncPositionWithServer = function (node, ctrl, extraCallback) {
-    $(ctrl).on('userdata_position_' + node.id, function (e, offsetJSON) {
-        var offset = safeJSONparse(offsetJSON);
-        if (offset) {
-            $(node).offset(offset);
-            if (extraCallback) {
-                extraCallback(node);
-            }
-        }
-    });
-    ctrl.send('getuserdata', 'position_' + node.id);
-};
 
 // PUZZLE BELOW!
 //
