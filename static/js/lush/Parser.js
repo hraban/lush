@@ -111,15 +111,10 @@ define(["lush/Ast",
             }
             switch (err.type) {
             case Lexer.ERRCODES.UNBALANCED_SINGLE_QUOTE:
-                // ignore. can only happen at end of input, so finish up:
-                lexer.onboundary();
-                break;
             case Lexer.ERRCODES.UNBALANCED_DOUBLE_QUOTE:
-                // ignore
-                lexer.onboundary();
-                break;
             case Lexer.ERRCODES.TERMINATING_BACKSLASH:
-                // ignore!
+                // ignore.
+                // these errors can only happen at end of input, so finish up:
                 lexer.onboundary();
                 break;
             default:
