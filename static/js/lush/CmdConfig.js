@@ -41,7 +41,7 @@ define(["jquery",
             // up, and eat your cereal.
         }
         $('#cmdedit input[name=cmd]').autocomplete({source: "/new/names.json"});
-        $('#cmddetailarea').tabs({
+        $('#cmddetailarea').tabsBottom({
             collapsible: true,
             selected: -1,
         });

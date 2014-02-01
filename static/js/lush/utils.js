@@ -359,3 +359,17 @@ if (!document.scrollToBottom) {
         }
     };
 }
+
+// putting jquery UI tabs on bottom of this element 
+if (!$.fn.tabsBottom) {
+    $.fn.tabsBottom = function (options) {
+        this.tabs(options);
+        // fix the classes of containers when tabs are bottom
+        this.find(".tabs-bottom .ui-tabs-nav, .tabs-bottom .ui-tabs-nav > *")
+            .removeClass("ui-corner-all ui-corner-top")
+            .addClass("ui-corner-bottom");
+        // move the nav DOM node to the bottom of its parent
+        this.find(".tabs-bottom").append(this.find(".ui-tabs-nav"));
+        return this;
+    };
+}
