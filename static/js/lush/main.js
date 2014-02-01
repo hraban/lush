@@ -323,12 +323,74 @@ define(["jquery",
         confwin.associateCmd(cmds[nid]);
     }
 
+    // remove all commands that are not owned by any of the active clients
+    // (active client list passed as an array).
+    function pruneStalePreparedCommands(activeClients) {
+        if (!$.isArray(activeClients)) {
+            throw "pruneStalePreparedCommands requires array of active clients";
+        }
+        // require set access
+        var clients = {};
+        activeClients.forEach(function (nid) { clients[nid] = 58008; });
+        $.each(cmds, function (nid, cmd) {
+            // someone left an unused prepared command lying around
+            if (cmd.userdata.creator == "prompt" &&
+                cmd.userdata.unused &&
+                !(cmd.userdata.god in clients))
+            {
+                // damnit JS I had to jump through five mental hoops to find
+                // out the name of this method I know intellisense is not
+                // your responsibility but your untyped drama is not making
+                // it any easier for people to make one! TYPED JAVASCRIPT
+                // PLS
+                cmd.release();
+                // (typescript != javasript + types; typescript ==
+                // lang_with_javascript_semantics + types, i.e. diff
+                // tooling, lower adoption, docs, unfamiliar to many, etc)
+                // (wow I finally understand the semi-colon as a statement
+                // delimiter.. this... this is beautiful.)
+            };
+        });
+    }
+
+    // the server said that there is a new command
+    function processNewCmdEvent(ctrl, init, historyw) {
+        if (!(historyw instanceof HistoryWidget)) {
+            throw "last argument to processNewCmdEvent must be a HistoryWidget";
+        }
+        cmds_init[init.nid] = init;
+        var cmd = initCommand(init.nid, historyw);
+        if (cmd.imadethis()) {
+            // i made this!
+            // capture all stdout and stderr to terminal
+            var printer = function (_, data) {
+                termPrintlnCmd(globals.term, cmd.nid, data);
+            };
+            $(cmd).on('stdout.stream', printer);
+            $(cmd).on('stderr.stream', printer);
+            $(cmd).on('childAdded', function (e, child, stream) {
+                var cmd = this;
+                $(cmd).off(stream + '.stream');
+            });
+            $(cmd).on('childRemoved', function (e, child, stream) {
+                var cmd = this;
+                $(cmd).on(stream + '.stream', printer);
+            });
+            // subscribe to stream data
+            ctrl.send('subscribe', cmd.nid, 'stdout');
+            ctrl.send('subscribe', cmd.nid, 'stderr');
+            // trigger all callbacks waiting for a newcmd event
+            $(window).trigger('newcmdcallback', cmd);
+        }
+    }
+
     // server is ready: init client.
     function main_aux(ctrl, moi) {
         globals.ctrl = ctrl;
         globals.moi = moi;
-        var confwin = new CmdConfig();
         var term = terminal(processCmd, ctrl);
+        globals.term = term;
+        var confwin = new CmdConfig();
         // turn DOM node's ID into a numerical one (strip off leading "cmd")
         function getNidFromNode(node) {
             return +(/\d+$/.exec(node.id)[0]);
@@ -423,30 +485,7 @@ define(["jquery",
             var ctrl = this;
             var historyw = e.data.historyw;
             var init = JSON.parse(cmdjson);
-            cmds_init[init.nid] = init;
-            var cmd = initCommand(init.nid, historyw);
-            if (cmd.imadethis()) {
-                // i made this!
-                // capture all stdout and stderr to terminal
-                var printer = function (_, data) {
-                    termPrintlnCmd(term, cmd.nid, data);
-                };
-                $(cmd).on('stdout.stream', printer);
-                $(cmd).on('stderr.stream', printer);
-                $(cmd).on('childAdded', function (e, child, stream) {
-                    var cmd = this;
-                    $(cmd).off(stream + '.stream');
-                });
-                $(cmd).on('childRemoved', function (e, child, stream) {
-                    var cmd = this;
-                    $(cmd).on(stream + '.stream', printer);
-                });
-                // subscribe to stream data
-                ctrl.send('subscribe', cmd.nid, 'stdout');
-                ctrl.send('subscribe', cmd.nid, 'stderr');
-                // trigger all callbacks waiting for a newcmd event
-                $(window).trigger('newcmdcallback', cmd);
-            }
+            processNewCmdEvent(ctrl, init, historyw);
         });
         // the property of some object was changed
         $(ctrl).on("property", function (_, propdataJson) {
@@ -477,30 +516,9 @@ define(["jquery",
         // Still race sensitive if another client connects while this one is not
         // done pruning. TODO I guess. :(
         $(ctrl).one("allclients", function (_, payload) {
-            var clients_ar = JSON.parse(payload);
-            // require set access
-            var clients = {};
-            clients_ar.forEach(function (nid) { clients[nid] = 58008; });
-            $.each(cmds, function (nid, cmd) {
-                // someone left an unused prepared command lying around
-                if (cmd.userdata.creator == "prompt" &&
-                    cmd.userdata.unused &&
-                    !(cmd.userdata.god in clients))
-                {
-                    // damnit JS I had to jump through five mental hoops to find
-                    // out the name of this method I know intellisense is not
-                    // your responsibility but your untyped drama is not making
-                    // it any easier for people to make one! TYPED JAVASCRIPT
-                    // PLS
-                    cmd.release();
-                    // (typescript != javasript + types; typescript ==
-                    // lang_with_javascript_semantics + types, i.e. diff
-                    // tooling, lower adoption, docs, unfamiliar to many, etc)
-                    // (wow I finally understand the semi-colon as a statement
-                    // delimiter.. this... this is beautiful.)
-                };
-            });
-        })
+            var activeClients = JSON.parse(payload);
+            pruneStalePreparedCommands(activeClients);
+        });
         // also, excuse me, but was that sexy or was that sexy? I think that was
         // sexy. maybe not ThatGirlFromRioIMetInBelem-sexy, but still quite
         // sexy.
