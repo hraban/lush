@@ -528,12 +528,7 @@ define(["jquery",
             e.preventDefault();
             var clsName = this.dataset.toggleClass;
             var targetSelector = this.dataset.target || $(this).attr('href');
-            var $node = $(targetSelector);
-            if ($node.hasClass(clsName)) {
-                $node.removeClass(clsName);
-            } else {
-                $node.addClass(clsName);
-            }
+            $(targetSelector).toggleClass(clsName);
         });
         // tabs for the left pane
         $("#left").tabs();
