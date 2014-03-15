@@ -50,7 +50,7 @@ define(["jquery",
             // jquery.terminal interprets square brackets
             text = text.replace(/\[/g, '&#91;');
             this.echo(text, finalize);
-            document.scrollToBottom();
+            U.scrollToBottom();
         };
     }
 
@@ -90,12 +90,14 @@ define(["jquery",
         var latestParseError;
         var $term = $('#terminal').terminal(function (x) {
             if (x.trim() == "") {
+                U.scrollToBottom();
                 return;
             }
             cli.setprompt(x).done(function () {
                 cli.commit();
             }).fail(function (e) {
                 $term.error('Parse error: ' + e.message);
+                U.scrollToBottom();
             });
         }, {
             greetings: 'Welcome to Luyat shell',
@@ -137,7 +139,10 @@ define(["jquery",
             },
             exit: false,
         });
-        cli.onerror = $term.error;
+        cli.onerror = function (msg) {
+            $term.error(msg);
+            U.scrollToBottom();
+        };
         cli.onUpdatedPrompt = function (txt) {
             // hack to prevent the onCommandChange handler from sending this
             // change back to the command object. justified because the real

@@ -53,22 +53,28 @@ body {
 .tabs-bottom .ui-tabs-nav li.ui-tabs-active { margin-top: -1px; padding-top: 1px; }
 
 div#bodycontainer {
-}
-
-div#left, div#right {
-    display: inline-block;
-    margin: 6px;
+    flex-direction: row;
+    display: flex;
+    height: 100%; /* how do I make this thing stretch vertically to the size of <body>? */
 }
 
 div#left {
     width: 500px;
     overflow-x: auto;
+    margin: 6px;
+}
+
+div#left > div {
+    display: inline-block;
+    vertical-align: bottom;
 }
 
 div#right {
+    flex: auto;
+    margin: 6px;
     margin-left: 0;
     height: 100%;
-    width: 400px; // TODO: stretch horizontally to fill remainder of window
+    width: 400px; /* TODO: stretch horizontally to fill remainder of window */
 }
 
 /* contains all #roots, stretches vertically to fit them. */
@@ -85,18 +91,20 @@ div#cmddetailarea > div {
 }
 
 #terminalwrap {
+    height: 100%;
+    /* TODO: min-height = viewport height */
+    min-height: 500px;
     padding: 0;
     padding-bottom: 28px;
 }
 
 #terminal {
-    width: 100%;
-    min-height: 500px; // TODO: min-height = viewport height
+    min-height: 500px; /* TODO: min-height = viewport height */
+    width: 492px;
 }
 
 /* root is positioned absolute in the document */
 div.rootcontainer {
-    margin-right: 36px;
     border-top: solid thin #446;
     padding: 2px;
     background-color: #d3d3cf;

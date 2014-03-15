@@ -22,11 +22,11 @@
 
 
 // command object synchronized with server. the properties of this object are
-// not spec'ed but the y should be. instead they are implementation defined, by
-// the serialization of a server-side command object to JSON. still, they
-// should be treated as if that is the spec, the client is not supposed to
-// start adding all kinds of new properties (use the userdata property for
-// custom client data).
+// not spec'ed but they should be. instead they are implementation defined, by
+// the serialization of a server-side command object to JSON (metacmd.go).
+// still, they should be treated as if that is the spec, the client is not
+// supposed to start adding all kinds of new properties (use the userdata
+// property for custom client data).
 //
 // the following jquery events can be subscribed to on an instance of this
 // class:

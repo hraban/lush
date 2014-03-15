@@ -28,20 +28,12 @@
 //
 // COMMAND OBJECTS
 //
-// TODO: This is obsolete. check out Command.js
-// commands are represented in the global array "cmds" as objects (usually
-// called "cmd" when assigned to a variable). there is no spec on the
-// properties in a cmd object (frowny face) but you can get the idea from a
-// couple places:
-//
-// metacmd.go defines serialization of the cmd object from the server side.
-// this is where a cmd object comes to life as a JSON object
-//
-// that json thing finds its way to the createCmdWidget function. there a
-// widget is created and initialized for the command and some extra stuff is
-// added to the cmd object like functions and more properties.
-//
-// sounds good to me what could possibly go wrong?
+// commands are represented in the array globals.cmds as Command instances (see
+// Command.js). These instances are always called "cmd" when assigned to a
+// variable. They are the M in MVC. Or MVVM. I still get confused. Well
+// definitely not 100% MVVM because holy shit have you read those msdn docs? Are
+// they high? It's like they think we have infinite mental RAM or something.
+// Yeah, sure! Four different files for one checkbox! Why not?
 //
 // WIDGETS
 //
@@ -49,16 +41,16 @@
 //
 // CONTROL STREAM
 //
-// this script opens a websocket connection to /ctrl where the client and
+// This script opens a websocket connection to /ctrl where the client and
 // server talk to eachother about food and fashion and larry king. shockingly,
-// there is no spec for this, either. check out websocket.go for the messages
-// that the server can handle. check out every line of every .js file to see
-// what messages the client can handle. or grep $(ctrl).on in this file thats
-// probably easier. see ctrl.js for details. in code. haha what you thought in
+// there is no spec for this. check out websocket.go for the messages that the
+// server can handle. Check out every line of every .js file to see what
+// messages the client can handle. Or grep $(ctrl).on in this file thats
+// probably easier. See Ctrl.js for details. In code. Haha what you thought in
 // documentation?
 //
 // Note that websocket messages are broadcasted to every connected client.
-// There is no request/reply system even though it does look like that its
+// There is no request/reply system even though it does look like that it's
 // slightly different. This is mostly relevant when you have multiple connected
 // clients.
 //
@@ -84,7 +76,7 @@
 //
 // the code does this:
 //
-// 1 handle answer (ctrl.handleEvent(...))
+// 1 handle answer ($(ctrl).on(...))
 // 2 ask question (ctrl.send())
 // 3 get answer
 //
@@ -119,14 +111,15 @@
 //     all incoming websocket events are translated by the control object
 //     (often (hopefully always) referred to by a var named ctrl) into jquery
 //     events on itself. this part is pretty obvious and you can see how it
-//     works by checking out Control.js and searching for ctrl.*on in other
-//     parts of the code.
+//     works by checking out Ctrl.js and searching for ctrl.*on in other parts
+//     of the code.
 //
 // cmd
 //
 //     the command object also generates jquery events of its own. they are
 //     used by Viewers to subscribe to updates of the Model. these are detailed
-//     in the documentation of the Command class.
+//     in the documentation of the Command class. (I'm actually quite proud of
+//     that hand-rolled MV system please do check out Command.js :D)
 //
 //
 // good luck.

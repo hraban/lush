@@ -271,16 +271,19 @@ noConcurrentCalls: function noConcurrentCalls(f) {
     };
 },
 
+scrollToBottom: function () {
+    var el = document.getElementById('bottomofpage');
+    if (el) {
+        el.scrollIntoView();
+    } else {
+        throw "scrollToBottom() needs an element with id 'bottomofpage'";
+    }
+},
+
 }; // the U object containing all utility functions
 
-return U;
 
-} // the AMD wrapping function
-
-); // requirejs define()
-
-
-// these extensions don't fit in a requirejs function but they do just fine here
+// these extensions are not part of the utility object U
 
 // haha stupid phantomjs
 if (!Function.prototype.bind) {
@@ -348,18 +351,6 @@ if (!$.fn.serializeObject) {
     };
 }
 
-// hehehe
-if (!document.scrollToBottom) {
-    document.scrollToBottom = function () {
-        var el = document.getElementById('bottomofpage');
-        if (el) {
-            el.scrollIntoView();
-        } else {
-            throw "scrollToBottom() needs an element with id 'bottomofpage'";
-        }
-    };
-}
-
 // putting jquery UI tabs on bottom of this element 
 if (!$.fn.tabsBottom) {
     $.fn.tabsBottom = function (options) {
@@ -373,3 +364,9 @@ if (!$.fn.tabsBottom) {
         return this;
     };
 }
+
+return U;
+
+} // the AMD wrapping function
+
+); // requirejs define()

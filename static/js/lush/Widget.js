@@ -145,7 +145,7 @@ define(["jquery",
                 .attr('id', cmd.htmlid)
                 .get(0);
         // the new widget causes the bottom of the page to scroll away:
-        document.scrollToBottom();
+        U.scrollToBottom();
         widget.cmd = cmd;
         widget._initDom();
         widget._initJsPlumb(ctrl);
