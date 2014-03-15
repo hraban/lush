@@ -72,11 +72,14 @@ div#left > div {
 }
 
 div#right {
+    /* this applies to the entire column being part of a horizontal flexbox */
     flex: auto;
+    /* the right column is, itself, also a flexbox. vertically. */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
     margin: 6px;
     margin-left: 0;
-    height: 100%;
-    width: 400px; /* TODO: stretch horizontally to fill remainder of window */
 }
 
 /* contains all #roots, stretches vertically to fit them. */
