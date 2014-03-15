@@ -52,6 +52,12 @@ body {
 .tabs-bottom .ui-tabs-nav li { top: auto; bottom: 0; margin: 0 .2em 1px 0; border-bottom: auto; border-top: 0; }
 .tabs-bottom .ui-tabs-nav li.ui-tabs-active { margin-top: -1px; padding-top: 1px; }
 
+/* Word to the reader: this CSS was treated in the spirit of "if it looks okay
+ * in my browser, commit and move on". There's duplicate and contradicting
+ * rules everywhere, flexboxes are used judiciously until the problem seemed
+ * sort of fixed. Be warned and feel free to change / fix whatever and tell me
+ * about it. */
+
 div#bodycontainer {
     flex-direction: row;
     display: flex;
