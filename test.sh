@@ -1,6 +1,13 @@
 #!/bin/bash
 
-go test . ./liblush  || exit 1
+go build ./posixtools/echo || exit 1
+ECHOBIN=$PWD/echo
+function cleanecho {
+	rm -f $ECHOBIN
+}
+trap cleanecho EXIT
+
+ECHOBIN=$ECHOBIN go test . ./liblush  || exit 1
 
 phantompath="$(which phantomjs)"
 if [[ -z "$phantompath" ]]
