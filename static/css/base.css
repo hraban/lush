@@ -59,14 +59,16 @@ div#bodycontainer {
 }
 
 div#left {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
     width: 500px;
     overflow-x: auto;
     margin: 6px;
 }
 
 div#left > div {
-    display: inline-block;
-    vertical-align: bottom;
+    margin-bottom: 26px;
 }
 
 div#right {
@@ -91,11 +93,9 @@ div#cmddetailarea > div {
 }
 
 #terminalwrap {
-    height: 100%;
     /* TODO: min-height = viewport height */
     min-height: 500px;
     padding: 0;
-    padding-bottom: 28px;
 }
 
 #terminal {
