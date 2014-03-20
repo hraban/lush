@@ -45,7 +45,7 @@ requirejs.config({
       "lush": "../lush",
       "jquery": "jquery-2.0.3.min",
       "jquery.ui": "jquery-ui-1.10.2.min",
-      "jquery.terminal": "jquery.terminal-0.7.6.min",
+      "jquery.terminal": "jquery.terminal-0.8.6.min",
       "jsPlumb": "jquery.jsPlumb-1.5.3-min",
     },
     "shim": {
