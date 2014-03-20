@@ -24,32 +24,43 @@
 // TERMINAL HANDLING
 
 define(["jquery",
+        "ansi_up",
         "lush/Cli",
         "lush/Ctrl",
         "lush/Parser",
         "lush/utils",
         "jquery.terminal",
         "jquery.ui"],
-       function ($, Cli, Ctrl, Parser, U) {
+       function ($, ansi_up, Cli, Ctrl, Parser, U) {
+
+    // prepare raw data for passing to jQuery.terminal's .echo method
+    function escapeTerminalOutput(text) {
+        // term.echo will always append newline (which, by the way, really
+        // messes up commands that write lines to stdout in multiple chunks,
+        // see https://github.com/hraban/lush/issues/67) so strip one off
+        // the end of the output if there already is one.
+        if (U.hassuffix(text, '\r\n')) {
+            text = text.slice(0, -2);
+        } else if (U.hassuffix(text, '\n')) {
+            text = text.slice(0, -1);
+        }
+        text = U.escapeHTML(text);
+        text = ansi_up.ansi_to_html(text);
+        // jquery.terminal interprets square brackets in a weird way
+        text = text.replace(/\[/g, '&#91;');
+        return text;
+    }
 
     // Print text to this terminal. Ensures the text always ends in newline.
     // defined as a jQuery extension because the terminal object is actually a
     // jquery object (you know, what with it being a jquery plugin and all).
     if (!$.fn.termPrintln) {
         $.fn.termPrintln = function (text, finalize) {
-            // term.echo will always append newline (which, by the way, really
-            // messes up commands that write lines to stdout in multiple chunks,
-            // see https://github.com/hraban/lush/issues/67) so strip one off
-            // the end of the output if there already is one.
-            if (U.hassuffix(text, '\r\n')) {
-                text = text.slice(0, -2);
-            } else if (U.hassuffix(text, '\n')) {
-                text = text.slice(0, -1);
-            }
-            text = U.escapeHTML(text);
-            // jquery.terminal interprets square brackets
-            text = text.replace(/\[/g, '&#91;');
-            this.echo(text, finalize);
+            text = escapeTerminalOutput(text);
+            this.echo(text, {
+                finalize: finalize,
+                raw: true,
+            });
             U.scrollToBottom();
         };
     }

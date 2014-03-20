@@ -112,6 +112,12 @@ div#cmddetailarea > div {
     width: 492px;
 }
 
+.terminal-output {
+    /* Act like a <pre>, but also wrap if line is too long. Prevents
+     * overflowing terminal box. */
+    white-space: pre-wrap;
+}
+
 /* root is positioned absolute in the document */
 div.rootcontainer {
     border-top: solid thin #446;
