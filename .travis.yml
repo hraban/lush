@@ -1,2 +1,3 @@
 language: go
 script: ./test.sh
+go: 1.2
