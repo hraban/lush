@@ -21,7 +21,12 @@
 "use strict";
 
 
-// The logic behind the control window for active commands.
+// Control window for active commands (that box in the bottom right). Click on a
+// command widget to "select" a command. In this file, selecting is called
+// "associating", which can be done by calling CmdConfig.assocCmd(cmd);. This
+// file is ONLY about the command window itself, and thus does not listen for
+// "click" events on the widget; binding that event to this assocCmd method is
+// responsibility of the caller.
 
 define(["jquery",
         'lush/help',
