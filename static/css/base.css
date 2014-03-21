@@ -92,10 +92,18 @@ div#right {
 div#cmds {
 }
 
-div#cmddetailarea {
+/* State of the detail area */
+div#cmddetailarea:not([data-associated]) > div#cmddetailarea_associated,
+div#cmddetailarea[data-associated] > div#cmddetailarea_disassociated {
+    display: none;
 }
 
-div#cmddetailarea > div {
+div#cmddetailarea_disassociated p {
+    margin: 2em;
+    text-align: center;
+}
+
+div#cmddetailarea_associated > div {
     max-height: 400px;
     overflow: auto;
     margin-bottom: 28px;

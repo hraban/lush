@@ -73,41 +73,54 @@ SOFTWARE.
     <div id="cmds"></div>
 
     <!-- PER-COMMAND CONFIG -->
-    <div id=cmddetailarea class=tabs-bottom>
+    <!-- When associating a command, set data-associated="id". To disassociate,
+         delete that entire attribute (i.e. initial state is disassociated).
+         Don't just empty it, remove it. -->
+    <div id=cmddetailarea class=tabs-bottom >
 
-      <ul>
-        <li><a href="#cmdedit">edit</a></li>
-        <li><a href="#cmdstdout">stdout</a></li>
-        <li><a href="#cmdstderr">stderr</a></li>
-        <li><a href="#cmdhelp">help</a></li>
-      </ul>
-
-      <div id=cmdedit>
-        <form>
-         name <input name=cmd><br>
-         args:
-           <input size=10 name=arg1>
-           <br>
-         <button>save</button>
-         <button class=cancelbtn type=button>cancel</button>
-        <h2>Configuration</h2>
-        <p>stdout scrollback: <input size=4 name=stdoutScrollback value=1000> bytes<br>
-        stderr scrollback: <input size=4 name=stderrScrollback value=1000> bytes
-        </form>
+      <!-- Shown when no command is selected -->
+      <div id=cmddetailarea_disassociated>
+        <p>Click on a command widget to activate this part.
       </div>
 
-      <div id=cmdstdout>
-        <span class=forwarded>forwarded to: <span id=stdouttoid></span> <a href="">(disconnect)</a></span>
-        <pre class=streamdata></pre>
-      </div>
+      <!-- Shown when a command is selected -->
+      <div id=cmddetailarea_associated>
 
-      <div id=cmdstderr>
-        <span class=forwarded>forwarded to: <span id=stderrtoid></span> <a href="">(disconnect)</a></span>
-        <pre class=streamdata></pre>
-      </div>
+        <ul>
+          <li><a href="#cmdedit">edit</a></li>
+          <li><a href="#cmdstdout">stdout</a></li>
+          <li><a href="#cmdstderr">stderr</a></li>
+          <li><a href="#cmdhelp">help</a></li>
+        </ul>
 
-      <div id=cmdhelp>
-      </div>
+        <div id=cmdedit>
+          <form>
+           name <input name=cmd><br>
+           args:
+             <input size=10 name=arg1>
+             <br>
+           <button>save</button>
+           <button class=cancelbtn type=button>cancel</button>
+          <h2>Configuration</h2>
+          <p>stdout scrollback: <input size=4 name=stdoutScrollback value=1000> bytes<br>
+          stderr scrollback: <input size=4 name=stderrScrollback value=1000> bytes
+          </form>
+        </div>
+
+        <div id=cmdstdout>
+          <span class=forwarded>forwarded to: <span id=stdouttoid></span> <a href="">(disconnect)</a></span>
+          <pre class=streamdata></pre>
+        </div>
+
+        <div id=cmdstderr>
+          <span class=forwarded>forwarded to: <span id=stderrtoid></span> <a href="">(disconnect)</a></span>
+          <pre class=streamdata></pre>
+        </div>
+
+        <div id=cmdhelp>
+        </div>
+
+      </div> <!-- /#cmddetailarea_associated -->
 
     </div> <!-- /#cmddetailarea -->
 
