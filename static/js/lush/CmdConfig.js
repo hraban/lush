@@ -50,32 +50,18 @@ define(["jquery",
             collapsible: true,
             selected: -1,
         });
-        $('#cmdedit form').on('keydown', 'input[name^=arg]', function (e) {
-            // if typing in the last argument field
-            if ($(this).nextAll('input[name^=arg]').length == 0) {
-                var newname = +(this.name.slice(3)) + 1; // hahaha
-                newname = 'arg' + newname;
-                // the user needs a new empty argument field
-                $(this).clone()
-                    .attr('name', newname)
-                    .val('')
-                    .insertAfter(this);
-            }
-        }).submit({conf: conf}, function (e) {
-            // request the command to be updated. behind the scenes this
-            // happens: send "updatecmd" message over ctrl stream.  server will
-            // reply with updatecmd, which will invoke a handler to update the
-            // cmd object, which will invoke $(cmd).trigger('updated') (in the
-            // relevant namespace), which will invoke the handler that updates
-            // the view
-            e.preventDefault();
-            var conf = e.data.conf;
-            var cmd = conf._cmd;
+        // request the command to be updated. behind the scenes this happens:
+        // send "updatecmd" message over ctrl stream.  server will reply with
+        // updatecmd, which will invoke a handler to update the cmd object,
+        // which will invoke $(cmd).trigger('updated') (in the relevant
+        // namespace), which will invoke the handler that updates the view. The
+        // argument is the form containing the properties as a DOM node.
+        function submitChanges(form, cmd) {
             if (cmd === undefined) {
                 // no associated command
                 throw "Select command before saving changes";
             }
-            var o = $(this).serializeObject();
+            var o = $(form).serializeObject();
             // cast numeric inputs to JS ints
             $.each(o, function (key, val) {
                 if (/^\d+$/.test(val)) {
@@ -83,7 +69,7 @@ define(["jquery",
                 }
             });
             // arg1="foo", arg2="bar", ... => ["foo", "bar", ...]
-            var $args = $(this).find('input[name^=arg]');
+            var $args = $(form).find('input[name^=arg]');
             var args = $.map($args, U.attrgetter('value'));
             args = U.removeFalse(args);
             o.args = args;
@@ -98,8 +84,23 @@ define(["jquery",
             for (var i = 0; i < args.length; i++) {
                 o.name += ' ' + args[i];
             }
-            o.userdata = $(this).data();
+            o.userdata = $(form).data();
             cmd.update(o);
+        }
+        $('#cmdedit form').on('keydown', 'input[name^=arg]', function (e) {
+            // if typing in the last argument field
+            if ($(this).nextAll('input[name^=arg]').length == 0) {
+                var newname = +(this.name.slice(3)) + 1; // hahaha
+                newname = 'arg' + newname;
+                // the user needs a new empty argument field
+                $(this).clone()
+                    .attr('name', newname)
+                    .val('')
+                    .insertAfter(this);
+            }
+        }).submit({conf: conf}, function (e) {
+            e.preventDefault();
+            submitChanges(this, e.data.conf._cmd);
         });
         $('#cmdstdout .forwarded a').click(function (e) {
             e.preventDefault();
