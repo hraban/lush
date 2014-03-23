@@ -205,9 +205,8 @@ define(["jquery",
             $editm.find('[name=stderrScrollback]').val(cmd.stderrScrollback)
         });
         $(cmd).on('done.cmdconfig', function () {
-            // no need for editing anymore, release all closures
-            var cmd = this;
-            $(cmd).off('.cmdconfig');
+            // TODO: Disable inputs somehow (remember to reenable on
+            // disassociate)
         });
     };
 
@@ -274,6 +273,9 @@ define(["jquery",
         conf._assocStderr();
         conf._assocHelp();
         document.getElementById('cmddetailarea').setAttribute('data-associated', cmd.nid);
+        $(cmd).on('wasreleased.cmdconfig', function () {
+            conf.disassociate();
+        });
         // view bindings are hooked to updated event, trigger for initialization
         $(cmd).trigger('updated.cmdconfig');
     };
