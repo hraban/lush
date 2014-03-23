@@ -54,9 +54,15 @@ body {
 
 /* Word to the reader: this CSS was treated in the spirit of "if it looks okay
  * in my browser, commit and move on". There's duplicate and contradicting
- * rules everywhere, flexboxes are used judiciously until the problem seemed
- * sort of fixed. Be warned and feel free to change / fix whatever and tell me
- * about it. */
+ * rules everywhere, colors and pixels are all hard-coded and every positioning
+ * problem is approached with my patented "if it doesn't work you're not using
+ * enough flexboxes and position: absolute;" approach. Not out of principle,
+ * but out of pure necessity.  I hate CSS and just thinking about it makes me
+ * depressed, so I try to limit my time in this file to a bare minimum. Which
+ * is still far too much.
+ *
+ * Be warned and feel free to change / fix whatever and tell me about it.
+ */
 
 div#bodycontainer {
     flex-direction: row;
@@ -69,6 +75,7 @@ div#left {
     flex-direction: column;
     justify-content: flex-end;
     width: 500px;
+    flex-shrink: 0;
     overflow-x: auto;
     margin: 6px;
 }
