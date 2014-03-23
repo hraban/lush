@@ -123,7 +123,7 @@ define(["jquery", "lush/utils"], function ($, U) {
     };
 
     HistoryWidget.prototype.addCommand = function (cmd) {
-        $('#history ul').prepend(createHistoryLi(cmd));
+        $('#history ul').append(createHistoryLi(cmd));
     };
 
     return HistoryWidget;
