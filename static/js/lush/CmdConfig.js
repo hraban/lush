@@ -37,6 +37,10 @@ define(["jquery",
 
     var CmdConfig = function () {
         var conf = this;
+        // Identifier that allows me to ignore my own update() calls. The GUID
+        // helps distinguish this CmdConfig widget from other ones if there are
+        // multiple clients connected to the same lush instance.
+        conf._myid = 'CmdConfig' + U.guid();
         if (numInstances++ > 0) {
             throw "CmdConfig must not be instanciated more than once";
             // yeah yeah yeah that means it's not supposed to be a class. it's
@@ -50,57 +54,21 @@ define(["jquery",
             collapsible: true,
             selected: -1,
         });
-        // request the command to be updated. behind the scenes this happens:
-        // send "updatecmd" message over ctrl stream.  server will reply with
-        // updatecmd, which will invoke a handler to update the cmd object,
-        // which will invoke $(cmd).trigger('updated') (in the relevant
-        // namespace), which will invoke the handler that updates the view. The
-        // argument is the form containing the properties as a DOM node.
-        function submitChanges(form, cmd) {
-            if (cmd === undefined) {
-                // no associated command
-                throw "Select command before saving changes";
-            }
-            var o = $(form).serializeObject();
-            // cast numeric inputs to JS ints
-            $.each(o, function (key, val) {
-                if (/^\d+$/.test(val)) {
-                    o[key] = parseInt(val);
-                }
-            });
-            // arg1="foo", arg2="bar", ... => ["foo", "bar", ...]
-            var $args = $(form).find('input[name^=arg]');
-            var args = $.map($args, U.attrgetter('value'));
-            args = U.removeFalse(args);
-            o.args = args;
-            // delete old arg properties
-            for (var k in o) {
-                if (/^arg\d/.test(k)) {
-                    delete o[k];
-                }
-            }
-            // set command name to argv
-            o.name = o.cmd;
-            for (var i = 0; i < args.length; i++) {
-                o.name += ' ' + args[i];
-            }
-            o.userdata = $(form).data();
-            cmd.update(o);
-        }
         $('#cmdedit form').on('keydown', 'input[name^=arg]', function (e) {
-            // if typing in the last argument field
-            if ($(this).nextAll('input[name^=arg]').length == 0) {
-                var newname = +(this.name.slice(3)) + 1; // hahaha
-                newname = 'arg' + newname;
-                // the user needs a new empty argument field
-                $(this).clone()
-                    .attr('name', newname)
-                    .val('')
-                    .insertAfter(this);
-            }
+            var argId = +(this.name.slice(3));
+            // if there is no next argument, make an empty one
+            conf._ensureArgInput(argId + 1);
+        }).on('input', 'input', {conf: conf}, function (e) {
+            // that binding looks weird: it's the "input" event on all "<input>"
+            // tags that are a child of "#cmdedit form"
+            var form = $(this).closest('form')[0];
+            var conf = e.data.conf;
+            conf._submitChanges(form);
         }).submit({conf: conf}, function (e) {
+            var form = this;
             e.preventDefault();
-            submitChanges(this, e.data.conf._cmd);
+            var conf = e.data.conf;
+            conf._submitChanges(form);
         });
         $('#cmdstdout .forwarded a').click(function (e) {
             e.preventDefault();
@@ -118,6 +86,63 @@ define(["jquery",
         });
     };
 
+    // request the command to be updated. behind the scenes this happens: send
+    // "updatecmd" message over ctrl stream.  server will reply with updatecmd,
+    // which will invoke a handler to update the cmd object, which will invoke
+    // $(cmd).trigger('updated') (in the relevant namespace), which will invoke
+    // the handler that updates the view. The argument is the form containing
+    // the properties as a DOM node.
+    CmdConfig.prototype._submitChanges = function (form) {
+        var conf = this;
+        var cmd = conf._cmd;
+        if (cmd === undefined) {
+            // no associated command
+            throw "Select command before saving changes";
+        }
+        var o = $(form).serializeObject();
+        // cast numeric inputs to JS ints
+        $.each(o, function (key, val) {
+            if (/^\d+$/.test(val)) {
+                o[key] = parseInt(val);
+            }
+        });
+        // arg1="foo", arg2="bar", ... => ["foo", "bar", ...]
+        var $args = $(form).find('input[name^=arg]');
+        var args = $.map($args, U.attrgetter('value'));
+        // TODO: deletes all empty args, but should only strip trailing empty
+        // args. Even better: there should be a button on every arg input to
+        // actually delete it, maybe special case strip the last arg if it's
+        // empty because that one is create automatically.
+        args = U.removeFalse(args);
+        o.args = args;
+        // delete old arg properties
+        for (var k in o) {
+            if (/^arg\d/.test(k)) {
+                delete o[k];
+            }
+        }
+        // set command name to argv
+        o.name = o.cmd;
+        for (var i = 0; i < args.length; i++) {
+            o.name += ' ' + args[i];
+        }
+        o.userdata = $(form).data();
+        cmd.update(o, conf._myid);
+    }
+
+    // Return the <input> (DOM node) for this argument, create it if it doesn't
+    // exist. Expects the <input> for the arg before to already exist, if any.
+    CmdConfig.prototype._ensureArgInput = function (argId) {
+        if (!U.isInt(argId)) {
+            throw "Expected integer argument to _ensureArgInput";
+        }
+        var $arg = $('#argv input[name=arg' + argId + ']');
+        if ($arg.length === 0) {
+            var $arg = $('<input name=arg' + argId + '>').appendTo('#argv');
+        }
+        return $arg[0];
+    };
+
     CmdConfig.prototype.disassociate = function () {
         var conf = this;
         var cmd = conf._cmd;
@@ -132,7 +157,7 @@ define(["jquery",
     };
 
     CmdConfig.prototype._disassocEdit = function () {
-        $('#cmdedit input[name=arg1] ~ input[name^=arg]').remove();
+        $('fieldset#argv input[name=arg1] ~ input[name^=arg]').remove();
         $('#cmdedit input').val('');
     };
 
@@ -141,25 +166,42 @@ define(["jquery",
         var conf = this;
         var $editm = $('#cmdedit');
         var cmd = conf._cmd;
-        $(cmd).on('updated.cmd.cmdconfig', function () {
+        $(cmd).on('updated.cmd.cmdconfig', function (e, updateId) {
             var cmd = this;
+            if (updateId == conf._myid) {
+                return;
+            }
             $editm.find('[name=cmd]').val(cmd.cmd);
         });
-        $(cmd).on('updated.args.cmdconfig', function () {
+        $(cmd).on('updated.args.cmdconfig', function (e, updateId) {
             var cmd = this;
-            // remove all arg fields (in case num args decreased)
-            $editm.find('input[name=arg1] ~ input[name^=arg]').remove();
-            cmd.args.forEach(function (arg, idx) {
-                // keydown triggers the "create new arg input" handler
-                $editm.find('[name=arg' + (idx + 1) + ']').val(arg).keydown();
+            if (updateId == conf._myid) {
+                return;
+            }
+            var args = cmd.args.slice(0); // copy to modify
+            // append one empty arg to always have an empty input field
+            args.push('');
+            args.forEach(function (arg, idx) {
+                var node = conf._ensureArgInput(idx + 1);
+                node.value = arg;
             });
+            // if any of these exist, the number of args decreased so these
+            // inputs must be removed
+            var lastArgId = args.length;
+            $editm.find('input[name=arg' + lastArgId + ']').nextAll().remove();
         });
-        $(cmd).on('updated.stdoutScrollback.cmdconfig', function () {
+        $(cmd).on('updated.stdoutScrollback.cmdconfig', function (e, updateId) {
             var cmd = this;
+            if (updateId == conf._myid) {
+                return;
+            }
             $editm.find('[name=stdoutScrollback]').val(cmd.stdoutScrollback)
         });
-        $(cmd).on('updated.stderrScrollback.cmdconfig', function () {
+        $(cmd).on('updated.stderrScrollback.cmdconfig', function (e, updateId) {
             var cmd = this;
+            if (updateId == conf._myid) {
+                return;
+            }
             $editm.find('[name=stderrScrollback]').val(cmd.stderrScrollback)
         });
         $(cmd).on('done.cmdconfig', function () {

@@ -280,6 +280,10 @@ scrollToBottom: function () {
     }
 },
 
+isInt: function (i) {
+    return (typeof i === 'number') && (i % 1 === 0);
+},
+
 }; // the U object containing all utility functions
 
 

@@ -492,7 +492,7 @@ define(["jquery",
         }).always(function () { start(); });
     });
 
-    asyncTest("mapf", function () {
+    asyncTest("U.mapf", function () {
         expect(2);
         // 1536 = 3 * 2^9
         var last;
@@ -512,5 +512,16 @@ define(["jquery",
         }).done(function () {
             equal(str, "dcba", "reverse order flag respected");
         }).always(function () { start(); });
+    });
+
+    test("U.isInt", function () {
+        ok(U.isInt(1), "1 is integer");
+        ok(U.isInt(1.0), "1.0 is integer (oh, javascript...)");
+        ok(!U.isInt(1.5), "1.5 is not integer");
+        ok(!U.isInt("foo"), '"foo" is not integer');
+        ok(!U.isInt("1"), '"1" is not integer');
+        ok(!U.isInt(NaN), "NaN is not integer");
+        ok(!U.isInt(Infinity), "Infinity is not integer");
+        ok(U.isInt(-3), "-3 is integer");
     });
 });

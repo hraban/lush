@@ -95,12 +95,12 @@ SOFTWARE.
 
         <div id=cmdedit>
           <form>
-           name <input name=cmd><br>
-           args:
-             <input size=10 name=arg1>
-             <br>
-           <button>save</button>
-           <button class=cancelbtn type=button>cancel</button>
+          <fieldset id=argv>
+            name <input name=cmd><br>
+            args: <input size=10 name=arg1>
+          </fieldset>
+          <button>save</button>
+          <button class=cancelbtn type=button>cancel</button>
           <h2>Configuration</h2>
           <p>stdout scrollback: <input size=4 name=stdoutScrollback value=1000> bytes<br>
           stderr scrollback: <input size=4 name=stderrScrollback value=1000> bytes
