@@ -209,10 +209,6 @@ define(["jquery",
             var cmd = this;
             $(cmd).off('.cmdconfig');
         });
-        $editm.find('.cancelbtn').click({cmd: cmd}, function (e) {
-            var cmd = e.data.cmd;
-            $(cmd).trigger('updated.cmdconfig');
-        });
     };
 
     CmdConfig.prototype._assocStdout = function () {
