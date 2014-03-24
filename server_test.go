@@ -21,6 +21,12 @@ func TestAuthentication(t *testing.T) {
 	req := mustRequest(http.NewRequest("GET", "/", nil))
 	s.ServeHTTP(rec, req)
 	if rec.Code != 401 {
-		t.Fatal("Expected 401 Unauthorized status, got", rec.Code)
+		t.Error("Expected 401 Unauthorized status, got", rec.Code)
+	}
+	req.SetBasicAuth("lush", "test")
+	rec = httptest.NewRecorder()
+	s.ServeHTTP(rec, req)
+	if rec.Code != 200 {
+		t.Error("Expected 200 status with password 'test', got", rec.Code)
 	}
 }
