@@ -23,11 +23,12 @@ it. E.g.:
 
 ## Lush on Windows
 
-Lush works just fine on Windows. The only thing that might disappoint you: it's just a shell. The common tools (ls, grep, find, cat, sed, ...) are not (yet!) provided.
+Lush works just fine on Windows.
 
-Installing lush on Windows comes in two flavors: download a binary release or install from source.
+Installing lush on Windows comes in two flavors: download a binary release or
+install from source.
 
-The binary release will include grep, cat, etc. in v0.3.0 (release date 31 dec 2013).
+The binary release includes grep, cat, etc. for that real "terminal feel".
 
 ## Lush on Windows: Binary (EASY!)
 
@@ -66,4 +67,4 @@ Feel free to contact me for more info
 
 Hraban Luyat
 hraban@0brg.net
-2014
+March 2014
