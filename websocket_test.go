@@ -24,7 +24,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -34,8 +34,11 @@ import (
 // this function starts a server listening on localhost:15846 (good) but then
 // also tests web.go a little bit. That's insane, if anything it should be part
 // of web.go's unit tests, not lush.
-func makeTestServer(t *testing.T) (*server, <-chan error) {
+func makeLiveTestServer(t *testing.T, passwd string) (*server, <-chan error) {
 	s := newServer()
+	if passwd != "" {
+		s.SetPassword(passwd)
+	}
 	s.web.Get("/ping", func() string {
 		return "pong"
 	})
@@ -46,22 +49,7 @@ func makeTestServer(t *testing.T) (*server, <-chan error) {
 	}()
 	// wait arbitrary time for server to start
 	time.Sleep(time.Second)
-	rec := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/ping", nil)
-	if err != nil {
-		// forget about it.
-		panic("failed to create ping request for testing")
-	}
-	// This, obviously, is not actually testing the live connection, so it's
-	// kind of useless.
-	s.ServeHTTP(rec, req)
-	if rec.Code == 200 {
-		return s, errc
-	}
-	// forget about testing anything
-	s.Close()
-	<-errc
-	panic("failed to create test server")
+	return s, errc
 }
 
 // helper type to leverage ioutil.ReadAll in ioutilReadMsg. (never tested this,
@@ -88,9 +76,13 @@ func ioutilReadMsg(r io.Reader) ([]byte, error) {
 	return ioutil.ReadAll(messageReader{r})
 }
 
+func isLegalFirstMessage(msg []byte) bool {
+	return strings.HasPrefix(string(msg), "clientid;")
+}
+
 // Test websocket with an actual TCP connection
 func TestWebsocketLive(t *testing.T) {
-	s, weberrc := makeTestServer(t)
+	s, weberrc := makeLiveTestServer(t, "")
 	done := make(chan int)
 	// I wrote this stuff a while ago and it looks a bit convoluted / complex.
 	// Needs trimming.
@@ -117,13 +109,64 @@ func TestWebsocketLive(t *testing.T) {
 	url := "ws://localhost:15846/ctrl"
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
-		t.Fatal("Couldn't open client websocket connection: ", err)
+		t.Fatal("Couldn't open client websocket connection:", err)
 	}
 	buf, err := ioutilReadMsg(ws)
 	if err != nil {
-		t.Fatal("Error reading first websocket message: ", err)
+		t.Fatal("Error reading first websocket message:", err)
 	}
-	if string(buf) != "clientid;1" {
-		t.Errorf("Unexpected websocket handshake: %v", buf)
+	if !isLegalFirstMessage(buf) {
+		t.Errorf("Unexpected websocket handshake: %s", buf)
+	}
+}
+
+// Ensure access to websocket resource is denied w/o password
+func TestAuthenticationWebsocketLive(t *testing.T) {
+	s, weberrc := makeLiveTestServer(t, "test")
+	// copy of the above code, not proud of this, needs change
+	done := make(chan int)
+	go func() {
+		select {
+		case <-done:
+			break
+		case err := <-weberrc:
+			if err != nil {
+				t.Errorf("failure in webserver: %v", err)
+			}
+		}
+	}()
+	defer func() {
+		done <- 80085
+		s.Close()
+		// drain errors, if any
+		for _ = range weberrc {
+		}
+	}()
+
+	// Open a websocket client to the listening socket
+	origin := "http://localhost:15846/"
+	url := "ws://localhost:15846/ctrl"
+	ws, err := websocket.Dial(url, "", origin)
+	if err == nil {
+		t.Error("Expected error when connecting without authentication")
+	}
+	req := mustRequest(http.NewRequest("GET", "/ctrl", nil))
+	req.SetBasicAuth("lush", "test")
+	wsconf, err := websocket.NewConfig(url, origin)
+	if err != nil {
+		t.Fatal("Failed to create websocket client config:", err)
+	}
+	// lush:test
+	wsconf.Header.Set("Authorization", "Basic bHVzaDp0ZXN0")
+	ws, err = websocket.DialConfig(wsconf)
+	if err != nil {
+		t.Fatal("Couldn't create authenticated websocket connection:", err)
+	}
+	buf, err := ioutilReadMsg(ws)
+	if err != nil {
+		t.Fatal("Error reading first websocket message:", err)
+	}
+	if !isLegalFirstMessage(buf) {
+		t.Errorf("Unexpected websocket handshake: %s", buf)
 	}
 }

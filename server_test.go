@@ -29,4 +29,10 @@ func TestAuthentication(t *testing.T) {
 	if rec.Code != 200 {
 		t.Error("Expected 200 status with password 'test', got", rec.Code)
 	}
+	req.SetBasicAuth("lush", "wrongpass")
+	rec = httptest.NewRecorder()
+	s.ServeHTTP(rec, req)
+	if rec.Code != 401 {
+		t.Error("Expected 401 status with password 'wrongpass', got", rec.Code)
+	}
 }
