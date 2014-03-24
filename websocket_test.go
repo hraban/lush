@@ -36,7 +36,7 @@ func makeTestServer(t *testing.T) (*server, <-chan error) {
 	})
 	errc := make(chan error)
 	go func() {
-		errc <- s.web.Run("localhost:15846")
+		errc <- s.Run("localhost:15846")
 	}()
 	// wait arbitrary time for server to start
 	time.Sleep(time.Second)
@@ -46,12 +46,12 @@ func makeTestServer(t *testing.T) (*server, <-chan error) {
 		// forget about it.
 		panic("failed to create ping request for testing")
 	}
-	s.web.ServeHTTP(rec, req)
+	s.ServeHTTP(rec, req)
 	if rec.Code == 200 {
 		return s, errc
 	}
 	// forget about testing anything
-	s.web.Close()
+	s.Close()
 	<-errc
 	panic("failed to create test server")
 }
@@ -73,6 +73,6 @@ func TestStub(t *testing.T) {
 	// test server here...
 
 	done <- 80085
-	s.web.Close()
+	s.Close()
 	<-weberrc
 }

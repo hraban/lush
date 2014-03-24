@@ -28,10 +28,14 @@ import (
 func main() {
 	s := newServer()
 	listenaddr := flag.String("l", "localhost:8081", "listen address")
+	passwd := flag.String("p", "", "password")
 	flag.BoolVar(&s.everybodyMaster, "everybodymaster", false,
 		"grant every incoming connection full privileges. when false only the first connection is a master")
 	flag.Parse()
-	err := s.web.Run(*listenaddr)
+	if *passwd != "" {
+		s.SetPassword(*passwd)
+	}
+	err := s.Run(*listenaddr)
 	if err != nil {
 		log.Fatalf("Failed to listen on %s: %v", *listenaddr, err)
 	}
