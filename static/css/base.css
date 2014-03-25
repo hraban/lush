@@ -133,6 +133,9 @@ div#cmddetailarea_associated > div {
     white-space: pre-wrap;
 }
 
+
+/*** Command widget area ***/
+
 /* root is positioned absolute in the document */
 div.rootcontainer {
     border-top: solid thin #446;
@@ -158,11 +161,17 @@ div.cmdwidget {
     border: solid black thin;
     padding: 0.5em;
     font-size: 10pt;
-    width: 200px;
+    min-width: 150px;
+    margin-right: 6px;
 }
 
 div.cmdwidget.selected {
     background-color: rgb(255, 206, 187);
+}
+
+/* Stack command widgets horizontally. Works better than display: inline-block; */
+.children, .groupwidget {
+    display: flex;
 }
 
 .windowbuttons button {
