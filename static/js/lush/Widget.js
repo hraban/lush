@@ -250,7 +250,6 @@ define(["jquery",
             var cmd = this;
             var argvtxt = cmd.getArgv().join(' ');
             $(node).find('.argv').text(argvtxt);
-            $(node).find('.bookmark').attr('href', '#prompt;' + argvtxt);
         });
     };
 
