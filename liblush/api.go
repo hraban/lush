@@ -100,6 +100,13 @@ type Cmd interface {
 	Argv() []string
 	// Error to call this after command has started
 	SetArgv([]string) error
+	// Current working directory of this command
+	// TODO: Should allow monitoring because the command can change this
+	// whenever. I'll just tell you right here: that's gonna be tough. Best I
+	// can come up with right now is ptrace the chdir syscall, which is not the
+	// end of the world but it's not something I'm going to spend time on right
+	// now. You know, what with priorities and all.
+	Cwd() (string, error)
 	// Run command and wait for it to exit
 	Run() error
 	// Start the command in the background. Follow by Wait() to get exit status

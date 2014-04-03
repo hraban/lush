@@ -269,3 +269,31 @@ func TestCommandIllegalAPIUse(t *testing.T) {
 		t.Errorf("expected error sending signal after .Wait()")
 	}
 }
+
+func TestCommandCwd(t *testing.T) {
+	// Don't test if it's not supported
+	if !GETCMDWD_SUPPORTED {
+		t.Skip("getCmdCwd not supported on this platform")
+	}
+	c := echoCmd("testing working directory")
+	err := c.Run()
+	if err != nil {
+		t.Fatalf("error running command: %v", err)
+	}
+	if !c.Status().Success() {
+		t.Errorf("unexpected status: %#v", c.Status())
+	}
+	// the actual test:
+	testcwd, err := c.Cwd()
+	if err != nil {
+		t.Fatal("Getting working directory failed:", err)
+	}
+	mycwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal("Failed to get test process working directory:", err)
+	}
+	if testcwd != mycwd {
+		t.Error("Command CWD (%q) not equal to test process CWD (%q)", testcwd,
+			mycwd)
+	}
+}

@@ -87,6 +87,10 @@ func (c *cmd) SetArgv(argv []string) error {
 	return nil
 }
 
+func (c *cmd) Cwd() (string, error) {
+	return getCmdWd(c)
+}
+
 func (c *cmd) Run() error {
 	var err error
 	err = c.Start()
