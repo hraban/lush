@@ -107,6 +107,13 @@ type Cmd interface {
 	// end of the world but it's not something I'm going to spend time on right
 	// now. You know, what with priorities and all.
 	Cwd() (string, error)
+	// Working directory that this process was started in. This is set once,
+	// errors are not kept around: if the working directory could not be
+	// determined at startup, an empty string is stored.  The API could be
+	// richer by also allowing one to SET the starting directory before a
+	// process is started. I don't use that yet so I prefer keeping the API
+	// simple like this, for now.
+	StartWd() string
 	// Run command and wait for it to exit
 	Run() error
 	// Start the command in the background. Follow by Wait() to get exit status

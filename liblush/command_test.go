@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -293,7 +294,27 @@ func TestCommandCwd(t *testing.T) {
 		t.Fatal("Failed to get test process working directory:", err)
 	}
 	if testcwd != mycwd {
-		t.Error("Command CWD (%q) not equal to test process CWD (%q)", testcwd,
+		t.Errorf("Command CWD (%q) not equal to test process CWD (%q)", testcwd,
 			mycwd)
+	}
+}
+
+// Matches output from pwd in UNIX (/) or Windows (C:\) root
+var rootPathRegexp = regexp.MustCompile(`^([c-zC-Z]:\\|/)\n$`)
+
+func TestCommandSetStartWd(t *testing.T) {
+	var b bytes.Buffer
+	c := newcmdPanicOnError(0, exec.Command("pwd"))
+	c.SetStartWd("/")
+	c.Stdout().SetListener(&b)
+	err := c.Run()
+	if err != nil {
+		t.Fatalf("error running command: %v", err)
+	}
+	if !c.Status().Success() {
+		t.Errorf("unexpected status: %#v", c.Status())
+	}
+	if !rootPathRegexp.Match(b.Bytes()) {
+		t.Errorf("unexpected directory: %q", b.String())
 	}
 }

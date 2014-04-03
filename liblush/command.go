@@ -91,6 +91,16 @@ func (c *cmd) Cwd() (string, error) {
 	return getCmdWd(c)
 }
 
+func (c *cmd) StartWd() string {
+	return c.execCmd.Dir
+}
+
+func (c *cmd) SetStartWd(dir string) {
+	// you know what? I don't care if you call this after it started. suit
+	// yourself.
+	c.execCmd.Dir = dir
+}
+
 func (c *cmd) Run() error {
 	var err error
 	err = c.Start()
@@ -170,7 +180,7 @@ func isRunning(c *cmd) bool {
 	return c.status.started != nil && c.status.exited == nil
 }
 
-// race &c
+// TODO: see isRunning about race &c
 func wasStarted(c *cmd) bool {
 	return c.status.started != nil || c.status.err != nil
 }
