@@ -156,7 +156,8 @@ func TestAuthenticationWebsocketLive(t *testing.T) {
 	if err != nil {
 		t.Fatal("Failed to create websocket client config:", err)
 	}
-	// lush:test
+	// prehashed credentials: lush:test (net/http.Header does not support
+	// SetBasicAuth)
 	wsconf.Header.Set("Authorization", "Basic bHVzaDp0ZXN0")
 	ws, err = websocket.DialConfig(wsconf)
 	if err != nil {
