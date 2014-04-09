@@ -161,10 +161,15 @@ around: it remains as a direct child of #cmds.
 -->
 <div id=rootcontainer_template class=rootcontainer>
 <div class=windowbuttons>
+  <!-- these are in reverse order there's probably a CSS reason for that.
+  whatever it is I don't care. -->
   <button class=repeatgroup>↻</button>
   <button class=startgroup>▶</button>
   <button class=archivegroup>_</button>
   <button class=releasegroup>x</button>
+  <!-- TODO: implement (I never use this and Koen never uses lush so whatever) -->
+    <!-- <a class='ui-icon ui-icon-link bookmark'
+      title='link to bookmark this command'></a> -->
 </div>
 <!--
 This is the groupwidget: it contains the cmd widget (directly), and all
@@ -180,8 +185,6 @@ the .children node of another command when it becomes its child, leaving this
     <span class=id></span>:
     <tt class=argv></tt>
     <span class=status></span>
-    <a class='ui-icon ui-icon-link bookmark'
-       title='link to bookmark this command'></a>
   </div> <!-- /.cmdwidget -->
 
   <div class=children></div>
