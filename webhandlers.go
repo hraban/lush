@@ -31,7 +31,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/hraban/lush/liblush"
 	"github.com/hraban/web"
