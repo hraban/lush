@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -96,19 +97,6 @@ func getCmdWeb(s liblush.Session, idstr string) (liblush.Cmd, error) {
 		return nil, web.WebError{404, "no such command: " + idstr}
 	}
 	return c, nil
-}
-
-func handleGetRoot(ctx *web.Context) error {
-	s := ctx.User.(*server)
-	ch := make(chan metacmd)
-	go func() {
-		for _, id := range s.session.GetCommandIds() {
-			ch <- metacmd{s.session.GetCommand(id)}
-		}
-		close(ch)
-	}()
-	err := s.tmplts.ExecuteTemplate(ctx, "/", ch)
-	return err
 }
 
 func handleGetCmdidsJson(ctx *web.Context) error {
@@ -377,7 +365,7 @@ func init() {
 	serverinitializers = append(serverinitializers, func(s *server) {
 		s.userdata = map[string]string{}
 		// public handlers
-		s.web.Get(`/`, handleGetRoot)
+		s.web.Get(`/`, http.FileServer(http.Dir("static")))
 		s.web.Get(`/cmdids.json`, handleGetCmdidsJson)
 		s.web.Get(`/(\d+).json`, handleGetCmdJson)
 		s.web.Get(`/(\d+)/`, handleGetCmd)
