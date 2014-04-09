@@ -88,10 +88,6 @@ func (s *cmdstatus) NotifyChange(f func(CmdStatus) error) {
 
 // call this whenever the status has changed to notify the listeners
 func (s *cmdstatus) changed() {
-	if s.listeners == nil {
-		log.Print("ERROR: status changed after call to exitNow()")
-		return
-	}
 	for i := 0; i < len(s.listeners); i++ {
 		err := s.listeners[i](s)
 		if err != nil {
