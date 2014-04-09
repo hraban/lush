@@ -3,7 +3,7 @@ ZIP = zip -9 -r
 PLATFORMS = linux windows darwin
 
 # These files survive distclean
-DISTFILES = static templates bin LICENSE README.md lush.exe lush
+DISTFILES = static bin LICENSE README.md lush.exe lush
 BUILDS_386 = $(patsubst %, build-%-386, $(PLATFORMS))
 BUILDS_AMD64 = $(patsubst %, build-%-amd64, $(PLATFORMS))
 BUILDS = $(BUILDS_386) $(BUILDS_AMD64)

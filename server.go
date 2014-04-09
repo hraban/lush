@@ -24,7 +24,6 @@ import (
 	"errors"
 	"fmt"
 	"go/build"
-	"html/template"
 	"log"
 	"net"
 	"net/http"
@@ -40,7 +39,6 @@ import (
 type server struct {
 	session liblush.Session
 	root    string
-	tmplts  *template.Template
 	web     *web.Server
 	l       net.Listener
 	// The front-facing HTTP handler. Defaults to the raw web.go server, but can
@@ -65,27 +63,24 @@ const basePkg = "github.com/hraban/lush/"
 // instance of *server created through newServer.
 var serverinitializers []func(*server)
 
-// directory containing lush resources (templates/ and static/)
+// directory containing lush resources (containing static/)
 var root = resourceDir()
-
-// HTML templates
-var tmplts *template.Template
 
 // PATH
 var path string
 
-// find the directory containing the lush resource files. looks for a
-// "templates" directory in the directory of the executable. if not found try
-// to look for them in GOPATH ($GOPATH/src/github.com/....). Panics if no
-// resources are found.
+// find the directory containing the lush resource files. looks for a directory
+// called "static" in the directory of the executable. if not found try to look
+// for them in GOPATH ($GOPATH/src/github.com/....). Panics if no resources are
+// found.
 func resourceDir() string {
 	root, err := osext.ExecutableFolder()
 	if err == nil {
-		if _, err = os.Stat(root + "/templates"); err == nil {
+		if _, err = os.Stat(root + "/static"); err == nil {
 			return root
 		}
 	}
-	// didn't find <dir of executable>/templates
+	// didn't find <dir of executable>/static
 	p, err := build.Default.Import(basePkg, "", build.FindOnly)
 	if err != nil {
 		panic("Couldn't find lush resource files")
@@ -98,7 +93,6 @@ func newServer() *server {
 		session: liblush.NewSession(),
 		root:    root,
 		web:     web.NewServer(),
-		tmplts:  tmplts,
 	}
 	s.httpHandler = s.web
 	s.web.Config.StaticDirs = []string{root + "/static"}
@@ -187,6 +181,4 @@ func init() {
 		log.Print("Failed to add ./bin to the PATH: ", err)
 		// continue
 	}
-	tmplts = template.New("lushhtmltemplates")
-	tmplts = template.Must(tmplts.ParseGlob(root + "/templates/*.html"))
 }
