@@ -24,11 +24,12 @@ package liblush
 
 import (
 	"os"
+	"strconv"
 )
 
 const GETCMDWD_SUPPORTED = true
 
 func getCmdWd(c *cmd) (string, error) {
 	pid := c.execCmd.Process.Pid
-	return os.ReadLink("/proc/" + pid + "/cwd")
+	return os.Readlink("/proc/" + strconv.Itoa(pid) + "/cwd")
 }
