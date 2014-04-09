@@ -300,7 +300,11 @@ func TestCommandCwd(t *testing.T) {
 }
 
 // Matches output from pwd in UNIX (/) or Windows (C:\) root
-var rootPathRegexp = regexp.MustCompile(`^([c-zC-Z]:\\|/)\n$`)
+var rootPathRegexp = regexp.MustCompile(`^([c-zC-Z]:\\|/)\n?$`)
+
+func isRootPath(b []byte) bool {
+	return rootPathRegexp.Match(b)
+}
 
 func TestCommandSetStartWd(t *testing.T) {
 	var b bytes.Buffer
@@ -312,9 +316,34 @@ func TestCommandSetStartWd(t *testing.T) {
 		t.Fatalf("error running command: %v", err)
 	}
 	if !c.Status().Success() {
-		t.Errorf("unexpected status: %#v", c.Status())
+		t.Fatalf("unexpected status: %#v", c.Status())
 	}
-	if !rootPathRegexp.Match(b.Bytes()) {
+	if !isRootPath(b.Bytes()) {
 		t.Errorf("unexpected directory: %q", b.String())
+	}
+}
+
+func TestCommandStartWd(t *testing.T) {
+	var b bytes.Buffer
+	c := newcmdPanicOnError(0, exec.Command("pwd"))
+	c.Stdout().SetListener(&b)
+	// change directory of test process
+	err := os.Chdir("/")
+	if err != nil {
+		t.Fatalf("Couldn't change directory of test process:", err)
+	}
+	err = c.Run()
+	if err != nil {
+		t.Fatalf("error running command: %v", err)
+	}
+	if !c.Status().Success() {
+		t.Fatalf("unexpected status: %#v", c.Status())
+	}
+	if !isRootPath(b.Bytes()) {
+		t.Errorf("unexpected directory: %q", b.String())
+	}
+	// see if StartWd picked up un our os.Chdir
+	if !isRootPath([]byte(c.StartWd())) {
+		t.Errorf("command start dir not in root: %q", c.StartWd())
 	}
 }

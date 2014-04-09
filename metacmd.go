@@ -42,6 +42,8 @@ type cmdmetadata struct {
 	Name             string        `json:"name"`
 	Cmd              string        `json:"cmd"`
 	Args             []string      `json:"args"`
+	Cwd              string        `json:"cwd"`
+	StartWd          string        `json:"startwd"`
 	Status           statusJson    `json:"status"`
 	StdouttoId       liblush.CmdId `json:"stdoutto,omitempty"`
 	StderrtoId       liblush.CmdId `json:"stderrto,omitempty"`
@@ -112,6 +114,11 @@ func (mc metacmd) Metadata() (data cmdmetadata, err error) {
 		data.Cmd = argv[0]
 		data.Args = argv[1:]
 	}
+	data.Cwd, err = mc.Cwd()
+	if err != nil {
+		data.Cwd = fmt.Sprintf("<%v>", err)
+	}
+	data.StartWd = mc.StartWd()
 	data.UserData = mc.UserData()
 	data.StdoutScrollback = mc.Stdout().Scrollback().Size()
 	data.StderrScrollback = mc.Stderr().Scrollback().Size()

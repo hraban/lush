@@ -136,9 +136,9 @@ define(["jquery",
         if (!U.isInt(argId)) {
             throw "Expected integer argument to _ensureArgInput";
         }
-        var $arg = $('#argv input[name=arg' + argId + ']');
+        var $arg = $('#cmdedit_argv input[name=arg' + argId + ']');
         if ($arg.length === 0) {
-            var $arg = $('<input name=arg' + argId + '>').appendTo('#argv');
+            var $arg = $('<input name=arg' + argId + '>').appendTo('#cmdedit_argv');
         }
         return $arg[0];
     };
@@ -157,8 +157,25 @@ define(["jquery",
     };
 
     CmdConfig.prototype._disassocEdit = function () {
-        $('fieldset#argv input[name=arg1] ~ input[name^=arg]').remove();
+        $('fieldset#cmdedit_argv input[name=arg1] ~ input[name^=arg]').remove();
         $('#cmdedit input').val('');
+    };
+
+    CmdConfig.prototype._assocSummary = function () {
+        var conf = this;
+        var cmd = conf._cmd;
+        $(cmd).on('updated.args.cmd.cmdconfig', function () {
+            var cmd = this;
+            $('#cmdsummary_argv').text(cmd.getArgv().join(" "));
+        });
+        $(cmd).on('updated.cwd.cmdconfig', function () {
+            var cmd = this;
+            $('#cmdsummary_cwd').text(cmd.cwd);
+        });
+        $(cmd).on('updated.startwd.cmdconfig', function () {
+            var cmd = this;
+            $('#cmdsummary_startwd').text(cmd.startwd);
+        });
     };
 
     // initialize the edit tab for the newly associated command
@@ -268,6 +285,7 @@ define(["jquery",
         var conf = this;
         conf.disassociate();
         conf._cmd = cmd;
+        conf._assocSummary();
         conf._assocEdit();
         conf._assocStdout();
         conf._assocStderr();

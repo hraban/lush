@@ -52,6 +52,7 @@ func (s *cmdstatus) exitNow() {
 	t := time.Now()
 	s.exited = &t
 	s.changed()
+	// Status won't change anymore
 	s.listeners = nil
 }
 
@@ -94,6 +95,8 @@ func (s *cmdstatus) changed() {
 	for i := 0; i < len(s.listeners); i++ {
 		err := s.listeners[i](s)
 		if err != nil {
+			log.Printf(
+				"Status update notification listener returned error: %v", err)
 			s.listeners = append(s.listeners[:i], s.listeners[i+1:]...)
 			i--
 		}

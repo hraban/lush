@@ -87,15 +87,39 @@ SOFTWARE.
       <div id=cmddetailarea_associated>
 
         <ul>
+          <li><a href="#cmdsummary">summary</a></li>
           <li><a href="#cmdedit">edit</a></li>
           <li><a href="#cmdstdout">stdout</a></li>
           <li><a href="#cmdstderr">stderr</a></li>
           <li><a href="#cmdhelp">help</a></li>
         </ul>
 
+        <div id=cmdsummary>
+          <table>
+            <tfoot>
+              <td colspan=2>
+                <sup>1</sup> Working directory at startup time, not updated live
+              </td>
+            </tfoot>
+            <tbody>
+              <tr>
+                <th>argv</th>
+                <td><tt id=cmdsummary_argv></tt></td>
+              </tr>
+              <tr>
+                <th>cwd</th>
+                <td><tt id=cmdsummary_cwd></tt></td>
+              </tr>
+                <th>starting wd</th>
+                <td><tt id=cmdsummary_startwd></tt></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <div id=cmdedit>
           <form>
-          <fieldset id=argv>
+          <fieldset id=cmdedit_argv>
             name <input name=cmd><br>
             args: <input size=10 name=arg1>
           </fieldset>
@@ -175,6 +199,7 @@ the .children node of another command when it becomes its child, leaving this
 
 
 <script>
+var mydebug = 1234;
 var cmds_init = {
 {{range .}}
 {{.Id}}: {{.Metadata}},

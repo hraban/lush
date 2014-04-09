@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"sync"
@@ -121,6 +122,15 @@ func (c *cmd) Start() error {
 		p = c.execCmd.Args[0]
 	}
 	c.execCmd.Path = p
+	if c.StartWd() == "" {
+		// No explicit starting dir: starting dir of shell process
+		cwd, err := os.Getwd()
+		if err != nil {
+			log.Print("Failed to obtain working directory of shell")
+		} else {
+			c.SetStartWd(cwd)
+		}
+	}
 	err = c.execCmd.Start()
 	if err != nil {
 		c.status.setErr(err)

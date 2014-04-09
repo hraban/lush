@@ -147,6 +147,20 @@ func wseventNew(s *server, optionsJSON string) error {
 			Value:    jsonstatus,
 		})
 	})
+	// Starting a command changes its StartWd if none was explicitly set (which
+	// is always because SetStartWd is not implemented yet). There are better
+	// places to handle this, but this is already pretty good.
+	c.Status().NotifyChange(func(status liblush.CmdStatus) error {
+		// startwd only changes when it starts
+		if status.Started() != nil && status.Exited() == nil {
+			return notifyPropertyUpdate(&s.ctrlclients, getPropResponse{
+				Objname:  cmdId2Json(c.Id()),
+				Propname: "startwd",
+				Value:    c.StartWd(),
+			})
+		}
+		return nil
+	})
 	return nil
 }
 
@@ -465,6 +479,15 @@ func wseventGetprop(s *server, reqstr string) error {
 			r.Value = c.Argv()[0]
 		case "args":
 			r.Value = c.Argv()[1:]
+		case "cwd":
+			r.Value, err = c.Cwd()
+			// TODO: This is not a client error, it should not disconnect the
+			// client but just inform it of a server-side problem
+			if err != nil {
+				return fmt.Errorf("Error getting working directory: %v", err)
+			}
+		case "startwd":
+			r.Value = c.StartWd()
 		case "status":
 			r.Value = cmdstatus2json(c.Status())
 		case "userdata":
