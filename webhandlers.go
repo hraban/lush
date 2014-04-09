@@ -187,28 +187,6 @@ func handleGetNewNames(ctx *web.Context) error {
 	return err
 }
 
-func handleWsStream(ctx *web.Context, idstr, streamname string) error {
-	id, _ := liblush.ParseCmdId(idstr)
-	s := ctx.User.(*server)
-	c := s.session.GetCommand(id)
-	if c == nil {
-		return web.WebError{404, "no such command: " + idstr}
-	}
-	var stream liblush.OutStream
-	switch streamname {
-	case "stdout":
-		stream = c.Stdout()
-	case "stderr":
-		stream = c.Stderr()
-	default:
-		return web.WebError{400, "No such stream: " + streamname}
-	}
-	stream.Peeker().AddWriter(ctx.WebsockConn)
-	buf := make([]byte, 1)
-	ctx.WebsockConn.Read(buf)
-	return nil
-}
-
 func handlePostChdir(ctx *web.Context) error {
 	s := ctx.User.(*server)
 	return s.session.Chdir(ctx.Params["dir"])
@@ -308,7 +286,6 @@ func init() {
 		s.web.Get(`/cmdids.json`, handleGetCmdidsJson)
 		s.web.Get(`/(\d+).json`, handleGetCmdJson)
 		s.web.Websocket(`/ctrl`, handleWsCtrl)
-		s.web.Websocket(`/(\d+)/stream/(\w+).bin`, handleWsStream)
 		// only master
 		s.web.Post(`/(\d+)/send`, handlePostSend)
 		s.web.Post(`/(\d+)/close`, handlePostClose)
