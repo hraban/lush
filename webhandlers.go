@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -98,78 +99,26 @@ func getCmdWeb(s liblush.Session, idstr string) (liblush.Cmd, error) {
 	return c, nil
 }
 
-func handleGetRoot(ctx *web.Context) error {
+func handleGetCmdidsJson(ctx *web.Context) error {
 	s := ctx.User.(*server)
-	ch := make(chan metacmd)
-	go func() {
-		for _, id := range s.session.GetCommandIds() {
-			ch <- metacmd{s.session.GetCommand(id)}
-		}
-		close(ch)
-	}()
-	err := s.tmplts.ExecuteTemplate(ctx, "/", ch)
-	return err
+	ids := s.session.GetCommandIds()
+	ctx.ContentType("json")
+	return json.NewEncoder(ctx).Encode(ids)
 }
 
-func handleGetCmd(ctx *web.Context, idstr string) error {
-	type cmdctx struct {
-		Cmd          liblush.Cmd
-		Stdout       string
-		Stderr       string
-		Connectables chan liblush.Cmd
-	}
+func handleGetCmdJson(ctx *web.Context, idstr string) error {
 	id, _ := liblush.ParseCmdId(idstr)
 	s := ctx.User.(*server)
 	c := s.session.GetCommand(id)
 	if c == nil {
 		return web.WebError{404, "no such command: " + idstr}
 	}
-	stdout := make([]byte, 1000)
-	stderr := make([]byte, 1000)
-	n := c.Stdout().Scrollback().Last(stdout)
-	stdout = stdout[:n]
-	n = c.Stderr().Scrollback().Last(stderr)
-	stderr = stderr[:n]
-	ch := make(chan liblush.Cmd)
-	go func() {
-		for _, id := range s.session.GetCommandIds() {
-			other := s.session.GetCommand(id)
-			if c.Id() != other.Id() && other.Status().Started() == nil {
-				ch <- other
-			}
-		}
-		close(ch)
-	}()
-	tmplCtx := cmdctx{
-		Cmd:          c,
-		Stdout:       string(stdout),
-		Stderr:       string(stderr),
-		Connectables: ch,
+	md, err := metacmd{c}.Metadata()
+	if err != nil {
+		return err
 	}
-	err := s.tmplts.ExecuteTemplate(ctx, "cmd", tmplCtx)
-	return err
-}
-
-func handleGetCmdInfo(ctx *web.Context, idstr string) error {
-	id, _ := liblush.ParseCmdId(idstr)
-	s := ctx.User.(*server)
-	c := s.session.GetCommand(id)
-	if c == nil {
-		return web.WebError{404, "no such command: " + idstr}
-	}
-	ctx.Header().Set("content-type", "application/json")
-	enc := json.NewEncoder(ctx)
-	var info = struct {
-		Started, Exited *time.Time
-		Error           string `json:",omitempty"`
-	}{
-		Started: c.Status().Started(),
-		Exited:  c.Status().Exited(),
-	}
-	if cerr := c.Status().Err(); cerr != nil {
-		info.Error = cerr.Error()
-	}
-	return enc.Encode(info)
+	ctx.ContentType("json")
+	return json.NewEncoder(ctx).Encode(md)
 }
 
 func handlePostSend(ctx *web.Context, idstr string) error {
@@ -236,28 +185,6 @@ func handleGetNewNames(ctx *web.Context) error {
 	enc := json.NewEncoder(ctx)
 	err := enc.Encode(bins)
 	return err
-}
-
-func handleWsStream(ctx *web.Context, idstr, streamname string) error {
-	id, _ := liblush.ParseCmdId(idstr)
-	s := ctx.User.(*server)
-	c := s.session.GetCommand(id)
-	if c == nil {
-		return web.WebError{404, "no such command: " + idstr}
-	}
-	var stream liblush.OutStream
-	switch streamname {
-	case "stdout":
-		stream = c.Stdout()
-	case "stderr":
-		stream = c.Stderr()
-	default:
-		return web.WebError{400, "No such stream: " + streamname}
-	}
-	stream.Peeker().AddWriter(ctx.WebsockConn)
-	buf := make([]byte, 1)
-	ctx.WebsockConn.Read(buf)
-	return nil
 }
 
 func handlePostChdir(ctx *web.Context) error {
@@ -355,11 +282,10 @@ func init() {
 	serverinitializers = append(serverinitializers, func(s *server) {
 		s.userdata = map[string]string{}
 		// public handlers
-		s.web.Get(`/`, handleGetRoot)
-		s.web.Get(`/(\d+)/`, handleGetCmd)
-		s.web.Get(`/(\d+)/info.json`, handleGetCmdInfo)
+		s.web.Get(`/`, http.FileServer(http.Dir("static")))
+		s.web.Get(`/cmdids.json`, handleGetCmdidsJson)
+		s.web.Get(`/(\d+).json`, handleGetCmdJson)
 		s.web.Websocket(`/ctrl`, handleWsCtrl)
-		s.web.Websocket(`/(\d+)/stream/(\w+).bin`, handleWsStream)
 		// only master
 		s.web.Post(`/(\d+)/send`, handlePostSend)
 		s.web.Post(`/(\d+)/close`, handlePostClose)
