@@ -121,67 +121,6 @@ func handleGetCmdJson(ctx *web.Context, idstr string) error {
 	return json.NewEncoder(ctx).Encode(md)
 }
 
-func handleGetCmd(ctx *web.Context, idstr string) error {
-	type cmdctx struct {
-		Cmd          liblush.Cmd
-		Stdout       string
-		Stderr       string
-		Connectables chan liblush.Cmd
-	}
-	id, _ := liblush.ParseCmdId(idstr)
-	s := ctx.User.(*server)
-	c := s.session.GetCommand(id)
-	if c == nil {
-		return web.WebError{404, "no such command: " + idstr}
-	}
-	stdout := make([]byte, 1000)
-	stderr := make([]byte, 1000)
-	n := c.Stdout().Scrollback().Last(stdout)
-	stdout = stdout[:n]
-	n = c.Stderr().Scrollback().Last(stderr)
-	stderr = stderr[:n]
-	ch := make(chan liblush.Cmd)
-	go func() {
-		for _, id := range s.session.GetCommandIds() {
-			other := s.session.GetCommand(id)
-			if c.Id() != other.Id() && other.Status().Started() == nil {
-				ch <- other
-			}
-		}
-		close(ch)
-	}()
-	tmplCtx := cmdctx{
-		Cmd:          c,
-		Stdout:       string(stdout),
-		Stderr:       string(stderr),
-		Connectables: ch,
-	}
-	err := s.tmplts.ExecuteTemplate(ctx, "cmd", tmplCtx)
-	return err
-}
-
-func handleGetCmdInfo(ctx *web.Context, idstr string) error {
-	id, _ := liblush.ParseCmdId(idstr)
-	s := ctx.User.(*server)
-	c := s.session.GetCommand(id)
-	if c == nil {
-		return web.WebError{404, "no such command: " + idstr}
-	}
-	ctx.Header().Set("content-type", "application/json")
-	enc := json.NewEncoder(ctx)
-	var info = struct {
-		Started, Exited *time.Time
-		Error           string `json:",omitempty"`
-	}{
-		Started: c.Status().Started(),
-		Exited:  c.Status().Exited(),
-	}
-	if cerr := c.Status().Err(); cerr != nil {
-		info.Error = cerr.Error()
-	}
-	return enc.Encode(info)
-}
-
 func handlePostSend(ctx *web.Context, idstr string) error {
 	if err := errorIfNotMaster(ctx); err != nil {
 		return err
@@ -368,8 +307,6 @@ func init() {
 		s.web.Get(`/`, http.FileServer(http.Dir("static")))
 		s.web.Get(`/cmdids.json`, handleGetCmdidsJson)
 		s.web.Get(`/(\d+).json`, handleGetCmdJson)
-		s.web.Get(`/(\d+)/`, handleGetCmd)
-		s.web.Get(`/(\d+)/info.json`, handleGetCmdInfo)
 		s.web.Websocket(`/ctrl`, handleWsCtrl)
 		s.web.Websocket(`/(\d+)/stream/(\w+).bin`, handleWsStream)
 		// only master
