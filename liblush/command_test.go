@@ -276,18 +276,19 @@ func TestCommandCwd(t *testing.T) {
 	if !GETCMDWD_SUPPORTED {
 		t.Skip("getCmdCwd not supported on this platform")
 	}
-	c := echoCmd("testing working directory")
-	err := c.Run()
+	c := newcmdPanicOnError(0, exec.Command("sleep", "1"))
+	err := c.Start()
 	if err != nil {
-		t.Fatalf("error running command: %v", err)
-	}
-	if !c.Status().Success() {
-		t.Errorf("unexpected status: %#v", c.Status())
+		t.Fatalf("error starting command: %v", err)
 	}
 	// the actual test:
 	testcwd, err := c.Cwd()
 	if err != nil {
-		t.Fatal("Getting working directory failed:", err)
+		t.Errorf("Getting working directory failed: %v", err)
+	}
+	err = c.Wait()
+	if err != nil {
+		t.Errorf("error running command: %v", err)
 	}
 	mycwd, err := os.Getwd()
 	if err != nil {

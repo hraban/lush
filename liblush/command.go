@@ -89,6 +89,12 @@ func (c *cmd) SetArgv(argv []string) error {
 }
 
 func (c *cmd) Cwd() (string, error) {
+	// This looks racey but it's actually just a courtesy: if by race this test
+	// doesn't trigger but the command stops just after it, no problem; you'll
+	// just get a more obscure error message.
+	if !isRunning(c) {
+		return "", errors.New("command not running")
+	}
 	return getCmdWd(c)
 }
 
