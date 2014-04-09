@@ -166,7 +166,8 @@ div.cmdwidget {
 }
 
 div.cmdwidget.selected {
-    background-color: rgb(255, 206, 187);
+    border-color: rgb(187, 54, 2);
+    border-width: medium;
 }
 
 /* Stack command widgets horizontally. Works better than display: inline-block; */
