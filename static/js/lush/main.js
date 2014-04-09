@@ -168,6 +168,9 @@ define(["jquery",
                  path,
                  U) {
 
+    // Reference to the history widget (needed for command initialization)
+    var history_widget;
+
     // print text to this terminal's output and mark it as coming from this
     // command. sets a class in the div that holds the output in the terminal.
     var termPrintlnCmd = function (term, sysid, data) {
@@ -277,38 +280,101 @@ define(["jquery",
         return false;
     }
 
-    // complete initialization of a command given its nid. Expects
-    // initialization data for this command and all possible child commands to
-    // be in cmds_init. will also init all child commands.
-    function initCommand(nid, historyw) {
-        if (typeof nid !== "number") {
-            throw "nid must be a number";
+    // Complete initialization of a command given its initialization data.
+    // Throws an exception if its children are not initialized.
+    function initSingleCommandRaw(init) {
+        if (!$.isPlainObject(init)) {
+            throw "init data must be a plain object";
         }
-        if (historyw === undefined) {
-            throw "history widget must be defined";
-        }
-        var init = cmds_init[nid];
-        if (init === undefined) {
-            throw "No init data available for cmd " + nid;
+        if (history_widget === undefined) {
+            throw "history widget must be defined before initialization";
         }
         // init children first
         if (init.stdoutto && !(init.stdoutto in cmds)) {
-            initCommand(init.stdoutto, historyw);
+            throw "initializing " + init.nid + " before its stdout child";
         }
         if (init.stderrto && !(init.stderrto in cmds)) {
-            initCommand(init.stderrto, historyw);
+            throw "initializing " + init.nid + " before its stderr child";
         }
-        delete cmds_init[nid];
         var cmd = new Command(globals.ctrl, init, globals.moi);
-        cmds[nid] = cmd;
+        cmds[cmd.nid] = cmd;
         var widget = new Widget(cmd, globals.ctrl);
-        historyw.addCommand(cmd);
+        history_widget.addCommand(cmd);
         // some UI parts are not initialized, just hooked into updated handlers.
         // TODO: NOT MY PROBLEM -- or so I wish :( that should change
         $(cmd).trigger('updated', ['init']);
         $(cmd).trigger('archival', [!!cmd.userdata.archived]);
         return cmd;
-    };
+    }
+
+    // Get this command's init data synchronously
+    function getInitData(nid) {
+        var init;
+        var err;
+        var url = '/' + nid + '.json'
+        $.ajax(url, {
+            async: false,
+            success: function (data) {
+                init = data;
+            },
+            error: function (_, textStatus, errorThrown) {
+                console.log("Retrieving " + url + " failed: " + textStatus);
+                err = errorThrown || textStatus;
+            },
+        });
+        if (undefined !== err) {
+            throw err;
+        }
+        return init;
+    }
+
+    // Third argument is the init data. If not supplied it is fetched from the
+    // server. If command is already initialized this is a NOP.
+    function initCommandAndChildren(nid, init) {
+        if (nid in cmds) {
+            return cmds[nid];
+        }
+        if (!$.isPlainObject(init)) {
+            init = getInitData(nid);
+        }
+        if (init.stdoutto) {
+            initCommandAndChildren(init.stdoutto);
+        }
+        if (init.stderrto) {
+            initCommandAndChildren(init.stderrto);
+        }
+        return initSingleCommandRaw(init);
+    }
+
+    function initCommands(historyw) {
+        var nids;
+        var err;
+        $.ajax('/cmdids.json', {
+            async: false, // TODO: async
+            success: function (data) {
+                if (!$.isArray(data)) {
+                    console.log("Expected array from /nids.json, got: " +
+                        JSON.stringify(data));
+                    err = "Received illegal response from server";
+                    return;
+                }
+                nids = data;
+            },
+            error: function (_, textStatus, errorThrown) {
+                console.log("Retrieving /nids.json failed: " + textStatus);
+                err = errorThrown || textStatus;
+            },
+        });
+        if (undefined !== err) {
+            throw err;
+        }
+        nids = nids.sort();
+        // build the command objects without triggering update handlers
+        nids.forEach(function (nid) {
+            nid = +nid;
+            initCommandAndChildren(nid, historyw);
+        });
+    }
 
     function selectCommand(nid, confwin) {
         $('.selected').removeClass('selected');
@@ -347,12 +413,8 @@ define(["jquery",
     }
 
     // the server said that there is a new command
-    function processNewCmdEvent(ctrl, init, historyw) {
-        if (!(historyw instanceof HistoryWidget)) {
-            throw "last argument to processNewCmdEvent must be a HistoryWidget";
-        }
-        cmds_init[init.nid] = init;
-        var cmd = initCommand(init.nid, historyw);
+    function processNewCmdEvent(ctrl, init) {
+        var cmd = initCommandAndChildren(init.nid, init);
         if (cmd.imadethis()) {
             // i made this!
             // capture all stdout and stderr to terminal
@@ -384,6 +446,7 @@ define(["jquery",
         var term = terminal(processCmd, ctrl);
         globals.term = term;
         var confwin = new CmdConfig();
+        history_widget = new HistoryWidget();
         // turn DOM node's ID into a numerical one (strip off leading "cmd")
         function getNidFromNode(node) {
             return +(/\d+$/.exec(node.id)[0]);
@@ -453,32 +516,16 @@ define(["jquery",
             var msg = JSON.parse(json);
             term.error(msg);
         });
-        var historyw = new HistoryWidget();
-        // build the command objects without triggering update handlers
-        $.each(cmds_init, function (nid) {
-            nid = +nid;
-            // parents automatically init children, don't reinit
-            if (nid in cmds_init) {
-                initCommand(nid, historyw);
-            }
-        });
-        jsPlumb.importDefaults({
-            ConnectionsDetachable: false,
-            // Put all connectors at z-index 3 and endpoints at 4
-            ConnectorZIndex: 3,
-        });
-        jsPlumb.bind("beforeDrop", jsPlumbBeforeDropHandler);
         $('button#newcmd').click(function () {
             // create an empty command
             processCmd({});
         });
         $('.sortable').disableSelection().sortable();
         // a new command has been created
-        $(ctrl).on("newcmd", {historyw: historyw}, function (e, cmdjson) {
+        $(ctrl).on("newcmd", function (e, cmdjson) {
             var ctrl = this;
-            var historyw = e.data.historyw;
             var init = JSON.parse(cmdjson);
-            processNewCmdEvent(ctrl, init, historyw);
+            processNewCmdEvent(ctrl, init);
         });
         // the property of some object was changed
         $(ctrl).on("property", function (_, propdataJson) {
@@ -544,6 +591,13 @@ define(["jquery",
         $("#left").tabsBottom();
         // I hate this class
         $('.ui-widget').removeClass('ui-widget');
+        initCommands();
+        jsPlumb.importDefaults({
+            ConnectionsDetachable: false,
+            // Put all connectors at z-index 3 and endpoints at 4
+            ConnectorZIndex: 3,
+        });
+        jsPlumb.bind("beforeDrop", jsPlumbBeforeDropHandler);
         $('body').attr('data-status', 'ok');
     }
 

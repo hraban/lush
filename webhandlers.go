@@ -111,6 +111,28 @@ func handleGetRoot(ctx *web.Context) error {
 	return err
 }
 
+func handleGetCmdidsJson(ctx *web.Context) error {
+	s := ctx.User.(*server)
+	ids := s.session.GetCommandIds()
+	ctx.ContentType("json")
+	return json.NewEncoder(ctx).Encode(ids)
+}
+
+func handleGetCmdJson(ctx *web.Context, idstr string) error {
+	id, _ := liblush.ParseCmdId(idstr)
+	s := ctx.User.(*server)
+	c := s.session.GetCommand(id)
+	if c == nil {
+		return web.WebError{404, "no such command: " + idstr}
+	}
+	md, err := metacmd{c}.Metadata()
+	if err != nil {
+		return err
+	}
+	ctx.ContentType("json")
+	return json.NewEncoder(ctx).Encode(md)
+}
+
 func handleGetCmd(ctx *web.Context, idstr string) error {
 	type cmdctx struct {
 		Cmd          liblush.Cmd
@@ -356,6 +378,8 @@ func init() {
 		s.userdata = map[string]string{}
 		// public handlers
 		s.web.Get(`/`, handleGetRoot)
+		s.web.Get(`/cmdids.json`, handleGetCmdidsJson)
+		s.web.Get(`/(\d+).json`, handleGetCmdJson)
 		s.web.Get(`/(\d+)/`, handleGetCmd)
 		s.web.Get(`/(\d+)/info.json`, handleGetCmdInfo)
 		s.web.Websocket(`/ctrl`, handleWsCtrl)
