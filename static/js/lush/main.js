@@ -368,10 +368,17 @@ define(["jquery",
         if (undefined !== err) {
             throw err;
         }
-        nids = nids.sort();
+        // oh my god javascript-dev what are you guys doing?
+        nids = nids.sort(function (a, b) {
+            if (a < b) {
+                return -1;
+            } else if (a > b) {
+                return 1;
+            }
+            return 0;
+        });
         // build the command objects without triggering update handlers
         nids.forEach(function (nid) {
-            nid = +nid;
             initCommandAndChildren(nid, historyw);
         });
     }
