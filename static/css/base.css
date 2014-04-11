@@ -133,6 +133,7 @@ div#cmddetailarea_associated > div {
 
 #terminal {
     min-height: 500px; /* TODO: min-height = viewport height */
+    /* why 494? because it looks okay in my browser icw the scroll bar. */
     width: 494px;
 }
 
