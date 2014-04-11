@@ -98,6 +98,7 @@ define(["lush/Ast",
                 // undo internal escape representation
                 ctx.ast.argv.push(Parser.Unescape(ctx.ast._newarg));
             }
+            ctx.ast.hasglob = false;
             ctx.ast._newarg = '';
         };
         // encountered a | character
