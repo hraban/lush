@@ -51,6 +51,10 @@ define(["jquery",
         return text;
     }
 
+    function scrollTerminalToBottom() {
+        U.scrollToBottom('terminalwrap');
+    }
+
     // Print text to this terminal. Ensures the text always ends in newline.
     // defined as a jQuery extension because the terminal object is actually a
     // jquery object (you know, what with it being a jquery plugin and all).
@@ -61,7 +65,7 @@ define(["jquery",
                 finalize: finalize,
                 raw: true,
             });
-            U.scrollToBottom();
+            scrollTerminalToBottom();
         };
     }
 
@@ -101,14 +105,15 @@ define(["jquery",
         var latestParseError;
         var $term = $('#terminal').terminal(function (x) {
             if (x.trim() == "") {
-                U.scrollToBottom();
+                scrollTerminalToBottom();
                 return;
             }
             cli.setprompt(x).done(function () {
                 cli.commit();
+                scrollTerminalToBottom();
             }).fail(function (e) {
                 $term.error('Parse error: ' + e.message);
-                U.scrollToBottom();
+                scrollTerminalToBottom();
             });
         }, {
             greetings: 'Welcome to Luyat shell',
@@ -152,7 +157,7 @@ define(["jquery",
         });
         cli.onerror = function (msg) {
             $term.error(msg);
-            U.scrollToBottom();
+            scrollTerminalToBottom();
         };
         cli.onUpdatedPrompt = function (txt) {
             // hack to prevent the onCommandChange handler from sending this

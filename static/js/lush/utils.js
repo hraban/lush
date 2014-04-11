@@ -271,12 +271,15 @@ noConcurrentCalls: function noConcurrentCalls(f) {
     };
 },
 
-scrollToBottom: function () {
-    var el = document.getElementById('bottomofpage');
+scrollToBottom: function (id) {
+    if (undefined === id) {
+        throw "scrollToBottom() needs the id of a container div to scroll";
+    }
+    var el = document.getElementById(id);
     if (el) {
-        el.scrollIntoView();
+        el.scrollTop = el.scrollHeight;
     } else {
-        throw "scrollToBottom() needs an element with id 'bottomofpage'";
+        throw "no such element";
     }
 },
 

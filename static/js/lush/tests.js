@@ -228,6 +228,21 @@ define(["jquery",
         // TODO: expand
     });
 
+    test("parser: globbing", function () {
+        function glob(pattern) {
+            if (pattern !== '*.c') {
+                ok(false, "unexpected glob pattern: " + pattern);
+                return [];
+            }
+            return ["foo.c", "bar.c"];
+        }
+        var parser = new Parser(glob);
+        parser.parse('ls *.c Makefile');
+        ok(parser.ctx.firstast instanceof Ast, "parser yields an AST");
+        var ast = parser.ctx.firstast;
+        deepEqual(ast.argv, ["ls", "foo.c", "bar.c", "Makefile"], "glob expanded in-place");
+    });
+
     // Mock (websocket) control line to server
     function buildMockCtrl(handlers) {
         return {
