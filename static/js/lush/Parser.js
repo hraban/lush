@@ -35,7 +35,7 @@ define(["lush/Ast",
     // list of files matching a pattern. if showhidden is false this excludes files
     // starting with a dot. if showhidden is not specified this only shows those
     // files if the pattern itself starts with a dot.
-    function glob(pattern, showhidden) {
+    function defaultGlob(pattern, showhidden) {
         var files = [];
         $.ajax('/files.json', {
             data: {pattern: pattern},
@@ -56,9 +56,13 @@ define(["lush/Ast",
     // Simple interface, "parse everything at once" parser. No callbacks, no
     // state between calls, just call .parse("your command string"), and access
     // .ctx.firstast. or .ctx.ast for the last node.
-    var Parser = function () {
+    var Parser = function (globFunction) {
         var parser = this;
+        if (globFunction === undefined) {
+            globFunction = defaultGlob;
+        }
         var lexer = new Lexer();
+        parser.glob = globFunction;
         parser._lexer = lexer;
         parser._ignoreErrors = false;
         // public parser state (TODO: make direct members)
@@ -87,7 +91,7 @@ define(["lush/Ast",
         };
         lexer.onboundary = function () {
             if (ctx.ast.hasglob) {
-                var matches = glob(ctx.ast._newarg);
+                var matches = parser.glob(ctx.ast._newarg);
                 // TODO: error if matches is empty
                 ctx.ast.argv.push.apply(ctx.ast.argv, matches);
             } else {
