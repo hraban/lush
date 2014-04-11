@@ -40,8 +40,23 @@ distclean:
 lush-%-windows-386:
 	@# This is necessary for go to look for liblush in the same dir
 	git archive --prefix $@/src/github.com/hraban/lush/ $* | tar x
-	cp -n Makefile $@/src/github.com/hraban/lush/
+	@# If no Makefile exists, install a known compatible version
+	git show feabd25279d5ccbc010efd562c5c68e2588df958:Makefile > "$@"/src/github.com/hraban/lush/Makefile.1
+	cp -n "$@"/src/github.com/hraban/lush/Makefile.1 "$@"/src/github.com/hraban/lush/Makefile
 	GOPATH=$$PWD/$@:$$GOPATH $(MAKE) -C $@/src/github.com/hraban/lush/ build-windows-386
+	$(MAKE) -C $@/src/github.com/hraban/lush/ distclean
+	@# Move all remaining files back to top level
+	find $@/src/github.com/hraban/lush/ -mindepth 1 -maxdepth 1 -exec mv -t "$@" '{}' \+
+	rm -rf $@/src
+	@# TODO: GNU tools for windows
+
+lush-%-windows-amd64:
+	@# This is necessary for go to look for liblush in the same dir
+	git archive --prefix $@/src/github.com/hraban/lush/ $* | tar x
+	@# If no Makefile exists, install a known compatible version
+	git show feabd25279d5ccbc010efd562c5c68e2588df958:Makefile > "$@"/src/github.com/hraban/lush/Makefile.1
+	cp -n "$@"/src/github.com/hraban/lush/Makefile.1 "$@"/src/github.com/hraban/lush/Makefile
+	GOPATH=$$PWD/$@:$$GOPATH $(MAKE) -C $@/src/github.com/hraban/lush/ build-windows-amd64
 	$(MAKE) -C $@/src/github.com/hraban/lush/ distclean
 	@# Move all remaining files back to top level
 	find $@/src/github.com/hraban/lush/ -mindepth 1 -maxdepth 1 -exec mv -t "$@" '{}' \+
@@ -51,7 +66,8 @@ lush-%-windows-386:
 lush-%-darwin-amd64:
 	@# This is necessary for go to look for liblush in the same dir
 	git archive --prefix $@/src/github.com/hraban/lush/ $* | tar x
-	cp -n Makefile $@/src/github.com/hraban/lush/
+	git show feabd25279d5ccbc010efd562c5c68e2588df958:Makefile > "$@"/src/github.com/hraban/lush/Makefile.1
+	cp -n "$@"/src/github.com/hraban/lush/Makefile.1 "$@"/src/github.com/hraban/lush/Makefile
 	GOPATH=$$PWD/$@:$$GOPATH $(MAKE) -C $@/src/github.com/hraban/lush/ build-darwin-amd64
 	$(MAKE) -C $@/src/github.com/hraban/lush/ distclean
 	@# Move all remaining files back to top level
@@ -61,7 +77,8 @@ lush-%-darwin-amd64:
 lush-%-linux-amd64:
 	@# This is necessary for go to look for liblush in the same dir
 	git archive --prefix $@/src/github.com/hraban/lush/ $* | tar x
-	cp -n Makefile $@/src/github.com/hraban/lush/
+	git show feabd25279d5ccbc010efd562c5c68e2588df958:Makefile > "$@"/src/github.com/hraban/lush/Makefile.1
+	cp -n "$@"/src/github.com/hraban/lush/Makefile.1 "$@"/src/github.com/hraban/lush/Makefile
 	GOPATH=$$PWD/$@:$$GOPATH $(MAKE) -C $@/src/github.com/hraban/lush/ build-linux-amd64
 	$(MAKE) -C $@/src/github.com/hraban/lush/ distclean
 	@# Move all remaining files back to top level
@@ -71,7 +88,8 @@ lush-%-linux-amd64:
 lush-%-linux-386:
 	@# This is necessary for go to look for liblush in the same dir
 	git archive --prefix $@/src/github.com/hraban/lush/ $* | tar x
-	cp -n Makefile $@/src/github.com/hraban/lush/
+	git show feabd25279d5ccbc010efd562c5c68e2588df958:Makefile > "$@"/src/github.com/hraban/lush/Makefile.1
+	cp -n "$@"/src/github.com/hraban/lush/Makefile.1 "$@"/src/github.com/hraban/lush/Makefile
 	GOPATH=$$PWD/$@:$$GOPATH $(MAKE) -C $@/src/github.com/hraban/lush/ build-linux-386
 	$(MAKE) -C $@/src/github.com/hraban/lush/ distclean
 	@# Move all remaining files back to top level
