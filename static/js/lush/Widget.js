@@ -148,7 +148,8 @@ define(["jquery",
         U.scrollToBottom('cmds');
         widget.cmd = cmd;
         widget._initDom();
-        widget._initJsPlumb(ctrl);
+        // Disabled until properly implemented. TODO: Make this work!
+        //widget._initJsPlumb(ctrl);
         $(cmd).on('archival', function (_, archived) {
             var cmd = this;
             if (archived) {
