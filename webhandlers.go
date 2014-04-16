@@ -219,7 +219,7 @@ func handleWsCtrl(ctx *web.Context) error {
 	s := ctx.User.(*server)
 	ws := newWsClient(wsconn)
 	// tell the client about its Id
-	_, err = fmt.Fprintf(ws, "clientid;", ws.Id)
+	_, err = fmt.Fprint(ws, "clientid;", ws.Id)
 	if err != nil {
 		return fmt.Errorf("Websocket write error: %v", err)
 	}
@@ -233,9 +233,14 @@ func handleWsCtrl(ctx *web.Context) error {
 	// TODO: keep clients updated about disconnects, too
 	ws.isMaster = claimMaster(ctx)
 	for {
-		msg, err := ioutilReadMsg(ws)
+		typ, msg, err := ws.ReadMessage()
 		if err != nil {
 			return fmt.Errorf("Websocket read error: %v", err)
+		}
+		if typ != websocket.TextMessage {
+			ws.Close()
+			s.ctrlclients.RemoveWriter(ws)
+			return fmt.Errorf("Unexpected websocket message type: %v", typ)
 		}
 		err = parseAndHandleWsEvent(s, ws, msg)
 		if err != nil {

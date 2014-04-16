@@ -51,7 +51,7 @@ type wsClient struct {
 // Write a message to this websocket client. Safety for concurrent use is
 // undefined.
 func (ws *wsClient) Write(data []byte) (int, error) {
-	return len(data), ws.WriteMessage(websocket.BinaryMessage, data)
+	return len(data), ws.WriteMessage(websocket.TextMessage, data)
 }
 
 // number of connected ws clients, current and past
@@ -60,7 +60,7 @@ var totalWsClients uint32
 func newWsClient(conn *websocket.Conn) *wsClient {
 	// Assign a (session-local) unique ID to this connection
 	id := atomic.AddUint32(&totalWsClients, 1)
-	return wsClient{id, false, conn}
+	return &wsClient{id, false, conn}
 }
 
 func getCmd(s *server, idstr string) (liblush.Cmd, error) {
@@ -595,7 +595,7 @@ func wseventAllclients(s *server, reqstr string) error {
 	ids := make([]uint32, len(clients))
 	// yeah. MUCH more readable. especially if you are new to Go.
 	for i, client := range clients {
-		ids[i] = client.(wsClient).Id
+		ids[i] = client.(*wsClient).Id
 	}
 	return writePrefixedJson(&s.ctrlclients, "allclients;", ids)
 }
@@ -648,7 +648,7 @@ var wsMasterHandlers = map[string]wsHandler{
 	//"updatecmd":   wseventUpdatecmd,
 }
 
-func parseAndHandleWsEvent(s *server, client wsClient, msg []byte) error {
+func parseAndHandleWsEvent(s *server, client *wsClient, msg []byte) error {
 	argv := strings.SplitN(string(msg), ";", 2)
 	if len(argv) != 2 {
 		return errors.New("parse error")
