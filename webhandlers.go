@@ -32,6 +32,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/gorilla/websocket"
 	"github.com/hraban/lush/liblush"
 	"github.com/hraban/web"
 )
@@ -207,12 +208,18 @@ func handleGetFiles(ctx *web.Context) error {
 	return json.NewEncoder(ctx).Encode(paths)
 }
 
-// websocket control connection (all are considered equal)
+// Websocket control connection. All connected clients are considered equal.
 func handleWsCtrl(ctx *web.Context) error {
+	wsconn, err := websocket.Upgrade(ctx.Response, ctx.Request, nil, 1024, 1024)
+	if _, ok := err.(websocket.HandshakeError); ok {
+		return web.WebError{400, "Not a websocket handshake"}
+	} else if err != nil {
+		return err
+	}
 	s := ctx.User.(*server)
-	ws := newWsClient(ctx.WebsockConn)
+	ws := newWsClient(wsconn)
 	// tell the client about its Id
-	_, err := fmt.Fprint(ws, "clientid;", ws.Id)
+	_, err = fmt.Fprintf(ws, "clientid;", ws.Id)
 	if err != nil {
 		return fmt.Errorf("Websocket write error: %v", err)
 	}
@@ -226,22 +233,10 @@ func handleWsCtrl(ctx *web.Context) error {
 	// TODO: keep clients updated about disconnects, too
 	ws.isMaster = claimMaster(ctx)
 	for {
-		buf := make([]byte, 5000)
-		n, err := ws.Read(buf)
+		msg, err := ioutilReadMsg(ws)
 		if err != nil {
 			return fmt.Errorf("Websocket read error: %v", err)
 		}
-		if n == cap(buf) {
-			// TODO: Obviously ridiculous, flexible size plz!
-			return fmt.Errorf("Websocket event too big (max: %d bytes)", n)
-		}
-		if n == 0 {
-			// TODO: tbh Im not sure why I wrote this if... why do I want to
-			// ignore empty messages? shouldn't that be an error? yay for not
-			// commenting weird code -.-
-			return nil
-		}
-		msg := buf[:n]
 		err = parseAndHandleWsEvent(s, ws, msg)
 		if err != nil {
 			return fmt.Errorf("error handling WS event: %v", err)
@@ -284,7 +279,7 @@ func init() {
 		s.web.Get(`/`, http.FileServer(http.Dir("static")))
 		s.web.Get(`/cmdids.json`, handleGetCmdidsJson)
 		s.web.Get(`/(\d+).json`, handleGetCmdJson)
-		s.web.Websocket(`/ctrl`, handleWsCtrl)
+		s.web.Get(`/ctrl`, handleWsCtrl)
 		// only master
 		s.web.Post(`/(\d+)/send`, handlePostSend)
 		s.web.Post(`/(\d+)/close`, handlePostClose)

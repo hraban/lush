@@ -37,7 +37,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"code.google.com/p/go.net/websocket"
+	"github.com/gorilla/websocket"
 	"github.com/hraban/lush/liblush"
 )
 
@@ -48,10 +48,16 @@ type wsClient struct {
 	*websocket.Conn
 }
 
+// Write a message to this websocket client. Safety for concurrent use is
+// undefined.
+func (ws *wsClient) Write(data []byte) (int, error) {
+	return len(data), ws.WriteMessage(websocket.BinaryMessage, data)
+}
+
 // number of connected ws clients, current and past
 var totalWsClients uint32
 
-func newWsClient(conn *websocket.Conn) wsClient {
+func newWsClient(conn *websocket.Conn) *wsClient {
 	// Assign a (session-local) unique ID to this connection
 	id := atomic.AddUint32(&totalWsClients, 1)
 	return wsClient{id, false, conn}
