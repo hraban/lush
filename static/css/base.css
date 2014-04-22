@@ -141,6 +141,7 @@ div#cmddetailarea_associated > div {
     /* Act like a <pre>, but also wrap if line is too long. Prevents
      * overflowing terminal box. */
     white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 
