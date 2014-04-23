@@ -21,8 +21,10 @@
 package main
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 )
 
@@ -34,7 +36,7 @@ func mustRequest(req *http.Request, err error) *http.Request {
 	return req
 }
 
-func TestAuthentication(t *testing.T) {
+func TestServerAuthentication(t *testing.T) {
 	s := newServer()
 	s.SetPassword("test")
 	rec := httptest.NewRecorder()
@@ -54,5 +56,24 @@ func TestAuthentication(t *testing.T) {
 	s.ServeHTTP(rec, req)
 	if rec.Code != 401 {
 		t.Error("Expected 401 status with password 'wrongpass', got", rec.Code)
+	}
+}
+
+func TestServerLive(t *testing.T) {
+	s := newServer()
+	ts := httptest.NewServer(s.httpHandler)
+	defer ts.Close()
+
+	res, err := http.Get(ts.URL)
+	if err != nil {
+		t.Fatal("Connecting to test server failed:", err)
+	}
+	page, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		t.Fatal("Couldn't read response:", err)
+	}
+	if !regexp.MustCompile(`<title>lush - Luyat shell</title>`).Match(page) {
+		t.Error("Didn't find expected <title> tag in root page")
 	}
 }
