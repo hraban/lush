@@ -23,12 +23,17 @@ package main
 import (
 	"io"
 	"io/ioutil"
+	_ "log"
+	"net"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
 
 	"code.google.com/p/go.net/websocket"
+	gwebsocket "github.com/gorilla/websocket"
 )
 
 // this function starts a server listening on localhost:15846 (good) but then
@@ -80,43 +85,48 @@ func isLegalFirstMessage(msg []byte) bool {
 	return strings.HasPrefix(string(msg), "clientid;")
 }
 
-// Test websocket with an actual TCP connection
-func TestWebsocketLive(t *testing.T) {
-	s, weberrc := makeLiveTestServer(t, "")
-	done := make(chan int)
-	// I wrote this stuff a while ago and it looks a bit convoluted / complex.
-	// Needs trimming.
-	go func() {
-		select {
-		case <-done:
-			break
-		case err := <-weberrc:
-			if err != nil {
-				t.Errorf("failure in webserver: %v", err)
-			}
-		}
-	}()
-	defer func() {
-		done <- 80085
-		s.Close()
-		// drain errors, if any
-		for _ = range weberrc {
-		}
-	}()
+// parse URL, panic on error
+func urlMustParse(s string) *url.URL {
+	url, err := url.Parse(s)
+	if err != nil {
+		panic(err)
+	}
+	return url
+}
 
-	// Open a websocket client to the listening socket
-	origin := "http://localhost:15846/"
-	url := "ws://localhost:15846/ctrl"
-	ws, err := websocket.Dial(url, "", origin)
+func connectToTestServer(t *testing.T, server *httptest.Server) net.Conn {
+	addr := server.Listener.Addr()
+	conn, err := net.DialTimeout(addr.Network(), addr.String(), time.Second)
+	if err != nil {
+		t.Fatal("Couldn't connect to test server:", err)
+	}
+	return conn
+}
+
+// Test websocket with live TCP connection
+func TestWebsocket(t *testing.T) {
+	s := newServer()
+	ts := httptest.NewServer(s.httpHandler)
+	defer ts.Close()
+
+	conn := connectToTestServer(t, ts)
+	url := urlMustParse(ts.URL)
+	url.Path = "/ctrl"
+	ws, _, err := gwebsocket.NewClient(conn, url, nil, 0, 0)
+	defer ws.Close()
 	if err != nil {
 		t.Fatal("Couldn't open client websocket connection:", err)
 	}
-	buf, err := ioutilReadMsg(ws)
+	ws.SetReadDeadline(time.Now().Add(time.Second))
+	typ, msg, err := ws.ReadMessage()
 	if err != nil {
 		t.Fatal("Error reading first websocket message:", err)
 	}
-	if !isLegalFirstMessage(buf) {
-		t.Errorf("Unexpected websocket handshake: %s", buf)
+	if typ != gwebsocket.TextMessage {
+		t.Errorf("Unexpected websocket message type: %v", typ)
+	}
+	if !isLegalFirstMessage(msg) {
+		t.Errorf("Unexpected websocket handshake: %s", msg)
 	}
 }
 
