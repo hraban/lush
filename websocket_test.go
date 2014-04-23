@@ -25,16 +25,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
+	"regexp"
 	"testing"
 	"time"
 
 	"github.com/gorilla/websocket"
 )
-
-func isLegalFirstMessage(msg []byte) bool {
-	return strings.HasPrefix(string(msg), "clientid;")
-}
 
 // parse URL, panic on error
 func urlMustParse(s string) *url.URL {
@@ -54,17 +50,41 @@ func connectToTestServer(t *testing.T, server *httptest.Server) net.Conn {
 	return conn
 }
 
+func getTextMessage(t *testing.T, ws *websocket.Conn) string {
+	typ, msg, err := ws.ReadMessage()
+	if err != nil {
+		t.Fatal("Error reading websocket message:", err)
+	}
+	if typ != websocket.TextMessage {
+		t.Errorf("Unexpected websocket message type: %v", typ)
+	}
+	return string(msg)
+}
+
+func testWebsocketHandshake(t *testing.T, ws *websocket.Conn) {
+	msg := getTextMessage(t, ws)
+	if !regexp.MustCompile(`^clientid;[0-9]+$`).MatchString(msg) {
+		t.Errorf("Unexpected websocket handshake (clientid): %q", msg)
+	}
+	msg = getTextMessage(t, ws)
+	if !regexp.MustCompile(`^allclients;\[[0-9, ]*\]$`).MatchString(msg) {
+		t.Errorf("Unexpected websocket handshake (allclients): %q", msg)
+	}
+}
+
 func connectWebsocket(t *testing.T, server *httptest.Server, header http.Header) (*websocket.Conn, error) {
 	conn := connectToTestServer(t, server)
 	url := urlMustParse(server.URL)
 	url.Path = "/ctrl"
-	ws, _, err := websocket.NewClient(conn, url, header, 0, 0)
+	ws, _, err := websocket.NewClient(conn, url, header, 1024, 1024)
 	if err != nil {
 		return nil, err
 	}
-	// All operations must complete within a second
-	ws.SetReadDeadline(time.Now().Add(time.Second))
-	ws.SetWriteDeadline(time.Now().Add(time.Second))
+	// All operations must complete within five seconds
+	ws.SetReadDeadline(time.Now().Add(5 * time.Second))
+	ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
+	// Must be consumed if you want to use this connection
+	testWebsocketHandshake(t, ws)
 	return ws, nil
 }
 
@@ -77,19 +97,6 @@ func connectWebsocketSimple(t *testing.T, server *httptest.Server) *websocket.Co
 	return ws
 }
 
-func testWebsocketHandshake(t *testing.T, ws *websocket.Conn) {
-	typ, msg, err := ws.ReadMessage()
-	if err != nil {
-		t.Fatal("Error reading first websocket message:", err)
-	}
-	if typ != websocket.TextMessage {
-		t.Errorf("Unexpected websocket message type: %v", typ)
-	}
-	if !isLegalFirstMessage(msg) {
-		t.Errorf("Unexpected websocket handshake: %s", msg)
-	}
-}
-
 // Test websocket with live TCP connection
 func TestWebsocket(t *testing.T) {
 	s := newServer()
@@ -97,7 +104,6 @@ func TestWebsocket(t *testing.T) {
 	defer ts.Close()
 	ws := connectWebsocketSimple(t, ts)
 	defer ws.Close()
-	testWebsocketHandshake(t, ws)
 }
 
 // Ensure access to websocket resource is denied w/o password
@@ -120,5 +126,4 @@ func TestWebsocketAuthentication(t *testing.T) {
 		t.Fatal("Couldn't create authenticated websocket connection:", err)
 	}
 	defer ws.Close()
-	testWebsocketHandshake(t, ws)
 }

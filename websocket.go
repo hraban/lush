@@ -26,7 +26,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -425,12 +424,12 @@ func wseventRelease(s *server, idstr string) error {
 // it to w as well. Ensures that w is only written to once, and only if
 // serialization succeeded.
 func writePrefixedJson(w io.Writer, prefix string, jsonobj interface{}) error {
-	buf := bytes.NewBufferString(prefix)
-	err := json.NewEncoder(buf).Encode(jsonobj)
+	enc, err := json.Marshal(jsonobj)
 	if err != nil {
 		return err
 	}
-	_, err = io.Copy(w, buf)
+	buf := append([]byte(prefix), enc...)
+	_, err = w.Write(buf)
 	return err
 }
 

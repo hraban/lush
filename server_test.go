@@ -59,21 +59,29 @@ func TestServerAuthentication(t *testing.T) {
 	}
 }
 
-func TestServerLive(t *testing.T) {
-	s := newServer()
-	ts := httptest.NewServer(s.httpHandler)
-	defer ts.Close()
-
-	res, err := http.Get(ts.URL)
+func testGetIndexPage(t *testing.T, url string) {
+	res, err := http.Get(url)
 	if err != nil {
 		t.Fatal("Connecting to test server failed:", err)
 	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		t.Fatalf("Non-200 status when getting index page at %q: %d", url,
+			res.StatusCode)
+	}
 	page, err := ioutil.ReadAll(res.Body)
-	res.Body.Close()
 	if err != nil {
 		t.Fatal("Couldn't read response:", err)
 	}
 	if !regexp.MustCompile(`<title>lush - Luyat shell</title>`).Match(page) {
 		t.Error("Didn't find expected <title> tag in root page")
 	}
+}
+
+func TestServerLive(t *testing.T) {
+	s := newServer()
+	ts := httptest.NewServer(s.httpHandler)
+	defer ts.Close()
+
+	testGetIndexPage(t, ts.URL+"/")
 }
