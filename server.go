@@ -63,9 +63,6 @@ const basePkg = "github.com/hraban/lush/"
 // instance of *server created through newServer.
 var serverinitializers []func(*server)
 
-// directory containing lush resources (containing static/)
-var root = resourceDir()
-
 // PATH
 var path string
 
@@ -88,7 +85,21 @@ func resourceDir() string {
 	return p.Dir
 }
 
+var _rootCache string
+
+// directory containing lush resources (containing static/). initializing the
+// variable in the getter removes all doubt about the order of init() functions;
+// call getRoot(), no matter where, and you're sure to either panic() or get a
+// valid root directory.
+func getRoot() string {
+	if _rootCache == "" {
+		_rootCache = resourceDir()
+	}
+	return _rootCache
+}
+
 func newServer() *server {
+	root := getRoot()
 	s := &server{
 		session: liblush.NewSession(),
 		root:    root,
@@ -174,6 +185,7 @@ Happy Hanukkah!
 }
 
 func init() {
+	root := getRoot()
 	// also search for binaries local /bin folder
 	path = appendPath(os.Getenv("PATH"), root+"/bin")
 	err := os.Setenv("PATH", path)
