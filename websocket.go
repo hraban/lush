@@ -32,6 +32,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/user"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -605,6 +606,14 @@ type lushError struct {
 }
 
 func wseventChdir(s *server, dir string) error {
+	if dir == "" {
+		user, err := user.Current()
+		if err != nil {
+			// rare enough, so fair enough.
+			return lushError{fmt.Errorf("Couldn't determine home dir: %v", err)}
+		}
+		dir = user.HomeDir
+	}
 	err := s.session.Chdir(dir)
 	if err != nil {
 		return lushError{err}
