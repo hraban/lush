@@ -24,9 +24,10 @@
 // PROMPT PARSING
 
 define(["lush/Ast",
+        "lush/HistoryExpander",
         "lush/Lexer",
         "lush/utils"],
-       function (Ast, Lexer, U) {
+       function (Ast, HistoryExpander, Lexer, U) {
 
     function startsWithDot(str) {
         return str[0] == ".";
@@ -61,19 +62,27 @@ define(["lush/Ast",
         if (globFunction === undefined) {
             globFunction = defaultGlob;
         }
+        // First layer of parsing: find all !$ and !! and expand them.
+        parser._histExp = new HistoryExpander();
+        // Second layer of parsing: split the text up in separate words (argv)
         var lexer = new Lexer();
         parser.glob = globFunction;
         parser._lexer = lexer;
         parser._ignoreErrors = false;
+        function emptyContext() {
+            return {
+                // the first parsed command, head of the linked list. pointer to
+                // the next is in the "stdout" member of the ast node.
+                firstast: undefined,
+                // The command currently being parsed
+                ast: undefined,
+            };
+        }
         // public parser state (TODO: make direct members)
-        parser.ctx = {
-            // the first parsed command, head of the linked list. pointer to the
-            // next is in the "stdout" member of the ast node.
-            firstast: undefined,
-            // The command currently being parsed
-            ast: undefined,
-        };
-        var ctx = parser.ctx; // shorthand
+        parser.ctx = emptyContext();
+        // quite a misnomer: this is AFTER history expansion
+        parser._raw = '';
+        var ctx = parser.ctx;
         lexer.oninit = function () {
             ctx.firstast = ctx.ast = new Ast();
         };
@@ -110,16 +119,22 @@ define(["lush/Ast",
             // haiku
             ctx.ast = newast;
         };
+        lexer.expandPreviousCommand = function () {
+            return parser._previousRaw;
+        };
+        lexer.expandPreviousLastArg = function () {
+            return parser._previousLastArg;
+        };
         lexer.onerror = function (err, type) {
             if (!parser._ignoreErrors) {
                 throw err;
             }
             switch (err.type) {
+            case Lexer.ERRCODES.BARE_EXCLAMATIONMARK:
             case Lexer.ERRCODES.UNBALANCED_SINGLE_QUOTE:
             case Lexer.ERRCODES.UNBALANCED_DOUBLE_QUOTE:
             case Lexer.ERRCODES.TERMINATING_BACKSLASH:
-                // ignore.
-                // these errors can only happen at end of input, so finish up:
+                // ignore, treat whatever was here as a word.
                 lexer.onboundary();
                 break;
             default:
@@ -134,8 +149,18 @@ define(["lush/Ast",
             throw "Parser.parse() requires text to parse";
         }
         parser._ignoreErrors = ignoreParseErrors;
-        parser._lexer.parse(txt);
+        var expanded = parser._histExp.expand(txt, ignoreParseErrors);
+        parser._lexer.parse(expanded);
+        parser._raw = expanded;
         return parser.ctx.firstast;
+    };
+
+    // Store most recently parsed text as the "previous command".  History
+    // functions (!$ and !!) operate on this value.  E.g.: parse('foo');
+    // commit(); parse('bar'); parse('!!'); will yield 'foo'.
+    Parser.prototype.commit = function (txt) {
+        var parser = this;
+        parser._histExp.setlast(parser._raw);
     };
 
     // TODO: behold, a code smell. why is it a public class method? because i

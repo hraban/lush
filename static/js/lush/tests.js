@@ -26,11 +26,12 @@ define(["jquery",
         "lush/Ast",
         "lush/Cli",
         "lush/Command",
+        "lush/HistoryExpander",
         "lush/Lexer",
         "lush/Parser",
         "lush/Pool",
         "lush/utils"],
-       function ($, Ast, Cli, Command, Lexer, Parser, Pool, U) {
+       function ($, Ast, Cli, Command, HistoryExpander, Lexer, Parser, Pool, U) {
 
     test("lcp(): longest common prefix", function () {
         equal(U.lcp(["abcd", "abab", "abba"]), "ab");
@@ -129,14 +130,22 @@ define(["jquery",
         var lexer = new Lexer();
         lexer.oninit = function () {
             ctx = {
-                newarg: '',
-                argv: [],
+                cmd: '',
+                gotstar: false,
+                gotquestionmark: false,
+                gotchoice: false,
             };
         };
-        // a wild character appeared! add it to the current word
         lexer.onliteral = function (c) {
-            ctx.newarg += c;
+            ctx.cmd += c;
         };
+        lexer.onboundary = function (c) {
+            ctx.cmd += '.';
+        };
+        lexer.parse('foo ? bar');
+        strictEqual(ctx.cmd, "foo.?.bar.", "Default ? handler: literal");
+        lexer.parse('x * y');
+        strictEqual(ctx.cmd, "x.*.y.", "Default * handler: literal");
         // got a *
         lexer.onglobStar = function (idx) {
             ctx.gotstar = idx;
@@ -190,11 +199,62 @@ define(["jquery",
         lexer.parse('echo foobar | cat');
         deepEqual(ctx.all_argv, [["echo", "foobar"], ["cat"]], "pipe once");
 
-        lexer.parse('abc | yeye | ohno!');
-        deepEqual(ctx.all_argv, [["abc"], ["yeye"], ["ohno!"]], "pipe twice");
+        lexer.parse('abc | yeye | ohno');
+        deepEqual(ctx.all_argv, [["abc"], ["yeye"], ["ohno"]], "pipe twice");
 
         lexer.parse('lookma|nospaces');
         deepEqual(ctx.all_argv, [["lookma"], ["nospaces"]], "no spaces around pipe");
+    });
+
+    test("lexer: !$ and !!", function () {
+        var ctx;
+        var lexer = new Lexer();
+        lexer.oninit = function () {
+            ctx = '';
+        };
+        lexer.onliteral = function (c) {
+            ctx += c;
+        };
+        lexer.onboundary = function () {
+            ctx += '.';
+        };
+        lexer.parse('foo !$ bar')
+        equal(ctx, 'foo.!$.bar.', '!$: default handler returns literal');
+        lexer.parse('foo !! bar')
+        equal(ctx, 'foo.!!.bar.', '!!: default handler returns literal');
+        lexer.onPreviousCommand = function () {
+            ctx += 'previous command';
+        };
+        lexer.onPreviousLastArg = function () {
+            ctx += "last arg";
+        };
+        lexer.parse('foo !$');
+        equal(ctx, 'foo.last arg.', '!$ invokes expandPreviousLastArg');
+        lexer.parse('x !! y');
+        equal(ctx, 'x.previous command.y.', '!! invokes expandPreviousCommand');
+    });
+
+    test("lexer: word boundaries", function () {
+        var lexer = new Lexer();
+        var boundaries;
+        lexer.onboundary = function (start, end) {
+            boundaries = start + " -- " + end;
+        };
+        function testBoundaries(str, expected, comment) {
+            boundaries = undefined;
+            lexer.parse(str);
+            equal(boundaries, expected, comment);
+        }
+        testBoundaries(" a ", "1 -- 2", "simple word");
+        testBoundaries(" a", "1 -- 2", "word at end of input");
+        testBoundaries("a", "0 -- 1", "word at start of input");
+        testBoundaries("    ", undefined, "no word");
+        testBoundaries(" 'a' ", "1 -- 4", "quoted word");
+        testBoundaries(" '' ", "1 -- 3", "empty quotes");
+        testBoundaries(" '''''''' ", "1 -- 9", "many empty quotes");
+        testBoundaries(" ''a'' ", "1 -- 6", "surrounding empty quotes");
+        testBoundaries(" \\' ", "1 -- 3", "escape char");
+        testBoundaries(" a\\ b ", "1 -- 5", "escaped space not a boundary");
     });
 
     test("lexer: errors", function () {
@@ -212,11 +272,48 @@ define(["jquery",
         }
         ok(Lexer.ERRCODES.UNBALANCED_SINGLE_QUOTE !== undefined &&
            Lexer.ERRCODES.UNBALANCED_DOUBLE_QUOTE !== undefined &&
-           Lexer.ERRCODES.TERMINATING_BACKSLASH !== undefined,
+           Lexer.ERRCODES.TERMINATING_BACKSLASH !== undefined &&
+           Lexer.ERRCODES.BARE_EXCLAMATIONMARK !== undefined,
            "expected error codes are defined");
         testError('what is "that?', Lexer.ERRCODES.UNBALANCED_DOUBLE_QUOTE);
         testError("it's a monster!!!", Lexer.ERRCODES.UNBALANCED_SINGLE_QUOTE);
         testError("/o\\", Lexer.ERRCODES.TERMINATING_BACKSLASH);
+        testError("Hey!", Lexer.ERRCODES.BARE_EXCLAMATIONMARK);
+    });
+
+    test("history expander", function () {
+        var hexp = new HistoryExpander();
+        equal(
+            hexp.expand("a !$ b !! c"),
+            "a  b  c",
+            "empty history expands to empty strings");
+        hexp.setlast("foo bar");
+        equal(
+            hexp.expand("hello !$ goodbye"),
+            "hello bar goodbye",
+            "!$ is expanded to the last argument");
+        equal(
+            hexp.expand("hello !! goodbye"),
+            "hello foo bar goodbye",
+            "!! is expanded to the last command");
+        hexp.setlast("latertater");
+        equal(
+            hexp.expand("!$"),
+            "latertater",
+            "setlast overwrites previous command");
+        equal(
+            hexp.expand("foo!$bar"),
+            "foolatertaterbar",
+            "concatenated with string literals on either side");
+        equal(
+            hexp.expand("!$ '!$' \"!$\" '!'$ \\!$"),
+            "latertater '!$' \"!$\" '!'$ \\!$",
+            "quoted variants not expanded");
+        hexp.setlast("some weird\"mixed\"quo'te's\\ ");
+        equal(
+            hexp.expand("!$"),
+            "weird\"mixed\"quo'te's\\ ",
+            "Save quote style");
     });
 
     test("parser", function () {
@@ -241,6 +338,31 @@ define(["jquery",
         ok(parser.ctx.firstast instanceof Ast, "parser yields an AST");
         var ast = parser.ctx.firstast;
         deepEqual(ast.argv, ["ls", "foo.c", "bar.c", "Makefile"], "glob expanded in-place");
+    });
+
+    test("parser: !$ and !!", function () {
+        var parser = new Parser();
+        function assertAst(expected, comment) {
+            deepEqual(parser.ctx.firstast.argv, expected.split(' '), comment);
+        }
+        parser.parse('x !! y !$ z');
+        assertAst('x y z', 'History expansions empty on first command');
+        parser.parse('one two three');
+        parser.commit();
+        parser.parse('foo !$ bar');
+        assertAst("foo three bar", "!$ is previous last argument");
+        parser.parse('x !! y');
+        assertAst("x one two three y", "!! is entire previous command");
+        parser.parse('!$');
+        assertAst("three", "!$ also works as cmd");
+        parser.parse('foo');
+        parser.commit();
+        parser.parse('bar');
+        parser.parse('echo !!');
+        assertAst("echo foo", "history not overwritten without .commit()");
+        parser.commit();
+        parser.parse('echo !!');
+        assertAst("echo echo foo", "history expansion is recursive");
     });
 
     // Mock (websocket) control line to server

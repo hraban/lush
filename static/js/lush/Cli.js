@@ -355,6 +355,7 @@ define(["jquery",
     // commit the current prompt ([enter] button)
     Cli.prototype.commit = function () {
         var cli = this;
+        cli._parser.commit();
         if (!cli._cmd) {
             throw "cmd not ready";
         }
