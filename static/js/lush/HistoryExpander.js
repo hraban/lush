@@ -21,7 +21,9 @@
 "use strict";
 
 
-// PROMPT PARSING
+// History expansion: store a "last command" and allow substituting !! and !$ in
+// other commands corresponding to bash semantics. See the unit tests for
+// examples.
 
 define(["lush/Lexer"], function (Lexer) {
 
