@@ -19,5 +19,6 @@ _testmain.go
 *.orig
 
 lush
+!static/js/lush
 lush.exe
 bin/
