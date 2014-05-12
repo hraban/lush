@@ -144,6 +144,14 @@ div#cmddetailarea_associated > div {
     word-wrap: break-word;
 }
 
+.terminal-output .success {
+    color: rgb(17, 192, 52);
+}
+
+.terminal-output .failure {
+    color: #f00; /* consistent with jquery.terminal errors */
+}
+
 
 /*** Command widget area ***/
 

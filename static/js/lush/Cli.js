@@ -367,6 +367,7 @@ define(["jquery",
         var runningCmds = 0;
         // archive when everybody completes succesfully
         var cmdDone = function (e, status) {
+            var cmd = this;
             if (status.code == 2) {
                 // success!
                 runningCmds -= 1;
@@ -374,16 +375,25 @@ define(["jquery",
                 // ohnoes!
                 // setting to -1 will prevent the counter from ever reaching 0
                 runningCmds = -1;
+                $('.promptcopy-' + cmd.nid).addClass('failure');
                 cli.onerror(status.err);
             }
             if (runningCmds == 0) {
+                $('.promptcopy-' + cmd.nid).addClass('success');
                 // all commands in this pipeline have completed succesfully
                 root.setArchivalState(true);
             }
         };
+        // huge hack around jQuery.terminal: get the div containing a copy of
+        // the prompt that spawned this command, which, we hope, is now the last
+        // non-output div in the list.  trivia: :last-child doesn't work here
+        // because that's a DOM property, not a filter on css result sets (I
+        // think)
+        var $promptcpy = $('.terminal-output > div:not([class*=output])').last();
         return cli._syncingPrompt.done(function () {
             // when the prompt has been set, all commands can be started.
             U.mapCmdTree(root, function (cmd) {
+                $promptcpy.addClass('promptcopy-' + cmd.nid);
                 cmd.start();
                 runningCmds += 1;
                 $(cmd).one('done', cmdDone);

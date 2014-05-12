@@ -70,8 +70,9 @@ define(["jquery",
     }
 
     // send what is currently on the prompt to the terminal output
-    var echoInput = function (term) {
-        return term.termPrintln(term.get_prompt() + term.get_command());
+    var echoInput = function (term, finalize) {
+        var txt = term.get_prompt() + term.get_command();
+        return term.termPrintln(txt, finalize);
     };
 
     // Called with array of filenames to populate a partially completed command
