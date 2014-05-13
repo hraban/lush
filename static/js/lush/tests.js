@@ -340,6 +340,16 @@ define(["jquery",
         deepEqual(ast.argv, ["ls", "foo.c", "bar.c", "Makefile"], "glob expanded in-place");
     });
 
+    test("parser: unsupported syntax", function () {
+        var parser = new Parser();
+        expect(1);
+        try {
+            parser.parse("foo ; bar");
+        } catch (e) {
+            ok(true, "semi-colon unsupported");
+        }
+    });
+
     test("parser: !$ and !!", function () {
         var parser = new Parser();
         function assertAst(expected, comment) {

@@ -134,15 +134,15 @@ define(function () {
     }
 
     function registerBoundary(lexer, i) {
-        lexer.onboundary(lexer.state.wordstart, i);
-        lexer.state.parsingword = false;
+        if (lexer.state.parsingword) {
+            lexer.onboundary(lexer.state.wordstart, i);
+            lexer.state.parsingword = false;
+        }
     }
 
     function parse_char_normal(lexer, c, i) {
         if (c === undefined) {
-            if (lexer.state.parsingword) {
-                registerBoundary(lexer, i);
-            }
+            registerBoundary(lexer, i);
             return;
         }
         // these chars have special meaning
@@ -162,9 +162,7 @@ define(function () {
             return parse_char_escaped;
         case ' ':
             // Word boundary
-            if (lexer.state.parsingword) {
-                registerBoundary(lexer, i);
-            }
+            registerBoundary(lexer, i);
             break;
         case '*':
             lexer.onglobStar(i);
@@ -175,13 +173,15 @@ define(function () {
             lexer.state.parsingword = true;
             break;
         case '|':
-            if (lexer.state.parsingword) {
-                registerBoundary(lexer, i);
-            }
+            registerBoundary(lexer, i);
             lexer.onpipe();
             break;
         case '!':
             return parse_char_exclamationmark;
+        case ';':
+            registerBoundary(lexer, i);
+            lexer.onsemicolon();
+            break;
         default:
             lexer.onliteral(c);
             lexer.state.parsingword = true;
@@ -242,6 +242,11 @@ define(function () {
             this.onPreviousCommand = function () {
                 this.onliteral('!');
                 this.onliteral('!');
+            };
+        }
+        if (!this.onsemicolon) {
+            this.onsemicolon = function () {
+                this.onliteral(';');
             };
         }
         // only called for parse errors
