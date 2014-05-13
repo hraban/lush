@@ -118,6 +118,12 @@ func handleGetCmdJson(ctx *web.Context, idstr string) error {
 		return err
 	}
 	ctx.ContentType("json")
+	// Don't hammer me, but don't cache for too long. This resource is not
+	// intended for polling, anyway. This may seem race sensitive, but that's
+	// because it is. Only matters in big, multi user setups with lots of
+	// concurrent changes, which is totally not lush's current intended use
+	// case. So a few race conditions here and there are no biggy (for now).
+	ctx.Response.Header().Set("cache-control", "max-age=3")
 	return json.NewEncoder(ctx).Encode(md)
 }
 
