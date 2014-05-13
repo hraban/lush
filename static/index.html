@@ -202,7 +202,9 @@ the .children node of another command when it becomes its child, leaving this
 
 
 <script>
-requirejs(["lush/main"]);
+requirejs(["lush/main"], function (main) {
+    main("/ctrl");
+});
 </script>
 </body>
 </html>

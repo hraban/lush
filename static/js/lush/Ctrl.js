@@ -25,9 +25,12 @@
 
 define(["jquery", "lush/utils"], function ($, U) {
 
-    var Ctrl = function () {
+    var Ctrl = function (url) {
+        if (typeof url !== "string") {
+            throw "First argument to control must be a websocket url";
+        }
         var ctrl = this;
-        ctrl.ws = new WebSocket(U.wsURI('/ctrl'));
+        ctrl.ws = new WebSocket(U.wsURI(url));
         ctrl.streamhandlers = {};
         ctrl.ws.onmessage = function (e) {
             // First message MUST be a clientid event

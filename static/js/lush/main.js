@@ -608,9 +608,12 @@ define(["jquery",
         $('body').attr('data-status', 'ok');
     }
 
-    function main() {
+    function lushMain(ctrlurl) {
+        if (typeof ctrlurl !== "string") {
+            throw "invalid argument for lush: requires url of control stream";
+        }
         // Control stream (Websocket)
-        var ctrl = new Ctrl();
+        var ctrl = new Ctrl(ctrlurl);
         ctrl.ws.onerror = function () {
             console.log('Websocket connection error');
         };
@@ -620,8 +623,6 @@ define(["jquery",
         });
     }
 
-    $(document).ready(function () {
-        main();
-    });
+    return lushMain;
 
 });
