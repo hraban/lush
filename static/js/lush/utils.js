@@ -140,8 +140,15 @@ guid: function guid() {
 
 // PROJECT LOCAL UTILTIES
 
+stringStartsWith: function stringStartsWith(str, prefix) {
+    return str.lastIndexOf(prefix, 0) === 0;
+},
+
 // create full websocket uri from relative path
 wsURI: function wsURI(path) {
+    if (U.stringStartsWith(path, "ws://")) {
+        return path;
+    }
     return 'ws://' + document.location.host + path;
 },
 
