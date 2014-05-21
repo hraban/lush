@@ -245,9 +245,13 @@ define(function () {
             };
         }
         if (!this.onsemicolon) {
-            this.onsemicolon = function () {
-                this.onliteral(';');
-            };
+            // default behavior: NOP. This is inconsistent with the other
+            // default handlers that invoke onliteral(), but that's because I
+            // just decided that those are wrong. It's confusing and useless.
+            // This is a shell lexer, don't be surprised at missing tokens if
+            // you're not subscribing to the proper hooks.
+            // TODO: All other default handlers should act like this.
+            this.onsemicolon = function () { }
         }
         // only called for parse errors
         if (!this.onerror) {
