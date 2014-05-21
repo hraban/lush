@@ -612,14 +612,18 @@ define(["jquery",
         if (typeof ctrlurl !== "string") {
             throw "invalid argument for lush: requires url of control stream";
         }
-        // Control stream (Websocket)
-        var ctrl = new Ctrl(ctrlurl);
-        ctrl.ws.onerror = function () {
-            console.log('Websocket connection error');
-        };
-        // wait for the server
-        $(ctrl).one('clientid', function (_, myid) {
-            main_aux(ctrl, myid);
+        $.get("/ctrl").done(function (key) {
+            // Control stream (Websocket)
+            var ctrl = new Ctrl(ctrlurl, key);
+            ctrl.ws.onerror = function () {
+                console.log('Websocket connection error');
+            };
+            // wait for the server
+            $(ctrl).one('clientid', function (_, myid) {
+                main_aux(ctrl, myid);
+            });
+        }).fail(function () {
+            throw "Failed to get the websocket key";
         });
     }
 
