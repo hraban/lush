@@ -57,7 +57,7 @@ define(["lush/Ast",
     // Simple interface, "parse everything at once" parser. No callbacks, no
     // state between calls, just call .parse("your command string"), and access
     // .ctx.firstast. or .ctx.ast for the last node.
-    var Parser = function (globFunction) {
+    function Parser(globFunction) {
         var parser = this;
         if (globFunction === undefined) {
             globFunction = defaultGlob;
@@ -119,11 +119,10 @@ define(["lush/Ast",
             // haiku
             ctx.ast = newast;
         };
-        lexer.expandPreviousCommand = function () {
-            return parser._previousRaw;
-        };
-        lexer.expandPreviousLastArg = function () {
-            return parser._previousLastArg;
+        lexer.onsemicolon = function () {
+            if (!parser._ignoreErrors) {
+                throw "semi-colon not supported (yet)";
+            }
         };
         lexer.onerror = function (err, type) {
             if (!parser._ignoreErrors) {

@@ -26,6 +26,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -52,6 +54,17 @@ type wsClient struct {
 // undefined.
 func (ws *wsClient) Write(data []byte) (int, error) {
 	return len(data), ws.WriteMessage(websocket.TextMessage, data)
+}
+
+func (ws *wsClient) ReadTextMessage() ([]byte, error) {
+	typ, msg, err := ws.ReadMessage()
+	if err != nil {
+		return nil, fmt.Errorf("Websocket read error: %v", err)
+	}
+	if typ != websocket.TextMessage {
+		return nil, fmt.Errorf("Unexpected websocket message type: %v", typ)
+	}
+	return msg, nil
 }
 
 // number of connected ws clients, current and past
@@ -686,4 +699,23 @@ func parseAndHandleWsEvent(s *server, client *wsClient, msg []byte) error {
 		}
 	}
 	return err
+}
+
+var _websocketKey string
+
+func getWebsocketKey() string {
+	// protect against human error after refactoring
+	if _websocketKey == "" {
+		panic("empty websocket key")
+	}
+	return _websocketKey
+}
+
+func init() {
+	buf := make([]byte, 60)
+	_, err := rand.Read(buf)
+	if err != nil {
+		panic("Couldn't generate websocket key: " + err.Error())
+	}
+	_websocketKey = base64.StdEncoding.EncodeToString(buf)
 }

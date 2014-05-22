@@ -31,6 +31,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/hraban/lush/liblush"
@@ -118,6 +119,12 @@ func handleGetCmdJson(ctx *web.Context, idstr string) error {
 		return err
 	}
 	ctx.ContentType("json")
+	// Don't hammer me, but don't cache for too long. This resource is not
+	// intended for polling, anyway. This may seem race sensitive, but that's
+	// because it is. Only matters in big, multi user setups with lots of
+	// concurrent changes, which is totally not lush's current intended use
+	// case. So a few race conditions here and there are no biggy (for now).
+	ctx.Response.Header().Set("cache-control", "max-age=3")
 	return json.NewEncoder(ctx).Encode(md)
 }
 
@@ -212,12 +219,40 @@ func handleGetFiles(ctx *web.Context) error {
 func handleWsCtrl(ctx *web.Context) error {
 	wsconn, err := websocket.Upgrade(ctx.Response, ctx.Request, nil, 1024, 1024)
 	if _, ok := err.(websocket.HandshakeError); ok {
-		return web.WebError{400, "Not a websocket handshake"}
+		// Get the secret token to include in a websocket request
+		ctx.ContentType("txt")
+		fmt.Fprint(ctx.Response, getWebsocketKey())
+		return nil
 	} else if err != nil {
 		return err
 	}
 	s := ctx.User.(*server)
 	ws := newWsClient(wsconn)
+	defer ws.Close()
+	// This is just for the incoming key, after which blocking on read is fine
+	err = ws.SetReadDeadline(time.Now().Add(5 * time.Second))
+	if err != nil {
+		return fmt.Errorf("Couldn't set read deadline for websocket: %v", err)
+	}
+	// First order of business: see if the client sends me the correct key
+	// this could be done lots of ways different, perhaps more elegant ways:
+	// HTTP headers, query parameters, secret path, ... BUT! This method is very
+	// straight-forward and easy to understand.
+	msg, err := ws.ReadTextMessage()
+	if err != nil {
+		return err
+	}
+	if string(msg) != getWebsocketKey() {
+		// This is a best effort service to help whoever tried to connect to
+		// this in debugging, hence no error checking.
+		fmt.Fprint(ws, "Invalid lush key")
+		return errors.New("Illegal websocket key")
+	}
+	// Alright I trust this client now, read ops are expected to block
+	err = ws.SetReadDeadline(time.Time{})
+	if err != nil {
+		return fmt.Errorf("Couldn't remove read deadline for websocket: %v", err)
+	}
 	// tell the client about its Id
 	_, err = fmt.Fprint(ws, "clientid;", ws.Id)
 	if err != nil {
@@ -233,14 +268,10 @@ func handleWsCtrl(ctx *web.Context) error {
 	// TODO: keep clients updated about disconnects, too
 	ws.isMaster = claimMaster(ctx)
 	for {
-		typ, msg, err := ws.ReadMessage()
+		msg, err := ws.ReadTextMessage()
 		if err != nil {
-			return fmt.Errorf("Websocket read error: %v", err)
-		}
-		if typ != websocket.TextMessage {
-			ws.Close()
 			s.ctrlclients.RemoveWriter(ws)
-			return fmt.Errorf("Unexpected websocket message type: %v", typ)
+			return err
 		}
 		err = parseAndHandleWsEvent(s, ws, msg)
 		if err != nil {

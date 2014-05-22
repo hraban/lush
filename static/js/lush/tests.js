@@ -218,30 +218,38 @@ define(["jquery",
         lexer.onboundary = function () {
             ctx += '.';
         };
-        lexer.parse('foo !$ bar')
-        equal(ctx, 'foo.!$.bar.', '!$: default handler returns literal');
-        lexer.parse('foo !! bar')
-        equal(ctx, 'foo.!!.bar.', '!!: default handler returns literal');
+        function testHistexp(str, expected, comment) {
+            lexer.parse(str);
+            equal(ctx, expected, comment);
+        }
+        testHistexp('foo !$ bar', 'foo.!$.bar.', '!$: default handler returns literal');
+        testHistexp('foo !! bar', 'foo.!!.bar.', '!!: default handler returns literal');
+        testHistexp('!$', '!$.', '!$: default handler causes onboundary');
+        testHistexp('!!', '!!.', '!!: default handler causes onboundary');
         lexer.onPreviousCommand = function () {
-            ctx += 'previous command';
+            ctx += 'PREVIOUS COMMAND';
         };
         lexer.onPreviousLastArg = function () {
-            ctx += "last arg";
+            ctx += "LAST ARG";
         };
-        lexer.parse('foo !$');
-        equal(ctx, 'foo.last arg.', '!$ invokes expandPreviousLastArg');
-        lexer.parse('x !! y');
-        equal(ctx, 'x.previous command.y.', '!! invokes expandPreviousCommand');
+        testHistexp('foo !$', 'foo.LAST ARG.', '!$ causes onPreviousLastArg event');
+        testHistexp('x !! y', 'x.PREVIOUS COMMAND.y.', '!! causes onPreviousCommand event');
+        testHistexp('x!$y', 'xLAST ARGy.', 'in-word !$ does not cause onboundary');
+        testHistexp('x!!y', 'xPREVIOUS COMMANDy.', 'in-word !! does not cause onboundary');
+        testHistexp('!$', 'LAST ARG.', 'bare !$ causes onboundary');
+        testHistexp('!!', 'PREVIOUS COMMAND.', 'bare !! causes onboundary');
     });
 
     test("lexer: word boundaries", function () {
         var lexer = new Lexer();
         var boundaries;
+        lexer.oninit = function () {
+            boundaries = undefined;
+        };
         lexer.onboundary = function (start, end) {
             boundaries = start + " -- " + end;
         };
         function testBoundaries(str, expected, comment) {
-            boundaries = undefined;
             lexer.parse(str);
             equal(boundaries, expected, comment);
         }
@@ -255,6 +263,32 @@ define(["jquery",
         testBoundaries(" ''a'' ", "1 -- 6", "surrounding empty quotes");
         testBoundaries(" \\' ", "1 -- 3", "escape char");
         testBoundaries(" a\\ b ", "1 -- 5", "escaped space not a boundary");
+    });
+
+    test("lexer: semi-colon (;)", function () {
+        var lexer = new Lexer();
+        var ctx;
+        lexer.oninit = function () {
+            ctx = '';
+        };
+        lexer.onliteral = function (c) {
+            ctx += c;
+        };
+        lexer.onboundary = function () {
+            ctx += '.';
+        };
+        function testSemicolon(str, expected, comment) {
+            lexer.parse(str);
+            equal(ctx, expected, comment);
+        }
+        testSemicolon("foo ; bar", "foo.bar.", "; default handler is a NOP");
+        testSemicolon("zoo;zar", "zoo.zar.", "; default handler causes onboundary");
+        lexer.onsemicolon = function () {
+            ctx += "SEMICOLON";
+        };
+        testSemicolon("foo ; bar", "foo.SEMICOLONbar.", "onsemicolon event");
+        testSemicolon(";", "SEMICOLON", "bare semi-colon, no onboundary");
+        testSemicolon("a;b", "a.SEMICOLONb.", "no spaces around semi-colon");
     });
 
     test("lexer: errors", function () {
@@ -338,6 +372,16 @@ define(["jquery",
         ok(parser.ctx.firstast instanceof Ast, "parser yields an AST");
         var ast = parser.ctx.firstast;
         deepEqual(ast.argv, ["ls", "foo.c", "bar.c", "Makefile"], "glob expanded in-place");
+    });
+
+    test("parser: unsupported syntax", function () {
+        var parser = new Parser();
+        expect(1);
+        try {
+            parser.parse("foo ; bar");
+        } catch (e) {
+            ok(true, "semi-colon unsupported");
+        }
     });
 
     test("parser: !$ and !!", function () {

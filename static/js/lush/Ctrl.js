@@ -25,13 +25,21 @@
 
 define(["jquery", "lush/utils"], function ($, U) {
 
-    var Ctrl = function () {
+    var Ctrl = function (url, key) {
+        if (typeof url !== "string") {
+            throw "First argument to control must be a websocket url";
+        }
+        if (typeof key !== "string") {
+            throw "Second argument to control must be lush websocket key";
+        }
         var ctrl = this;
-        ctrl.ws = new WebSocket(U.wsURI('/ctrl'));
+        ctrl.ws = new WebSocket(U.wsURI(url));
         ctrl.streamhandlers = {};
-        ctrl.ws.onmessage = function (e) {
+        var handleWebsocketMessage = function (e) {
             // First message MUST be a clientid event
             if (!/^clientid;\d+/.test(e.data)) {
+                console.log("Got illegal first message: " + e.data);
+                handleWebsocketMessage = function () { }
                 ctrl.ws.close(1002, "First websocket event must be clientid");
                 // TODO: Chrome complains about this 1002 code, but look:
                 //
@@ -47,12 +55,14 @@ define(["jquery", "lush/utils"], function ($, U) {
                 // not. And that's what counts.
                 return;
             }
-            ctrl._handleWsOnMessage(e);
-            // first event handled, no need for further checks
-            ctrl.ws.onmessage = Ctrl.prototype._handleWsOnMessage.bind(ctrl);
+            handleWebsocketMessage = Ctrl.prototype._handleWsOnMessage.bind(ctrl);
+            handleWebsocketMessage(e);
+        };
+        ctrl.ws.onmessage = function (e) {
+            handleWebsocketMessage(e);
         };
         ctrl.ws.onopen = function () {
-            $(ctrl).trigger('open')
+            ctrl.ws.send(key);
         };
         ctrl.ws.onclose = function () {
             // NOOOO NOOO ONOO NO NONO NOOOOO!

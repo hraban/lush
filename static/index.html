@@ -202,7 +202,19 @@ the .children node of another command when it becomes its child, leaving this
 
 
 <script>
-requirejs(["lush/main"]);
+requirejs(["jquery", "lush/main"], function ($, main) {
+    $.get("/config/websocketbase.txt").then(function (url) {
+        return url.trim();
+    }, function () {
+        var d = $.Deferred();
+        // default baseurl is empty string
+        d.resolve("");
+        // continue on the success path (return ""; continues on fail path)
+        return d;
+    }).then(function (baseurl) {
+        main(baseurl + "/ctrl");
+    });
+});
 </script>
 </body>
 </html>

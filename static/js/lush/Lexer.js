@@ -134,15 +134,15 @@ define(function () {
     }
 
     function registerBoundary(lexer, i) {
-        lexer.onboundary(lexer.state.wordstart, i);
-        lexer.state.parsingword = false;
+        if (lexer.state.parsingword) {
+            lexer.onboundary(lexer.state.wordstart, i);
+            lexer.state.parsingword = false;
+        }
     }
 
     function parse_char_normal(lexer, c, i) {
         if (c === undefined) {
-            if (lexer.state.parsingword) {
-                registerBoundary(lexer, i);
-            }
+            registerBoundary(lexer, i);
             return;
         }
         // these chars have special meaning
@@ -162,9 +162,7 @@ define(function () {
             return parse_char_escaped;
         case ' ':
             // Word boundary
-            if (lexer.state.parsingword) {
-                registerBoundary(lexer, i);
-            }
+            registerBoundary(lexer, i);
             break;
         case '*':
             lexer.onglobStar(i);
@@ -175,13 +173,15 @@ define(function () {
             lexer.state.parsingword = true;
             break;
         case '|':
-            if (lexer.state.parsingword) {
-                registerBoundary(lexer, i);
-            }
+            registerBoundary(lexer, i);
             lexer.onpipe();
             break;
         case '!':
             return parse_char_exclamationmark;
+        case ';':
+            registerBoundary(lexer, i);
+            lexer.onsemicolon();
+            break;
         default:
             lexer.onliteral(c);
             lexer.state.parsingword = true;
@@ -243,6 +243,15 @@ define(function () {
                 this.onliteral('!');
                 this.onliteral('!');
             };
+        }
+        if (!this.onsemicolon) {
+            // default behavior: NOP. This is inconsistent with the other
+            // default handlers that invoke onliteral(), but that's because I
+            // just decided that those are wrong. It's confusing and useless.
+            // This is a shell lexer, don't be surprised at missing tokens if
+            // you're not subscribing to the proper hooks.
+            // TODO: All other default handlers should act like this.
+            this.onsemicolon = function () { }
         }
         // only called for parse errors
         if (!this.onerror) {
