@@ -62,6 +62,10 @@ func getTextMessage(t *testing.T, ws *websocket.Conn) string {
 }
 
 func testWebsocketHandshake(t *testing.T, ws *websocket.Conn) {
+	err := ws.WriteMessage(websocket.TextMessage, []byte(getWebsocketKey()))
+	if err != nil {
+		t.Fatalf("Error writing websocket key: %v", err)
+	}
 	msg := getTextMessage(t, ws)
 	if !regexp.MustCompile(`^clientid;[0-9]+$`).MatchString(msg) {
 		t.Errorf("Unexpected websocket handshake (clientid): %q", msg)
