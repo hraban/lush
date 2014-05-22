@@ -58,6 +58,10 @@ define(["jquery", "lush/utils"], function ($, U) {
             handleWebsocketMessage = Ctrl.prototype._handleWsOnMessage.bind(ctrl);
             handleWebsocketMessage(e);
         };
+        // Proxy function. Overwriting this one directly, instead of going
+        // through handleWebsocketMessage, causes some weird behavior on
+        // Firefox 29. Didn't want to investigate further; set .onmessage once
+        // and handle changing handlers internally fixes the problem.
         ctrl.ws.onmessage = function (e) {
             handleWebsocketMessage(e);
         };
