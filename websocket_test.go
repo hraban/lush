@@ -26,6 +26,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -61,7 +62,15 @@ func getTextMessage(t *testing.T, ws *websocket.Conn) string {
 	return string(msg)
 }
 
-func testWebsocketHandshake(t *testing.T, ws *websocket.Conn) {
+// timeout error on all network activity
+func setDeadline(ws *websocket.Conn, d time.Duration) {
+	ws.SetReadDeadline(time.Now().Add(d))
+	ws.SetWriteDeadline(time.Now().Add(d))
+}
+
+func performWebsocketHandshake(t *testing.T, ws *websocket.Conn) {
+	setDeadline(ws, 4*time.Second)
+	// Must be consumed if you want to use this connection
 	err := ws.WriteMessage(websocket.TextMessage, []byte(getWebsocketKey()))
 	if err != nil {
 		t.Fatalf("Error writing websocket key: %v", err)
@@ -76,7 +85,7 @@ func testWebsocketHandshake(t *testing.T, ws *websocket.Conn) {
 	}
 }
 
-func connectWebsocket(t *testing.T, server *httptest.Server, header http.Header) (*websocket.Conn, error) {
+func connectWebsocketNoHandshake(t *testing.T, server *httptest.Server, header http.Header) (*websocket.Conn, error) {
 	conn := connectToTestServer(t, server)
 	url := urlMustParse(server.URL)
 	url.Path = "/ctrl"
@@ -84,14 +93,19 @@ func connectWebsocket(t *testing.T, server *httptest.Server, header http.Header)
 	if err != nil {
 		return nil, err
 	}
-	// All operations must complete within five seconds
-	ws.SetReadDeadline(time.Now().Add(5 * time.Second))
-	ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
-	// Must be consumed if you want to use this connection
-	testWebsocketHandshake(t, ws)
 	return ws, nil
 }
 
+func connectWebsocket(t *testing.T, server *httptest.Server, header http.Header) (*websocket.Conn, error) {
+	ws, err := connectWebsocketNoHandshake(t, server, header)
+	if err != nil {
+		return nil, err
+	}
+	performWebsocketHandshake(t, ws)
+	return ws, nil
+}
+
+// no auth, all errors are fatal
 func connectWebsocketSimple(t *testing.T, server *httptest.Server) *websocket.Conn {
 	ws, err := connectWebsocket(t, server, nil)
 	if err != nil {
@@ -130,4 +144,40 @@ func TestWebsocketAuthentication(t *testing.T) {
 		t.Fatal("Couldn't create authenticated websocket connection:", err)
 	}
 	defer ws.Close()
+}
+
+func TestWebsocketNoKey(t *testing.T) {
+	s := newServer()
+	ts := httptest.NewServer(s.httpHandler)
+	defer ts.Close()
+	defer ts.CloseClientConnections()
+	ws, err := connectWebsocketNoHandshake(t, ts, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	setDeadline(ws, 1*time.Second)
+	_, _, err = ws.ReadMessage()
+	if nerr, ok := err.(net.Error); !ok || !nerr.Timeout() {
+		t.Fatal("Expected timeout error on read, got:", err)
+	}
+}
+
+func TestWebsocketWrongKey(t *testing.T) {
+	s := newServer()
+	ts := httptest.NewServer(s.httpHandler)
+	defer ts.Close()
+	defer ts.CloseClientConnections()
+	ws, err := connectWebsocketNoHandshake(t, ts, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	setDeadline(ws, 1*time.Second)
+	err = ws.WriteMessage(websocket.TextMessage, []byte("tralalala"))
+	if err != nil {
+		t.Fatalf("Error writing websocket key: %v", err)
+	}
+	msg := getTextMessage(t, ws)
+	if strings.ContainsRune(msg, ';') {
+		t.Errorf("Sent illegal key but reply looks like a command: %q", msg)
+	}
 }

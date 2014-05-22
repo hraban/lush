@@ -120,6 +120,9 @@ func isLocalhost(h string) bool {
 }
 
 func (s *server) Close() error {
+	if s.l == nil {
+		return errors.New("Calling server.Close before Run")
+	}
 	err := s.l.Close()
 	if err != nil {
 		return fmt.Errorf("Error closing underlying web.go server: %v", err)
