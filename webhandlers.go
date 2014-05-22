@@ -31,6 +31,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/hraban/lush/liblush"
@@ -228,6 +229,11 @@ func handleWsCtrl(ctx *web.Context) error {
 	s := ctx.User.(*server)
 	ws := newWsClient(wsconn)
 	defer ws.Close()
+	// This is just for the incoming key, after which blocking on read is fine
+	err = ws.SetReadDeadline(time.Now().Add(5 * time.Second))
+	if err != nil {
+		return fmt.Errorf("Couldn't set read deadline for websocket: %v", err)
+	}
 	// First order of business: see if the client sends me the correct key
 	// this could be done lots of ways different, perhaps more elegant ways:
 	// HTTP headers, query parameters, secret path, ... BUT! This method is very
@@ -241,6 +247,11 @@ func handleWsCtrl(ctx *web.Context) error {
 		// this in debugging, hence no error checking.
 		fmt.Fprint(ws, "Invalid lush key")
 		return errors.New("Illegal websocket key")
+	}
+	// Alright I trust this client now, read ops are expected to block
+	err = ws.SetReadDeadline(time.Time{})
+	if err != nil {
+		return fmt.Errorf("Couldn't remove read deadline for websocket: %v", err)
 	}
 	// tell the client about its Id
 	_, err = fmt.Fprint(ws, "clientid;", ws.Id)
