@@ -157,8 +157,12 @@ func TestWebsocketNoKey(t *testing.T) {
 	}
 	setDeadline(ws, 1*time.Second)
 	_, _, err = ws.ReadMessage()
-	if nerr, ok := err.(net.Error); !ok || !nerr.Timeout() {
-		t.Fatal("Expected timeout error on read, got:", err)
+	// Obsolete since jun 4 revision of gorilla websocket
+	//if nerr, ok := err.(net.Error); !ok || !nerr.Timeout() {
+	//	t.Errorf("Expected timeout error on read, got: %#v", err)
+	//}
+	if err == nil {
+		t.Errorf("Expected error after timeout.")
 	}
 }
 
