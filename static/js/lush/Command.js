@@ -85,12 +85,11 @@ define(["jquery", "lush/utils"], function ($, U) {
         cmd._moi = moi;
         $.extend(cmd, init);
         /* default values for properties */
-        if (!cmd.userdata) {
-            cmd.userdata = {};
-        }
-        if (cmd.args === undefined) {
-            cmd.args = [];
-        } else if (!$.isArray(cmd.args)) {
+        cmd.stdout = cmd.stdout || "";
+        cmd.stderr = cmd.stderr || "";
+        cmd.userdata = cmd.userdata || {};
+        cmd.args = cmd.args || [];
+        if (!$.isArray(cmd.args)) {
             throw "command must have an array as argument list";
         }
         // stock event handlers
