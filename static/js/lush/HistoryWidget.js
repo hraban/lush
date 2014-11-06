@@ -76,7 +76,7 @@ define(["jquery", "lush/utils"], function ($, U) {
             var cmd = this;
             // if my name changes, so does the name of my group.  Set the text
             // of this li to the name of whatever group I belong to
-            updateHistoryLiName(cmd.gid);
+            updateHistoryLiName(cmd.getGid());
         });
         $(cmd).on('archival', function (_, archived) {
             var cmd = this;
@@ -109,7 +109,7 @@ define(["jquery", "lush/utils"], function ($, U) {
             // I'm back!
             // my name might have changed while I was a child but that will not
             // have been reflected in this LI
-            updateHistoryLiName(cmd.gid);
+            updateHistoryLiName(cmd.getGid());
             // now that I'm not a child of my old hierarchy, its name has
             // changed
             updateHistoryLiName(olddaddy.gid);

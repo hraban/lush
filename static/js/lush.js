@@ -48,6 +48,7 @@ requirejs.config({
         "jquery.terminal": "jquery.terminal-0.8.6.min",
         "jsPlumb": "jquery.jsPlumb-1.5.3-min",
         "ansi_up": "ansi_up-r7e9940fdad",
+        "react": "http://fb.me/react-with-addons-0.12.0",
     },
     "shim": {
         "jquery.terminal": ["jquery"],

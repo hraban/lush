@@ -84,14 +84,7 @@ define(["jquery", "lush/utils"], function ($, U) {
         cmd.ctrl = ctrl;
         cmd._moi = moi;
         $.extend(cmd, init);
-        cmd.gid = cmd.nid;
-        // default values for properties
-        if (!cmd.stdout) {
-            cmd.stdout = '';
-        }
-        if (!cmd.stderr) {
-            cmd.stderr = '';
-        }
+        /* default values for properties */
         if (!cmd.userdata) {
             cmd.userdata = {};
         }
@@ -103,18 +96,24 @@ define(["jquery", "lush/utils"], function ($, U) {
         // stock event handlers
         $(cmd).on('parentAdded', function (_, dad) {
             var cmd = this;
-            cmd.gid = dad.gid;
+            cmd.parentId = dad.nid;
         });
         $(cmd).on('parentRemoved', function () {
             var cmd = this;
-            cmd.gid = cmd.nid;
+            cmd.parentId = undefined;
         });
-        $(cmd).on('done', function () {
-            var cmd = this;
-            // these event handlers only make sense for running commands
-            // TODO: this list is bound to grow out of sync. How to fix?
-            $(cmd).off('.stream childAdded childRemoved parentAdded parentRemoved done updated.status updated.args updated.cmd');
-        });
+        /*
+         * Disabled because some UI elements rely on these events for
+         * initialization. The whole situation is a mess and these events should
+         * be on their way out anyway. Disabling as a temporary work-around.
+         * Helloooo memory leaks.
+         */
+        //$(cmd).on('done', function () {
+        //    var cmd = this;
+        //    // these event handlers only make sense for running commands
+        //    // TODO: this list is bound to grow out of sync. How to fix?
+        //    $(cmd).off('.stream childAdded childRemoved parentAdded parentRemoved done updated.status updated.args updated.cmd');
+        //});
         $(cmd).on('updated.status', function (e) {
             var cmd = this;
             if (cmd.status.code > 1) {
@@ -132,6 +131,31 @@ define(["jquery", "lush/utils"], function ($, U) {
             cmd.stderr += data;
             $(cmd).trigger('updated.stderr', [cmd.stderr]);
         });
+        if (cmd.stdoutto) {
+            var child = cmd.stdoutCmd();
+            // This is fucking terrible. Excuse the swearing but it truly is,
+            // it's a mess. Triggering this event before initialization
+            // completes is a disaster; callbacks will now fire, assuming the
+            // parent is ready, which it's not. E.g. it's not in cmds[] array
+            // yet, so child.getParentCmd() will fail, and thus so will
+            // getGid(). This is absolutely hopeless and I am deeply deeply
+            // ashamed. In dire, DIRE need of a rewrite. Simplification, static
+            // typing, removal of these jquery events (use normal, typesafe
+            // events on this object itself), the whole shebang.
+            //
+            // This.
+            //
+            // Is.
+            //
+            // A.
+            //
+            // Disaster.
+            $(child).trigger('parentAdded', [cmd]);
+        }
+        if (cmd.stderrto) {
+            var child = cmd.stderrCmd();
+            $(child).trigger('parentAdded', [cmd]);
+        }
     };
 
     Command.prototype.imadethis = function () {
@@ -161,6 +185,7 @@ define(["jquery", "lush/utils"], function ($, U) {
             updatedby = response.userdata.by;
             callbackId = response.userdata.callback;
         }
+        // Track modifications to hierarchy for appropriate event raising later
         // map(streamname => map({from, to} => [Command | null]))
         var childMod = {};
         if (prop == "stdoutto") {
@@ -455,25 +480,37 @@ define(["jquery", "lush/utils"], function ($, U) {
     };
 
     Command.prototype.isRoot = function () {
-        return this.gid == this.nid;
+        var cmd = this;
+        return !cmd.parentId;
     };
 
     Command.prototype.stdoutCmd = function () {
         var cmd = this;
-        if (cmd.stdoutto !== 0) {
-            if (cmd.stdoutto === undefined) {
-                // TODO: ensure this path cannot be reached and delete it
-                console.log("Deprecation warning: stoudtto should always be a number");
-                return;
-            }
+        if (cmd.stdoutto) {
             return cmds[cmd.stdoutto];
         }
     };
 
     Command.prototype.stderrCmd = function () {
         var cmd = this;
-        if (cmd.stderrto !== undefined) {
+        if (cmd.stderrto) {
             return cmds[cmd.stderrto];
+        }
+    };
+
+    Command.prototype.getParentCmd = function () {
+        var cmd = this;
+        if (cmd.parentId) {
+            return cmds[cmd.parentId];
+        }
+    };
+
+    Command.prototype.getGid = function () {
+        var cmd = this;
+        if (cmd.isRoot()) {
+            return cmd.nid;
+        } else {
+            return cmd.getParentCmd().getGid();
         }
     };
 

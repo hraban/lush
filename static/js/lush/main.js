@@ -298,7 +298,7 @@ define(["jquery",
         }
         var cmd = new Command(globals.ctrl, init, globals.moi);
         cmds[cmd.nid] = cmd;
-        var widget = new Widget(cmd, globals.ctrl);
+        var cmddiv = Widget(cmd, document.getElementById("cmds"));
         history_widget.addCommand(cmd);
         // some UI parts are not initialized, just hooked into updated handlers.
         // TODO: NOT MY PROBLEM -- or so I wish :( that should change
@@ -328,7 +328,7 @@ define(["jquery",
         return init;
     }
 
-    // Third argument is the init data. If not supplied it is fetched from the
+    // Second argument is the init data. If not supplied it is fetched from the
     // server. If command is already initialized this is a NOP.
     function initCommandAndChildren(nid, init) {
         if (nid in cmds) {

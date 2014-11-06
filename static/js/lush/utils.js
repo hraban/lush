@@ -278,16 +278,17 @@ noConcurrentCalls: function noConcurrentCalls(f) {
     };
 },
 
-scrollToBottom: function (id) {
-    if (undefined === id) {
-        throw "scrollToBottom() needs the id of a container div to scroll";
+scrollToBottom: function (el) {
+    if (undefined === el) {
+        throw new TypeError("container div to scroll argument required");
     }
-    var el = document.getElementById(id);
-    if (el) {
-        el.scrollTop = el.scrollHeight;
-    } else {
-        throw "no such element";
+    if (typeof el === "string") {
+        el = document.getElementById(el);
     }
+    if (!(el instanceof HTMLElement)) {
+        throw new Error("Not a valid DOM node");
+    }
+    el.scrollTop = el.scrollHeight;
 },
 
 isInt: function (i) {

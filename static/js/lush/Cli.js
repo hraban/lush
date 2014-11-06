@@ -255,7 +255,7 @@ define(["jquery",
             if (cmd.status.code > 0) {
                 // once started, stop worrying about changes
                 stopMonitoringCmd(cmd);
-                var root = cmds[cmd.gid];
+                var root = cmds[cmd.getGid()];
                 // this command is (part of) the synchronised command tree
                 if (root === cli._cmd) {
                     // what now? that is the big question. what now. take a step

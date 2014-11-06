@@ -27,7 +27,6 @@
 // resides:
 //
 // - the command widget
-// - helper nodes inserted by jsPlumb
 // - the group widget of every child of the command (indirectly)
 //
 // eg "echo hahahajustkidding | tee /tmp/foo | mail -s 'I think you are great' root"
@@ -38,24 +37,20 @@
 //
 // (groupwidget1
 //   (cmdwidget1)
-//   (jsPlumbstuff)
-//   (morejsPlumbstuff)
 //   (children
 //     (groupwidget2
 //       (cmdwidget2)
-//       .... // jsplumb stuff
 //       (children
 //         (groupwidget3
-//           (cmdwidget3)
-//           ... // jsPlumb stuff
-//           )))))
+//           (cmdwidget3))))))
 //
 // all this is wrapped in a <div class=rootcontainer>
 
 define(["jquery",
-        "lush/utils",
-        'jsPlumb'],
-       function ($, U) {
+        "react",
+        "lush/Command",
+        "lush/utils"],
+       function ($, React, Command, U) {
 
     // disable this dom element a specified amount of time (prevent double
     // click)
@@ -63,197 +58,175 @@ define(["jquery",
         if (ms === undefined) {
             ms = 1000;
         }
-        $(el).prop('disabled', true);
+        $(el).prop("disabled", true);
         setTimeout(function () {
-            $(el).prop('disabled', false);
+            $(el).prop("disabled", false);
         }, ms);
     }
 
-    // build jquery node containing [◼] button that stops the cmd in background
-    var makeStopButton = function (cmd) {
-        return $('<button class=stop>◼</button>').click(function (e) {
-            e.preventDefault();
-            disableAWhile(this);
-            cmd.stop();
-        });
-    };
-
-    // set the status info for this command in the given jquery node's content
-    var setStatNode = function (cmd, $node) {
-        var content;
-        switch (cmd.status.code) {
-        case 0:
-            break;
-        case 1:
-            content = makeStopButton(cmd);
-            break
-        case 2:
-            content = '✓';
-            break;
-        case 3:
-            content = '✗';
-            break;
-        default:
-            throw "illegal status code";
-        }
-        return $node.empty().append(content);
-    };
-
-    var stream2anchor = function (stream) {
-        return {stderr: "RightMiddle", stdout: "BottomCenter"}[stream]
-    };
-
-    var anchor2stream = function (anchor) {
-        return {RightMiddle: "stderr", BottomCenter: "stdout"}[anchor];
-    };
-
-    // the two first arguments are the source and target endpoints to connect
-    var connectVisually = function (srcep, trgtep, stream) {
-        jsPlumb.connect({
-            source: srcep,
-            target: trgtep,
-        });
-    };
-
-    // create widget with command info and add it to the DOM.
-    //
-    // jsPlumb endpoints: widgets have three endpoints: stdin, stdout and
-    // stderr. these endoints are jsPlumb.Endpoint objects and their reference
-    // is needed to connect them to eachother. this function creates the
-    // endpoints and stores their reference in the cmd argument object as
-    // .stdinep, .stdoutep and .stderrep.
-    //
-    // View is synced with command object through the relevant updated jQuery
-    // events (see doc for Command constructor).
-    var Widget = function (cmd, ctrl) {
-        var widget = this;
-        if (cmd === undefined || ctrl === undefined) {
-            throw "missing argument(s) to Widget constructor";
-        }
-        // container for the widget when it is root. widget container will always
-        // reside as a direct child of <div id=cmds>, the widget will move
-        // around depending on its hierarchy. if it is root, it is here, if it
-        // is a child, it is in another element's <div class=children>.
-        widget.node = $('#rootcontainer_template')
-            .clone()
-            .attr('id', 'root' + cmd.nid)
-            .appendTo('#cmds')
-            .find('.groupwidget')
-                .attr("id", "group" + cmd.nid)
-            .end()
-            .find('.cmdwidget')
-                .attr('id', cmd.htmlid)
-                .get(0);
-        // the new widget causes the bottom of the widgets div to scroll away:
-        U.scrollToBottom('cmds');
-        widget.cmd = cmd;
-        widget._initDom();
-        // Disabled until properly implemented. TODO: Make this work!
-        //widget._initJsPlumb(ctrl);
-        $(cmd).on('archival', function (_, archived) {
-            var cmd = this;
-            if (archived) {
-                $('#root' + cmd.nid).addClass('archived');
-            } else {
-                $('#root' + cmd.nid).removeClass('archived');
+    var StatusNode = React.createClass({
+        render: function () {
+            var content;
+            switch (this.props.cmd.status.code) {
+            case 0:
+                content = undefined;
+                break;
+            case 1:
+                // TODO: button.onclick:
+                //e.preventDefault();
+                //disableAWhile(this);
+                //cmd.stop();
+                content = React.DOM.button({className: "stop"}, "◼");
+                break
+            case 2:
+                content = "✓";
+                break;
+            case 3:
+                content = "✗";
+                break;
+            default:
+                throw new Error("illegal status code");
             }
-        });
-        $(cmd).on('wasreleased', function () {
-            var cmd = this;
-            $('#root' + cmd.nid + ', #group' + cmd.nid).remove();
-            delete widget.node;
-            delete widget.cmd;
-        });
-        function setChild(cmd, childid, streamname) {
-            // I have a new child, make its group node a child of my group
-            $('#group' + childid)
-                .appendTo('#group' + cmd.nid + ' > .children')
-                .attr('data-parent-stream', streamname);
-            $('#root' + childid).addClass('empty');
+            return React.DOM.span({className: "status"}, content);
         }
-        $(cmd).on('updated.stdoutto', function () {
-            var cmd = this;
+    });
+
+    var CommandWidget = React.createClass({
+        render: function () {
+            var argvtxt = this.props.cmd.getArgv().join(" ");
+            return (
+                React.DOM.div({id: this.props.cmd.htmlid,
+                                            className: "cmdwidget"},
+                    this.props.cmd.nid + ":",
+                    React.createElement("tt", null, argvtxt),
+                    React.createElement(StatusNode, {cmd: this.props.cmd}))
+            );
+        }
+    });
+
+    var GroupWidget = React.createClass({
+        propTypes: {
+            parentStreamName: React.PropTypes.string,
+            onChange: React.PropTypes.func.isRequired,
+            cmd: function (props, propName, componentName) {
+                if (!(props[propName] instanceof Command)) {
+                    return new Error("cmd property should be a Command");
+                }
+            }
+        },
+
+        componentWillMount: function () {
+            var events = [
+                'updated.status',
+                'archival',
+                'updated.cmd',
+                'updated.args',
+                'parentAdded',
+                'parentRemoved',
+                'childAdded',
+                'childRemoved'
+            ].reduce(function (x, y) { return x + y + '.WidgetGroupWidget '; }, '');
+            $(this.props.cmd).on(events, this.props.onChange);
+        },
+
+        componentWillUnmount: function () {
+            $(this.props.cmd).off('.WidgetGroupWidget');
+        },
+
+        render: function () {
+            var myProps = this.props;
+            var cmd = myProps.cmd;
+            var children = [];
+            function addChild(cmd, parentStreamName) {
+                if (typeof parentStreamName !== "string") {
+                    throw new TypeError("expected parent stream name (string)");
+                }
+                var childProps = {
+                    parentStreamName: parentStreamName,
+                    cmd: cmd,
+                    key: cmd.htmlid,
+                    onChange: myProps.onChange
+                }
+                children.push(React.createElement(GroupWidget, childProps));
+            }
             if (cmd.stdoutto) {
-                setChild(cmd, cmd.stdoutto, 'stdout');
+                addChild(cmd.stdoutCmd(), "stdout");
             }
-        });
-        $(cmd).on('updated.stderrto', function () {
-            var cmd = this;
             if (cmd.stderrto) {
-                setChild(cmd, cmd.stderrto, 'stderr');
+                addChild(cmd.stderrCmd(), "stderr");
             }
-        });
-        $(cmd).on('parentRemoved', function () {
-            var cmd = this;
-            // command is now root: put it back in its root container
-            // (NOP if already root)
-            $('#group' + cmd.nid).appendTo('#root' + cmd.nid)
-                                 .removeAttr('data-parent-stream');
-            $('#root' + cmd.nid).removeClass('empty');
-        });
-    };
+            var divProps = {
+                id: "group" + cmd.nid,
+                className: "groupwidget",
+                // Undefined if undefined :] (stupid vim syntax highlighter)
+                "data-parent-stream": myProps.parentStreamName,
+            };
+            return (
+                React.DOM.div(divProps,
+                    React.createElement(CommandWidget, {cmd: cmd}),
+                    React.DOM.div({className: "children"}, children))
+            );
+        }
+    });
 
-    Widget.prototype._initJsPlumb = function (ctrl) {
-        var widget = this;
-        var cmd = widget.cmd;
-        jsPlumb.makeTarget(widget.node, {
-            anchor: 'TopCenter',
-            isTarget: true,
-            maxConnections: 1,
-            cssClass: 'stdinep',
-            parameters: { sysid: cmd.nid },
-        });
-        cmd.stdoutep = jsPlumb.addEndpoint(this.node, {
-            anchor: 'BottomCenter',
-            isSource: true,
-            cssClass: 'stdoutep',
-            parameters: {
-                stream: "stdout",
-                sysid: cmd.nid,
-            },
-        });
-        cmd.stderrep = jsPlumb.addEndpoint(this.node, {
-            anchor: 'RightMiddle',
-            isSource: true,
-            cssClass: 'stderrep',
-            parameters: {
-                stream: "stderr",
-                sysid: cmd.nid,
-            },
-        });
-        $(cmd).one('release_jsplumb', function () {
-            var cmd = this;
-            // custom event for releasing all jsPlumb resources, once
-            jsPlumb.deleteEndpoint(cmd.stdoutep);
-            jsPlumb.deleteEndpoint(cmd.stderrep);
-            delete cmd.stdoutep;
-            delete cmd.stderrep;
-            // todo: stdin endpoint deleted on detach, so should be detached if
-            // applicable
-        }).one('done wasreleased', function () {
-            var cmd = this;
-            $(cmd).trigger('release_jsplumb');
-        });
-    };
+    var WindowButtons = React.createClass({
+        render: function () {
+            return (
+                React.DOM.div({className: "windowbuttons"},
+                    React.DOM.button({className: "repeatgroup"}, "↻"),
+                    React.DOM.button({className: "startgroup"}, "▶"),
+                    React.DOM.button({className: "archivegroup"}, "_"),
+                    React.DOM.button({className: "releasegroup"}, "x"))
+            );
+        }
+    });
 
-    Widget.prototype._initDom = function () {
-        var widget = this;
-        var node = widget.node;
-        var cmd = widget.cmd;
-        // static parts of the UI (depend on constant cmd property "nid")
-        $(node).find('.id').text(cmd.nid);
-        // dynamic parts of the UI
-        $(cmd).on('updated.status', function () {
-            var cmd = this;
-            setStatNode(cmd, $(node).find('.status'));
-        });
-        $(cmd).on('updated.cmd.args', function () {
-            var cmd = this;
-            var argvtxt = cmd.getArgv().join(' ');
-            $(node).find('.argv').text(argvtxt);
-        });
-    };
 
-    return Widget;
+    var RootContainer = React.createClass({
+        render: function () {
+            if (!this.props.cmd.isRoot()) {
+                return null;
+            }
+            var myProps = {
+                id: "root" + this.props.cmd.nid,
+                className: React.addons.classSet({
+                    rootcontainer: true,
+                    archived: this.props.cmd.userdata.archived,
+                })
+            };
+            var component = this;
+            var childProps = {
+                cmd: this.props.cmd,
+                // for some reason calling .render() doesn't do anything. I
+                // don't understand react and I also don't care. bite me.
+                onChange: function () {
+                    component.setProps({cmd: component.props.cmd});
+                },
+                key: this.props.cmd.htmlid
+            }
+            return (
+                React.DOM.div(myProps,
+                    React.createElement(WindowButtons, {cmd: this.props.cmd}),
+                    React.createElement(GroupWidget, childProps))
+            );
+        }
+    });
+
+    // create root widget for this command
+    return function (cmd, cmds) {
+        var wrapper = document.createElement('div');
+        cmds.appendChild(wrapper);
+        var props = {cmd: cmd, key: 'root' + cmd.nid};
+        var reactel = React.createElement(RootContainer, props);
+        var component = React.render(reactel, wrapper, function () {
+            // new widget causes bottom of widgets div to scroll away:
+            U.scrollToBottom(cmds);
+        });
+        $(cmd).one("wasreleased", function () {
+            React.unmountComponentAtNode(wrapper);
+            cmds.removeChild(wrapper);
+        });
+        return wrapper;
+    };
 
 });
