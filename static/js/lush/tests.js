@@ -41,13 +41,13 @@ define(["jquery",
         equal(U.lcp(["burt", "burt"]), "burt");
     });
 
-    test("splitn(): split string with limit", function () {
-        deepEqual("a,b,c,d".splitn(",", 3), ['a', 'b', 'c,d']);
-        deepEqual("a,b,c,d".splitn(",", 9), ['a', 'b', 'c', 'd']);
-        deepEqual("a,b,c,d".splitn(",", 1), ['a,b,c,d']);
-        deepEqual("foo".splitn("", 2), ['f', 'oo']);
-        deepEqual("".splitn(",", 1), [""]);
-        deepEqual("".splitn("", 1), []);
+    test("U.splitn(): split string with limit", function () {
+        deepEqual(U.splitn("a,b,c,d", ",", 3), ['a', 'b', 'c,d']);
+        deepEqual(U.splitn("a,b,c,d", ",", 9), ['a', 'b', 'c', 'd']);
+        deepEqual(U.splitn("a,b,c,d", ",", 1), ['a,b,c,d']);
+        deepEqual(U.splitn("foo", "", 2), ['f', 'oo']);
+        deepEqual(U.splitn("", ",", 1), [""]);
+        deepEqual(U.splitn("", "", 1), []);
     });
     
     test("lexer: argv", function() {

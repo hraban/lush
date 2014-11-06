@@ -581,7 +581,7 @@ define(["jquery",
         // that's this one. this handler will proxy that event to the command
         // object's processStream method.
         $(ctrl).on('stream', function (_, rawopts) {
-            var opts = rawopts.splitn(';', 3);
+            var opts = U.splitn(rawopts, ';', 3);
             var sysid = opts[0];
             var stream = opts[1];
             var data = opts[2];

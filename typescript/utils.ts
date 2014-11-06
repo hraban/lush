@@ -18,64 +18,59 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-"use strict";
-
-
 // GENERIC UTILITIES
 
-define(["jquery"], function ($) {
+/// <require path="jquery.d.ts" />
 
-// bite me, syntax fairy
-
-var U = {
+import $ = require("jquery");
 
 // prefix all special chars in arg by backslash
-parserEscape: function parserEscape(txt) {
+export function parserEscape(txt) {
     return txt.replace(/([\\?*\s"'])/g, "\\$1");
-},
+}
 
 // undo parserEscape
-parserUnescape: function parserUnescape(txt) {
+export function parserUnescape(txt) {
     return txt.replace(/\\(.)/g, "$1");
-},
+}
 
 
 // tries to parse JSON returns null on any failure
-safeJSONparse: function safeJSONparse(text) {
+export function safeJSONparse(text) {
     // how wrong is a wild-card catch in JS?
     try {
         return JSON.parse(text);
     } catch(e) {
         return null;
     }
-},
+}
 
 // analogous to CL's var by = function  the same name
-constantly: function constantly(val) {
+export function constantly(val) {
     return function () { return val; }
-},
+}
 
 // analogous to Python's operator.attrgetter
-attrgetter: function attrgetter(attr) {
+export function attrgetter(attr) {
     return function (obj) {
         return obj[attr];
     };
-},
+}
 
-identity: function identity(x) {
+export function identity(x) {
     return x;
-},
+}
 
 // copy ar but remove all values that evaluate to false (0, "", false, ...)
-removeFalse: function removeFalse(ar) {
-    return $.grep(ar, U.identity);
-},
+export function removeFalse(ar) {
+    return $.grep(ar, identity);
+}
 
 // transform an array of objects into a mapping from key to array of objects
 // with that key.
 // compare to SQL's GROUP BY, with a custom var to = function  evaluate which group an
 // object belongs to.
-groupby: function groupby(objs, keyfun) {
+export function groupby(objs, keyfun) {
     var groups = {};
     $.map(objs, function (obj) {
         var key = keyfun(obj);
@@ -83,94 +78,94 @@ groupby: function groupby(objs, keyfun) {
         groups[key] = (groups[key] || []).concat(obj);
     });
     return groups;
-},
+}
 
-curry: function curry(f) {
+export function curry(f) {
     var fixargs = Array.prototype.slice.call(arguments, 1);
     return function () {
         var restargs = Array.prototype.slice.call(arguments);
         return f.apply(this, fixargs.concat(restargs));
     };
-},
+}
 
-hassuffix: function hassuffix(str, suff) {
+export function hassuffix(str, suff) {
     return str.slice(-suff.length) == suff;
-},
+}
 
-escapeHTML: function escapeHTML(text) {
+export function escapeHTML(text) {
     // impressive for a lang that is by definition intended to mix with HTML
     return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-},
+}
 
-min: function min(x, y) {
+export function min(x, y) {
     return x < y ? x : y;
-},
+}
 
-lcpbi: function lcpbi(x, y) {
-    var l = U.min(x.length, y.length);
+export function lcpbi(x, y) {
+    var l = min(x.length, y.length);
     var i = 0;
     while (i < l && x[i] == y[i]) {
         i++;
     }
     return x.slice(0, i);
-},
+}
 
 // longest common prefix
-lcp: function lcp(seqs, i) {
+export function lcp(seqs, i) {
     if (seqs.length == 0) {
         return "";
     }
-    return seqs.reduce(U.lcpbi);
-},
+    return seqs.reduce(lcpbi);
+}
 
 // append text data to contents of jquery node
-appendtext: function appendtext($node, text) {
+export function appendtext($node, text) {
     return $node.text($node.text() + text);
-},
+}
 
 // http://stackoverflow.com/a/2117523
 // i like this guy
-guid: function guid() {
+export function guid() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         var r = Math.random()*16|0;
         return (c == 'x' ? r : (r&0x3|0x8)).toString(16);
     });
-},
+}
 
 
 // PROJECT LOCAL UTILTIES
 
-stringStartsWith: function stringStartsWith(str, prefix) {
+export function stringStartsWith(str, prefix) {
     return str.lastIndexOf(prefix, 0) === 0;
-},
+}
 
 // create full websocket uri from relative path
-wsURI: function wsURI(path) {
-    if (U.stringStartsWith(path, "ws://")) {
+export function wsURI(path) {
+    if (stringStartsWith(path, "ws://")) {
         return path;
     }
     return 'ws://' + document.location.host + path;
-},
+}
 
 // Call given var whenever = function  the specified stream from this
 // command has an update It is called with the new data so eg if a
 // stream produces two bytes A and B the following might happen:
 // callback("AB"); or callback("A"); callback("B");
 // returns the websocket object associated with this monitor
-monitorstream: function monitorstream(sysid, stream, callback) {
-    var uri = U.wsURI('/' + sysid + '/stream/' + stream + '.bin');
+export function monitorstream(sysid, stream, callback) {
+    var uri = wsURI('/' + sysid + '/stream/' + stream + '.bin');
     var ws = new WebSocket(uri);
     ws.onmessage = function (e) {
         callback(e.data);
     };
     return ws;
-},
+}
 
 // f acts on l, which is a tree with implicit nodes, the next node is extracted
 // using nextkey, which returns undefined if there is no next node. also f
 // returns a deferred and this function only progresses on success. as does this
 // function. if reversed is true, call last element first.
-mapf: function mapf(f, l, nextkey, reversed) {
+export function mapf(f, l, nextkey, reversed) {
     if (l === undefined) {
         return $.Deferred().resolve();
     }
@@ -178,19 +173,19 @@ mapf: function mapf(f, l, nextkey, reversed) {
         throw "mapf: nextkey MUST be a function";
     }
     if (reversed) {
-        return U.mapf(f, nextkey(l), nextkey, true).then(f.bind(this, l))
+        return mapf(f, nextkey(l), nextkey, true).then(f.bind(this, l))
     } else {
-        return f(l).then(U.mapf.bind(this, f, nextkey(l), nextkey));
+        return f(l).then(mapf.bind(this, f, nextkey(l), nextkey));
     }
-},
+}
 
-mapCmds: function mapCmds(f, cmd, reverse) {
-    return U.mapf(f, cmd, function (cmd) { return cmd.stdoutCmd(); }, reverse);
-},
+export function mapCmds(f, cmd, reverse) {
+    return mapf(f, cmd, function (cmd) { return cmd.stdoutCmd(); }, reverse);
+}
 
 // execute f on cmd and all its children, serially and top-down (not too happy
 // about the code dupe with mapCmds but hey)
-mapCmdTree: function mapCmdTree(cmd, f) {
+export function mapCmdTree(cmd, f) {
     if (cmd === undefined) {
         return;
     }
@@ -199,22 +194,22 @@ mapCmdTree: function mapCmdTree(cmd, f) {
         throw "f must be a function";
     }
     f(cmd);
-    U.mapCmdTree(cmd.stdoutCmd(), f);
-},
+    mapCmdTree(cmd.stdoutCmd(), f);
+}
 
 // serialize a pipeline
-cmdChainToPrompt: function cmdChainToPrompt(cmd) {
+export function cmdChainToPrompt(cmd) {
     var argvs = [];
     // couldn't resist.
-    U.mapCmdTree(cmd, function (cmd) {
-        var argv = cmd.getArgv().map(U.parserEscape);
+    mapCmdTree(cmd, function (cmd) {
+        var argv = cmd.getArgv().map(parserEscape);
         argvs.push.apply(argvs, argv);
         if (cmd.stdoutto > 0) {
             argvs.push('|');
         }
     });
     return argvs.join(' ');
-},
+}
 
 // PUZZLE BELOW!
 //
@@ -223,9 +218,9 @@ cmdChainToPrompt: function cmdChainToPrompt(cmd) {
 // works without looking at the implementation.
 
 // wait for d1 to complete, then proxy that to d2
-pipeDeferred: function pipeDeferred(d1, d2) {
+export function pipeDeferred(d1, d2) {
     d1.done(d2.resolve.bind(d2)).fail(d2.reject.bind(d2));
-},
+}
 
 // wrap a function, that returns a deferred, to a "locked" version:
 //
@@ -248,8 +243,8 @@ pipeDeferred: function pipeDeferred(d1, d2) {
 // now the first call is done: back to initial state.
 //
 // see unit tests for details
-noConcurrentCalls: function noConcurrentCalls(f) {
-    var running = $.Deferred().resolve();
+export function noConcurrentCalls(f) {
+    var running:JQueryPromise<any> = $.Deferred().resolve();
     var pendingf;
     return function () {
         var args = arguments;
@@ -264,7 +259,7 @@ noConcurrentCalls: function noConcurrentCalls(f) {
                 throw "Return value of wrapped function must be a deferred";
             }
             cd = cd.always(function () { exe.resolve(); });
-            U.pipeDeferred(cd, d);
+            pipeDeferred(cd, d);
             return exe;
         };
         running = running.then(function () {
@@ -276,9 +271,9 @@ noConcurrentCalls: function noConcurrentCalls(f) {
         });
         return d;
     };
-},
+}
 
-scrollToBottom: function (el) {
+export function scrollToBottom(el) {
     if (undefined === el) {
         throw new TypeError("container div to scroll argument required");
     }
@@ -289,16 +284,23 @@ scrollToBottom: function (el) {
         throw new Error("Not a valid DOM node");
     }
     el.scrollTop = el.scrollHeight;
-},
+}
 
-isInt: function (i) {
+export function isInt(i) {
     return (typeof i === 'number') && (i % 1 === 0);
-},
+}
 
-}; // the U object containing all utility functions
-
-
-// these extensions are not part of the utility object U
+export function splitn(str, sep, n) {
+    var components = str.split(sep);
+    var res = [];
+    while (--n && components.length > 0) {
+        res.push(components.shift());
+    }
+    if (components.length > 0) {
+        res.push(components.join(sep));
+    }
+    return res;
+}
 
 // haha stupid phantomjs
 if (!Function.prototype.bind) {
@@ -323,27 +325,6 @@ if (!Function.prototype.bind) {
 
     return fBound;
   };
-}
-
-// http://stackoverflow.com/a/202627
-if (!String.prototype.repeat) {
-    String.prototype.repeat = function (num) {
-        return new Array(num + 1).join(this);
-    };
-}
-
-if (!String.prototype.spltin) {
-    String.prototype.splitn = function (sep, n) {
-        var components = this.split(sep);
-        var res = [];
-        while (--n && components.length > 0) {
-            res.push(components.shift());
-        }
-        if (components.length > 0) {
-            res.push(components.join(sep));
-        }
-        return res;
-    };
 }
 
 // serialize html form to jquery object ready for jsoning
@@ -379,9 +360,3 @@ if (!$.fn.tabsBottom) {
         return this;
     };
 }
-
-return U;
-
-} // the AMD wrapping function
-
-); // requirejs define()

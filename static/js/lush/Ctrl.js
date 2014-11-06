@@ -81,7 +81,7 @@ define(["jquery", "lush/utils"], function ($, U) {
 
     Ctrl.prototype._handleWsOnMessage = function(e) {
         var ctrl = this;
-        var x = e.data.splitn(';', 2);
+        var x = U.splitn(e.data, ';', 2);
         var cmd = x[0];
         var rest = x[1];
         // transform to jquery event on control stream object
