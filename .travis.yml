@@ -1,4 +1,13 @@
 language: go
-script: ./test.sh
-install: go get -d -v ./... && go build -v ./...
+
 go: 1.2
+
+before_install:
+- sudo apt-get update
+- sudo apt-get install npm
+- npm install -g gulp
+- npm install -D gulp gulp-tsc
+
+install: go get -d -v ./... && go build -v ./... && gulp
+
+script: ./test.sh
