@@ -22,3 +22,4 @@ lush
 !static/js/lush
 lush.exe
 bin/
+node_modules/
