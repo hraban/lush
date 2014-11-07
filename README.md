@@ -8,27 +8,6 @@ The goal of lush is to reinvent interaction with an operating system. Currently
 there are two major players: the command line and graphical shells. Lush is a
 third option that leverages the webbrowser as the UI.
 
-See https://github.com/hraban/lush/wiki for more info.
-
-## Lush on Linux
-
-Installing Lush on Linux is only possible from source.
-
-For this, you will need node.js and go.
-
-Download and install:
-
-    $ go get github.com/hraban/lush
-    $ cd $GOPATH/github.com/hraban/lush
-    $ npm install -g gulp
-    $ npm install -D gulp gulp-typescript
-    $ gulp
-
-To run the program find the executable (somewhere in $GOPATH/bin/) and launch
-it. E.g.:
-
-    $ $GOPATH/bin/lush
-
 ## Lush on Windows: Binary (EASY!)
 
 Go to:
@@ -70,12 +49,32 @@ To update lush:
     cd c:\go3d\src\github.com\hraban\lush
     gulp
 
+## Lush on Linux
+
+Installing Lush on Linux is only possible from source.
+
+For this, you will need node.js and go.
+
+Download and install:
+
+    $ go get github.com/hraban/lush
+    $ cd $GOPATH/github.com/hraban/lush
+    $ npm install -g gulp
+    $ npm install -D gulp gulp-typescript
+    $ gulp
+
+To run the program find the executable (somewhere in $GOPATH/bin/) and launch
+it. E.g.:
+
+    $ $GOPATH/bin/lush
+
 ## Afterword
 
 The code is available on github at https://github.com/hraban/lush
 
-Feel free to contact me for more info
+See https://github.com/hraban/lush/wiki for more info, and feel free to contact
+me:
 
 Hraban Luyat
 hraban@0brg.net
-March 2014
+November 2014
