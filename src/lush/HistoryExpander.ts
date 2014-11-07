@@ -33,12 +33,8 @@ class HistoryExpander {
     private _lexer = new lexer.Lexer();
 
     constructor() {
-        this._lexer.onerror = function (err) {
-            // I only care about !$ !!
-            if (err.type == lexer.ERRCODES.BARE_EXCLAMATIONMARK) {
-                throw err;
-            }
-        };
+        // Errors are not important for history expander
+        this._lexer.onerror = () => {};
     }
 
     expand(txt: string) {

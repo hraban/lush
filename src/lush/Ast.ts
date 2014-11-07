@@ -23,22 +23,13 @@
 // a linked list of AST nodes.
 class Ast {
     // updated after each call to setprompt()
-    argv: string[];
-    // true when _newarg contains a globbing char
-    hasglob: boolean;
+    argv: string[] = [];
+    // true when newarg contains a globbing char
+    hasglob: boolean = false;
     // pointer to next command, if any
     stdout: Ast;
-
     // building the next argument
-    private _newarg: string;
-
-    constructor() {
-        var ast = this;
-        ast.argv = [];
-        ast._newarg = '';
-        ast.hasglob = false;
-        ast.stdout = undefined;
-    }
+    newarg = '';
 
     getName(): string {
         var ast = this;

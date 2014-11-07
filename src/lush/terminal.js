@@ -157,9 +157,9 @@ define(["jquery",
             // completion for files only
             completion: function (term) {
                 cli.complete(function (partial) {
-                    var pattern = Parser.Unescape(partial) + "*";
+                    var pattern = U.parserUnescape(partial) + "*";
                     $.get('/files.json', {pattern: pattern}).done(function (options) {
-                        tabcompleteCallback(term, partial, options.map(Parser.Escape));
+                        tabcompleteCallback(term, partial, options.map(U.parserEscape));
                     });
                 });
             },
