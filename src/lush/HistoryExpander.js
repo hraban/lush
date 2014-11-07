@@ -25,24 +25,23 @@
 // other commands corresponding to bash semantics. See the unit tests for
 // examples.
 
-define(["lush/Lexer"], function (Lexer) {
+define(["lush/lexer"], function (lexer) {
 
     function HistoryExpander() {
         var hexp = this;
         hexp._lastCmd = '';
         hexp._lastArg = '';
-        var lexer = new Lexer();
-        hexp._lexer = lexer;
-        lexer._ignoreErrors = false;
-        lexer.onerror = function (err, type) {
+        hexp._lexer = new lexer.Lexer();
+        hexp._lexer._ignoreErrors = false;
+        hexp._lexer.onerror = function (err, type) {
             switch (err.type) {
-            case Lexer.ERRCODES.UNBALANCED_SINGLE_QUOTE:
-            case Lexer.ERRCODES.UNBALANCED_DOUBLE_QUOTE:
-            case Lexer.ERRCODES.TERMINATING_BACKSLASH:
+            case lexer.ERRCODES.UNBALANCED_SINGLE_QUOTE:
+            case lexer.ERRCODES.UNBALANCED_DOUBLE_QUOTE:
+            case lexer.ERRCODES.TERMINATING_BACKSLASH:
                 // I only care about !$ !!, not my job to care about this
                 break;
-            case Lexer.ERRCODES.BARE_EXCLAMATIONMARK:
-                if (lexer._ignoreErrors) {
+            case lexer.ERRCODES.BARE_EXCLAMATIONMARK:
+                if (hexp._lexer._ignoreErrors) {
                     break;
                 } else {
                     throw err;

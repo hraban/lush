@@ -25,9 +25,9 @@
 
 define(["lush/Ast",
         "lush/HistoryExpander",
-        "lush/Lexer",
+        "lush/lexer",
         "lush/utils"],
-       function (Ast, HistoryExpander, Lexer, U) {
+       function (Ast, HistoryExpander, lexer, U) {
 
     function startsWithDot(str) {
         return str[0] == ".";
@@ -65,9 +65,9 @@ define(["lush/Ast",
         // First layer of parsing: find all !$ and !! and expand them.
         parser._histExp = new HistoryExpander();
         // Second layer of parsing: split the text up in separate words (argv)
-        var lexer = new Lexer();
+        var lex = new lexer.Lexer();
         parser.glob = globFunction;
-        parser._lexer = lexer;
+        parser._lexer = lex;
         parser._ignoreErrors = false;
         function emptyContext() {
             return {
@@ -83,22 +83,22 @@ define(["lush/Ast",
         // quite a misnomer: this is AFTER history expansion
         parser._raw = '';
         var ctx = parser.ctx;
-        lexer.oninit = function () {
+        lex.oninit = function () {
             ctx.firstast = ctx.ast = new Ast();
         };
-        lexer.onliteral = function (c) {
+        lex.onliteral = function (c) {
             // internal representation is escaped
             ctx.ast._newarg += Parser.Escape(c);
         };
-        lexer.onglobQuestionmark = function () {
+        lex.onglobQuestionmark = function () {
             ctx.ast.hasglob = true;
             ctx.ast._newarg += '?';
         };
-        lexer.onglobStar = function () {
+        lex.onglobStar = function () {
             ctx.ast.hasglob = true;
             ctx.ast._newarg += '*';
         };
-        lexer.onboundary = function () {
+        lex.onboundary = function () {
             if (ctx.ast.hasglob) {
                 var matches = parser.glob(ctx.ast._newarg);
                 // TODO: error if matches is empty
@@ -111,7 +111,7 @@ define(["lush/Ast",
             ctx.ast._newarg = '';
         };
         // encountered a | character
-        lexer.onpipe = function () {
+        lex.onpipe = function () {
             // this is a fresh command
             var newast = new Ast();
             // which is the child of the previously parsed cmd
@@ -119,22 +119,22 @@ define(["lush/Ast",
             // haiku
             ctx.ast = newast;
         };
-        lexer.onsemicolon = function () {
+        lex.onsemicolon = function () {
             if (!parser._ignoreErrors) {
                 throw "semi-colon not supported (yet)";
             }
         };
-        lexer.onerror = function (err, type) {
+        lex.onerror = function (err, type) {
             if (!parser._ignoreErrors) {
                 throw err;
             }
             switch (err.type) {
-            case Lexer.ERRCODES.BARE_EXCLAMATIONMARK:
-            case Lexer.ERRCODES.UNBALANCED_SINGLE_QUOTE:
-            case Lexer.ERRCODES.UNBALANCED_DOUBLE_QUOTE:
-            case Lexer.ERRCODES.TERMINATING_BACKSLASH:
+            case lexer.ERRCODES.BARE_EXCLAMATIONMARK:
+            case lexer.ERRCODES.UNBALANCED_SINGLE_QUOTE:
+            case lexer.ERRCODES.UNBALANCED_DOUBLE_QUOTE:
+            case lexer.ERRCODES.TERMINATING_BACKSLASH:
                 // ignore, treat whatever was here as a word.
-                lexer.onboundary();
+                lex.onboundary();
                 break;
             default:
                 throw "unknown parser error: " + err;

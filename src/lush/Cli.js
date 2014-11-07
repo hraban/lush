@@ -32,11 +32,10 @@
 define(["jquery",
         "lush/Ast",
         "lush/Command",
-        "lush/Lexer",
         "lush/Parser",
         "lush/Pool",
         "lush/utils"],
-       function ($, Ast, Command, Lexer, Parser, Pool, U) {
+       function ($, Ast, Command, Parser, Pool, U) {
 
     // Manage context of a command line interface. purely conceptual, no UI.
     // processCmd arg is a function, called by the cli to actually invoke a

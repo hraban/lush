@@ -27,11 +27,11 @@ define(["jquery",
         "lush/Cli",
         "lush/Command",
         "lush/HistoryExpander",
-        "lush/Lexer",
+        "lush/lexer",
         "lush/Parser",
         "lush/Pool",
         "lush/utils"],
-       function ($, Ast, Cli, Command, HistoryExpander, Lexer, Parser, Pool, U) {
+       function ($, Ast, Cli, Command, HistoryExpander, lexer, Parser, Pool, U) {
 
     test("lcp(): longest common prefix", function () {
         equal(U.lcp(["abcd", "abab", "abba"]), "ab");
@@ -53,25 +53,25 @@ define(["jquery",
     test("lexer: argv", function() {
         // parsing context
         var ctx;
-        var lexer = new Lexer();
+        var lex = new lexer.Lexer();
         // parse a new sentence
-        lexer.oninit = function () {
+        lex.oninit = function () {
             ctx = {
                 newarg: '',
                 argv: [],
             };
         };
         // a wild character appeared! add it to the current word
-        lexer.onliteral = function (c) {
+        lex.onliteral = function (c) {
             ctx.newarg += c;
         };
         // all literals found up to here: you are considered a word
-        lexer.onboundary = function () {
+        lex.onboundary = function () {
             ctx.argv.push(ctx.newarg);
             ctx.newarg = '';
         };
         var t = function (raw, out, name) {
-            lexer.parse(raw);
+            lex.parse(raw);
             deepEqual(ctx.argv, out, name);
         };
         t("foo bar baz", ['foo', 'bar', 'baz'], 'simple parsing');
@@ -92,27 +92,27 @@ define(["jquery",
         // ensures that all globbing chars in the resulting argv are actually
         // intended to be globbing chars, which is all we want to test for.
         var ctx;
-        var lexer = new Lexer();
-        lexer.oninit = function () {
+        var lex = new lexer.Lexer();
+        lex.oninit = function () {
             ctx = {
                 newarg: '',
                 argv: [],
             };
         };
-        lexer.onliteral = function (c) {
+        lex.onliteral = function (c) {
             ctx.newarg += c;
         };
-        lexer.onglobQuestionmark = function () {
+        lex.onglobQuestionmark = function () {
             ctx.newarg += 'GLOB_QM';
         };
-        lexer.onglobStar = function () {
+        lex.onglobStar = function () {
             ctx.newarg += 'GLOB_STAR';
         };
-        lexer.onboundary = function () {
+        lex.onboundary = function () {
             ctx.argv.push(ctx.newarg);
         };
         var t = function (raw, out, name) {
-            lexer.parse(raw);
+            lex.parse(raw);
             deepEqual(ctx.argv, out, name);
         };
         t('*', ['GLOB_STAR'], 'recognize bare globbing char (*)');
@@ -127,8 +127,8 @@ define(["jquery",
     // test the indexing of globbing character positions
     test("lexer: globbing char indexing", function() {
         var ctx;
-        var lexer = new Lexer();
-        lexer.oninit = function () {
+        var lex = new lexer.Lexer();
+        lex.oninit = function () {
             ctx = {
                 cmd: '',
                 gotstar: false,
@@ -136,100 +136,100 @@ define(["jquery",
                 gotchoice: false,
             };
         };
-        lexer.onliteral = function (c) {
+        lex.onliteral = function (c) {
             ctx.cmd += c;
         };
-        lexer.onboundary = function (c) {
+        lex.onboundary = function (c) {
             ctx.cmd += '.';
         };
-        lexer.parse('foo ? bar');
+        lex.parse('foo ? bar');
         strictEqual(ctx.cmd, "foo.?.bar.", "Default ? handler: literal");
-        lexer.parse('x * y');
+        lex.parse('x * y');
         strictEqual(ctx.cmd, "x.*.y.", "Default * handler: literal");
         // got a *
-        lexer.onglobStar = function (idx) {
+        lex.onglobStar = function (idx) {
             ctx.gotstar = idx;
         };
         // got a ?
-        lexer.onglobQuestionmark = function (idx) {
+        lex.onglobQuestionmark = function (idx) {
             ctx.gotquestionmark = idx;
         };
-        lexer.onglobChoice = function (choices, idx) {
+        lex.onglobChoice = function (choices, idx) {
             ctx.gotchoice = choices;
         };
-        lexer.parse('*');
+        lex.parse('*');
         strictEqual(ctx.gotstar, 0, 'indexed wildcard: * (0)');
-        lexer.parse('foo*bar');
+        lex.parse('foo*bar');
         strictEqual(ctx.gotstar, 3, 'indexed wildcard: * (3)');
-        lexer.parse('?');
+        lex.parse('?');
         strictEqual(ctx.gotquestionmark, 0, 'indexed wildcard: ?');
-        lexer.parse('?*');
+        lex.parse('?*');
         strictEqual(ctx.gotquestionmark, 0, 'indexed wildcards: ?');
         strictEqual(ctx.gotstar, 1, 'indexed wildcards: *');
         // Not implemented yet
-        //lexer.parse('[abc]');
+        //lex.parse('[abc]');
         //deepEqual(ctx.gotchoice, ['a', 'b', 'c'], 'wildcard choice: [abc]');
     });
 
     test("lexer: pipe syntax", function() {
         var ctx;
-        var lexer = new Lexer();
-        lexer.oninit = function () {
+        var lex = new lexer.Lexer();
+        lex.oninit = function () {
             ctx = {
                 newarg: '',
             };
             ctx.cur_argv = [];
             ctx.all_argv = [ctx.cur_argv];
         };
-        lexer.onliteral = function (c) {
+        lex.onliteral = function (c) {
             ctx.newarg += c;
         };
-        lexer.onboundary = function () {
+        lex.onboundary = function () {
             ctx.cur_argv.push(ctx.newarg);
             ctx.newarg = '';
         };
-        lexer.onpipe = function () {
+        lex.onpipe = function () {
             ctx.cur_argv = [];
             ctx.all_argv.push(ctx.cur_argv);
         };
 
-        lexer.parse('trala blabla');
+        lex.parse('trala blabla');
         deepEqual(ctx.all_argv, [["trala", "blabla"]], "no pipe");
 
-        lexer.parse('echo foobar | cat');
+        lex.parse('echo foobar | cat');
         deepEqual(ctx.all_argv, [["echo", "foobar"], ["cat"]], "pipe once");
 
-        lexer.parse('abc | yeye | ohno');
+        lex.parse('abc | yeye | ohno');
         deepEqual(ctx.all_argv, [["abc"], ["yeye"], ["ohno"]], "pipe twice");
 
-        lexer.parse('lookma|nospaces');
+        lex.parse('lookma|nospaces');
         deepEqual(ctx.all_argv, [["lookma"], ["nospaces"]], "no spaces around pipe");
     });
 
     test("lexer: !$ and !!", function () {
         var ctx;
-        var lexer = new Lexer();
-        lexer.oninit = function () {
+        var lex = new lexer.Lexer();
+        lex.oninit = function () {
             ctx = '';
         };
-        lexer.onliteral = function (c) {
+        lex.onliteral = function (c) {
             ctx += c;
         };
-        lexer.onboundary = function () {
+        lex.onboundary = function () {
             ctx += '.';
         };
         function testHistexp(str, expected, comment) {
-            lexer.parse(str);
+            lex.parse(str);
             equal(ctx, expected, comment);
         }
         testHistexp('foo !$ bar', 'foo.!$.bar.', '!$: default handler returns literal');
         testHistexp('foo !! bar', 'foo.!!.bar.', '!!: default handler returns literal');
         testHistexp('!$', '!$.', '!$: default handler causes onboundary');
         testHistexp('!!', '!!.', '!!: default handler causes onboundary');
-        lexer.onPreviousCommand = function () {
+        lex.onPreviousCommand = function () {
             ctx += 'PREVIOUS COMMAND';
         };
-        lexer.onPreviousLastArg = function () {
+        lex.onPreviousLastArg = function () {
             ctx += "LAST ARG";
         };
         testHistexp('foo !$', 'foo.LAST ARG.', '!$ causes onPreviousLastArg event');
@@ -241,16 +241,16 @@ define(["jquery",
     });
 
     test("lexer: word boundaries", function () {
-        var lexer = new Lexer();
+        var lex = new lexer.Lexer();
         var boundaries;
-        lexer.oninit = function () {
+        lex.oninit = function () {
             boundaries = undefined;
         };
-        lexer.onboundary = function (start, end) {
+        lex.onboundary = function (start, end) {
             boundaries = start + " -- " + end;
         };
         function testBoundaries(str, expected, comment) {
-            lexer.parse(str);
+            lex.parse(str);
             equal(boundaries, expected, comment);
         }
         testBoundaries(" a ", "1 -- 2", "simple word");
@@ -266,24 +266,24 @@ define(["jquery",
     });
 
     test("lexer: semi-colon (;)", function () {
-        var lexer = new Lexer();
+        var lex = new lexer.Lexer();
         var ctx;
-        lexer.oninit = function () {
+        lex.oninit = function () {
             ctx = '';
         };
-        lexer.onliteral = function (c) {
+        lex.onliteral = function (c) {
             ctx += c;
         };
-        lexer.onboundary = function () {
+        lex.onboundary = function () {
             ctx += '.';
         };
         function testSemicolon(str, expected, comment) {
-            lexer.parse(str);
+            lex.parse(str);
             equal(ctx, expected, comment);
         }
         testSemicolon("foo ; bar", "foo.bar.", "; default handler is a NOP");
         testSemicolon("zoo;zar", "zoo.zar.", "; default handler causes onboundary");
-        lexer.onsemicolon = function () {
+        lex.onsemicolon = function () {
             ctx += "SEMICOLON";
         };
         testSemicolon("foo ; bar", "foo.SEMICOLONbar.", "onsemicolon event");
@@ -292,27 +292,27 @@ define(["jquery",
     });
 
     test("lexer: errors", function () {
-        var lexer = new Lexer();
+        var lex = new lexer.Lexer();
         var e;
-        lexer.onerror = function (x) {
+        lex.onerror = function (x) {
             e = x;
         };
         function testError(txt, type) {
             var lead = "parsing <" + txt + "> ";
-            lexer.parse(txt);
+            lex.parse(txt);
             ok(e instanceof Error, lead + "yields Error object");
             equal(e.name, "ParseError",  lead + "yields ParseError");
             equal(e.type, type, lead + "yields expected error type");
         }
-        ok(Lexer.ERRCODES.UNBALANCED_SINGLE_QUOTE !== undefined &&
-           Lexer.ERRCODES.UNBALANCED_DOUBLE_QUOTE !== undefined &&
-           Lexer.ERRCODES.TERMINATING_BACKSLASH !== undefined &&
-           Lexer.ERRCODES.BARE_EXCLAMATIONMARK !== undefined,
+        ok(lexer.ERRCODES.UNBALANCED_SINGLE_QUOTE !== undefined &&
+           lexer.ERRCODES.UNBALANCED_DOUBLE_QUOTE !== undefined &&
+           lexer.ERRCODES.TERMINATING_BACKSLASH !== undefined &&
+           lexer.ERRCODES.BARE_EXCLAMATIONMARK !== undefined,
            "expected error codes are defined");
-        testError('what is "that?', Lexer.ERRCODES.UNBALANCED_DOUBLE_QUOTE);
-        testError("it's a monster!!!", Lexer.ERRCODES.UNBALANCED_SINGLE_QUOTE);
-        testError("/o\\", Lexer.ERRCODES.TERMINATING_BACKSLASH);
-        testError("Hey!", Lexer.ERRCODES.BARE_EXCLAMATIONMARK);
+        testError('what is "that?', lexer.ERRCODES.UNBALANCED_DOUBLE_QUOTE);
+        testError("it's a monster!!!", lexer.ERRCODES.UNBALANCED_SINGLE_QUOTE);
+        testError("/o\\", lexer.ERRCODES.TERMINATING_BACKSLASH);
+        testError("Hey!", lexer.ERRCODES.BARE_EXCLAMATIONMARK);
     });
 
     test("history expander", function () {
