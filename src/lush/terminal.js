@@ -99,7 +99,7 @@ define(["jquery",
 
     // set up the terminal window
     return function (processCmd, ctrl) {
-        if (!(ctrl instanceof Ctrl)) {
+        if (!(ctrl instanceof Ctrl.Ctrl)) {
             throw "second argument to terminal.js main function must be a Ctrl";
         }
         var cli = new Cli(processCmd);

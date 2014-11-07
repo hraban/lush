@@ -614,7 +614,7 @@ define(["jquery",
         }
         $.get("/ctrl").done(function (key) {
             // Control stream (Websocket)
-            var ctrl = new Ctrl(ctrlurl, key);
+            var ctrl = new Ctrl.Ctrl(ctrlurl, key);
             ctrl.ws.onerror = function () {
                 console.log('Websocket connection error');
             };
