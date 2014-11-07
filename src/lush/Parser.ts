@@ -31,33 +31,34 @@ import HistoryExpander = require("lush/HistoryExpander");
 import lexer = require("lush/lexer");
 import U = require("lush/utils");
 
-function startsWithDot(str) {
+function startsWithDot(str: string): boolean {
     return str[0] == ".";
-}
-
-interface GlobFunction {
-    (pattern: string, showhidden?: boolean): string[];
 }
 
 // list of files matching a pattern. if showhidden is false this excludes files
 // starting with a dot. if showhidden is not specified this only shows those
 // files if the pattern itself starts with a dot.
 function defaultGlob(pattern, showhidden?) {
-    var files = [];
+    var files: string[] = [];
     $.ajax('/files.json', {
         data: {pattern: pattern},
         success: function (x) {
             files = x;
         },
-        async: false});
+        async: false
+    });
     if (showhidden === undefined) {
         showhidden = startsWithDot(pattern);
     }
     if (!showhidden) {
         // hide files starting with a dot
-        files = $.grep(files, startsWithDot, true);
+        files = files.filter(startsWithDot);
     }
     return files;
+}
+
+interface GlobFunction {
+    (pattern: string, showhidden?: boolean): string[];
 }
 
 interface ParserContext {
