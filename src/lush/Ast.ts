@@ -18,29 +18,32 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-"use strict";
+// An Ast node represents the (rich) argv of one command. the complete command
+// line consists of one or more commands chained by pipes. it is represented as
+// a linked list of AST nodes.
+class Ast {
+    // updated after each call to setprompt()
+    argv: string[];
+    // true when _newarg contains a globbing char
+    hasglob: boolean;
+    // pointer to next command, if any
+    stdout: Ast;
 
+    // building the next argument
+    private _newarg: string;
 
-define(function () {
-    // An Ast node represents the (rich) argv of one command. the complete
-    // command line consists of one or more commands chained by pipes. it is
-    // represented as a linked list of AST nodes.
-    function Ast() {
+    constructor() {
         var ast = this;
-        // updated after each call to setprompt()
         ast.argv = [];
-        // building the next argument
         ast._newarg = '';
-        // true when _newarg contains a globbing char
         ast.hasglob = false;
-        // pointer to next command, if any (undefined or Ast instance)
         ast.stdout = undefined;
     }
 
-    Ast.prototype.getName = function () {
+    getName(): string {
         var ast = this;
         return ast.argv.join(' ');
-    };
+    }
+}
 
-    return Ast;
-});
+export = Ast;
