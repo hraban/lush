@@ -26,7 +26,7 @@
 import $ = require("jquery");
 import U = require("lush/utils");
 
-export class Ctrl {
+class Ctrl {
     private ws: WebSocket;
 
     constructor(url: string, key: string) {
@@ -111,3 +111,5 @@ export class Ctrl {
         ctrl.ws.send(args.join(';'));
     }
 }
+
+export = Ctrl;
