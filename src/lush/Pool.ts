@@ -18,23 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-"use strict";
-
 // Element pool that allows consuming elements before they were added by
 // registering callbacks and calling them when an element is added.
 
-
-define(function () {
-
-    var Pool = function () {
-        var pool = this;
-        pool._ar = [];
-        pool._pendingcbs = [];
-    };
+class Pool<T> {
+    private _ar: T[] = [];
+    private _pendingcbs: {(el: T): void}[] = [];
 
     // store an element in the pool. if a "consume" action was pending, call it
     // immediately with this element.
-    Pool.prototype.add = function (el) {
+    add(el: T) {
         var pool = this;
         if (pool._pendingcbs.length > 0) {
             var f = pool._pendingcbs.shift();
@@ -42,11 +35,11 @@ define(function () {
         } else {
             pool._ar.push(el);
         }
-    };
+    }
 
     // Take an element from the pool and call f on it. If the pool is empty,
     // wait until an element is available (iow: could be async).
-    Pool.prototype.consume = function (f) {
+    consume(f: (el: T) => void) {
         var pool = this;
         if (pool._ar.length > 0) {
             var el = pool._ar.shift();
@@ -54,7 +47,8 @@ define(function () {
         } else {
             pool._pendingcbs.push(f);
         }
-    };
+    }
 
-    return Pool;
-});
+}
+
+export = Pool;
