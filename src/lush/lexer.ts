@@ -87,7 +87,7 @@ export class Lexer {
     // don't be surprised at missing tokens if you're not subscribing to the
     // proper hooks.  TODO: All other default handlers should act like this.
     public onsemicolon: () => void;
-    public onerror: (e: Error) => void;
+    public onerror: (e: ParseError) => void;
 
     private state: State;
 

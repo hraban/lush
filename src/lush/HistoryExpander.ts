@@ -18,43 +18,31 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-"use strict";
-
 
 // History expansion: store a "last command" and allow substituting !! and !$ in
 // other commands corresponding to bash semantics. See the unit tests for
 // examples.
 
-define(["lush/lexer"], function (lexer) {
+/// <reference path="lexer.ts" />
 
-    function HistoryExpander() {
-        var hexp = this;
-        hexp._lastCmd = '';
-        hexp._lastArg = '';
-        hexp._lexer = new lexer.Lexer();
-        hexp._lexer._ignoreErrors = false;
-        hexp._lexer.onerror = function (err, type) {
-            switch (err.type) {
-            case lexer.ERRCODES.UNBALANCED_SINGLE_QUOTE:
-            case lexer.ERRCODES.UNBALANCED_DOUBLE_QUOTE:
-            case lexer.ERRCODES.TERMINATING_BACKSLASH:
-                // I only care about !$ !!, not my job to care about this
-                break;
-            case lexer.ERRCODES.BARE_EXCLAMATIONMARK:
-                if (hexp._lexer._ignoreErrors) {
-                    break;
-                } else {
-                    throw err;
-                }
-            default:
-                throw "unknown parser error: " + err;
+import lexer = require("lush/lexer");
+
+class HistoryExpander {
+    private _lastCmd = '';
+    private _lastArg = '';
+    private _lexer = new lexer.Lexer();
+
+    constructor() {
+        this._lexer.onerror = function (err) {
+            // I only care about !$ !!
+            if (err.type == lexer.ERRCODES.BARE_EXCLAMATIONMARK) {
+                throw err;
             }
         };
     }
 
-    HistoryExpander.prototype.expand = function (txt, ignoreParseErrors) {
+    expand(txt: string) {
         var hexp = this;
-        hexp._ignoreErrors = ignoreParseErrors;
         var slices = [];
         var prevI = 0;
         hexp._lexer.onPreviousCommand = function (i) {
@@ -76,11 +64,10 @@ define(["lush/lexer"], function (lexer) {
         }
         slices.push(txt.slice(prevI));
         return slices.join("");
-    };
+    }
 
-    HistoryExpander.prototype.setlast = function (txt) {
+    setlast(txt: string) {
         var hexp = this;
-        hexp._ignoreErrors = false;
         hexp._lastCmd = txt;
         hexp._lexer.onboundary = function (start, end) {
             hexp._lastArg = txt.slice(start, end);
@@ -91,6 +78,6 @@ define(["lush/lexer"], function (lexer) {
             hexp._lexer.onboundary = undefined;
         }
     }
+}
 
-    return HistoryExpander;
-});
+export = HistoryExpander;
