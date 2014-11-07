@@ -12,23 +12,22 @@ See https://github.com/hraban/lush/wiki for more info.
 
 ## Lush on Linux
 
+Installing Lush on Linux is only possible from source.
+
+For this, you will need node.js and go.
+
 Download and install:
 
     $ go get github.com/hraban/lush
+    $ cd $GOROOT/github.com/hraban/lush
+    $ npm install -g gulp
+    $ npm install -D gulp gulp-typescript
+    $ gulp
 
 To run the program find the executable (somewhere in $GOPATH/bin/) and launch
 it. E.g.:
 
     $ ${GOPATH%%:*}/bin/lush
-
-## Lush on Windows
-
-Lush works just fine on Windows.
-
-Installing lush on Windows comes in two flavors: download a binary release or
-install from source.
-
-The binary release includes grep, cat, etc. for that real "terminal feel".
 
 ## Lush on Windows: Binary (EASY!)
 
@@ -37,6 +36,8 @@ Go to:
 http://github.com/hraban/lush/releases
 
 Download the latest .zip. Unzip, find lush.exe, double click it. Done.
+
+Includes grep, cat, etc. for that real "terminal feel".
 
 ## Lush on Windows: Source
 
@@ -51,13 +52,23 @@ https://github.com/hraban/lush/wiki/Installing-Go-on-Windows)
 It will download lush (to `c:\go3d\src\github.com\hraban\lush` if you followed
 the instructions from the wiki) and install it (as `c:\go3d\bin\lush.exe`).
 
-**Run lush by double clicking the .exe!** Create a shortcut to your desktop for easy access.
+**Install node.js & npm** This is outside the scope of this README.
+
+**Install gulp and gulp-typescript** Go to `c:\go3d\src\github.com\hraban\lush`
+and execute:
+
+    npm install -g gulp
+    npm install -D gulp gulp-typescript
+    gulp
+
+**Run lush by double clicking the .exe!** Create a shortcut to your desktop for
+easy access.
 
 To update lush:
 
     go get -u github.com/hraban/lush
-
-That's it.
+    cd c:\go3d\src\github.com\hraban\lush
+    gulp
 
 ## Afterword
 
