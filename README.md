@@ -20,22 +20,22 @@ Includes grep, cat, etc. for that real "terminal feel".
 
 ## Lush on Windows: Source
 
+**Prerequisites** Make sure you have Go, Git, Mercurial, Node.js and npm installed.
+
+For instructions on installing Go, see
+https://github.com/hraban/lush/wiki/Installing-Go-on-Windows.
+
 **open a command window and type:**
+Execute:
 
     go get github.com/hraban/lush
 
-(Getting errors? Make sure you have Go, Git and Mercurial installed on Windows.
-For instructions: see
-https://github.com/hraban/lush/wiki/Installing-Go-on-Windows)
+It will download lush (to `c:\go3d\src\github.com\hraban\lush`) and install it
+(as `c:\go3d\bin\lush.exe`).
 
-It will download lush (to `c:\go3d\src\github.com\hraban\lush` if you followed
-the instructions from the wiki) and install it (as `c:\go3d\bin\lush.exe`).
+**Install gulp and gulp-typescript** 
 
-**Install node.js & npm** This is outside the scope of this README.
-
-**Install gulp and gulp-typescript** Go to `c:\go3d\src\github.com\hraban\lush`
-and execute:
-
+    cd c:\go3d\src\github.com\hraban\lush
     npm install -g gulp
     npm install -D gulp gulp-typescript
     gulp
