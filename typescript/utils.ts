@@ -20,7 +20,7 @@
 
 // GENERIC UTILITIES
 
-/// <require path="jquery.d.ts" />
+/// <reference path="refs/jquery.d.ts" />
 
 import $ = require("jquery");
 

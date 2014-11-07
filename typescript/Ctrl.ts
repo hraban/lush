@@ -18,23 +18,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-"use strict";
-
-
 // control stream related scripting
 
-define(["jquery", "lush/utils"], function ($, U) {
+/// <reference path="refs/jquery.d.ts" />
+/// <reference path="utils.ts" />
 
-    var Ctrl = function (url, key) {
-        if (typeof url !== "string") {
-            throw "First argument to control must be a websocket url";
-        }
-        if (typeof key !== "string") {
-            throw "Second argument to control must be lush websocket key";
-        }
+import $ = require("jquery");
+import U = require("utils");
+
+export class Ctrl {
+    private ws: WebSocket;
+
+    constructor(url: string, key: string) {
         var ctrl = this;
         ctrl.ws = new WebSocket(U.wsURI(url));
-        ctrl.streamhandlers = {};
         var handleWebsocketMessage = function (e) {
             // First message MUST be a clientid event
             if (!/^clientid;\d+/.test(e.data)) {
@@ -55,7 +52,7 @@ define(["jquery", "lush/utils"], function ($, U) {
                 // not. And that's what counts.
                 return;
             }
-            handleWebsocketMessage = Ctrl.prototype._handleWsOnMessage.bind(ctrl);
+            handleWebsocketMessage = e => ctrl._handleWsOnMessage(e);
             handleWebsocketMessage(e);
         };
         // Proxy function. Overwriting this one directly, instead of going
@@ -79,18 +76,17 @@ define(["jquery", "lush/utils"], function ($, U) {
         });
     }
 
-    Ctrl.prototype._handleWsOnMessage = function(e) {
+    private _handleWsOnMessage(e) {
         var ctrl = this;
         var x = U.splitn(e.data, ';', 2);
         var cmd = x[0];
         var rest = x[1];
         // transform to jquery event on control stream object
         $(ctrl).trigger(cmd, rest);
-    };
+    }
 
-    Ctrl.prototype.send = function () {
+    send(...args: string[]) {
         var ctrl = this;
-        var args = Array.prototype.slice.call(arguments);
         switch (this.ws.readyState) {
         case WebSocket.OPEN:
             // send normally
@@ -112,9 +108,6 @@ define(["jquery", "lush/utils"], function ($, U) {
             // needs at least 1 argument
             args.push("");
         }
-        this.ws.send(args.join(';'));
-    };
-
-    return Ctrl;
-
-});
+        ctrl.ws.send(args.join(';'));
+    }
+}

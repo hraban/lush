@@ -1,14 +1,11 @@
-var typescript = require('gulp-tsc');
+var typescript = require('gulp-typescript');
 var gulp = require('gulp');
 
 gulp.task('default', function() {
-  // place code for your default task here
-});
-
-gulp.task('compile', function () {
-    gulp.src(['typescript/utils.ts'])
+    gulp.src(['typescript/*.ts'])
         .pipe(typescript({
-            module: "amd"
-        }))
+            module: "amd",
+            declarationFiles: false
+        })).js
         .pipe(gulp.dest('static/js/lush/'));
 });
