@@ -14,6 +14,10 @@ _testmain.go
 # Vim noise
 *.swp
 
+# node
+node_modules/
+npm-debug.log
+
 # Just noise
 *~
 *.orig
@@ -22,4 +26,3 @@ lush
 !static/js/lush
 lush.exe
 bin/
-node_modules/
