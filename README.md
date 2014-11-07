@@ -19,7 +19,7 @@ For this, you will need node.js and go.
 Download and install:
 
     $ go get github.com/hraban/lush
-    $ cd $GOROOT/github.com/hraban/lush
+    $ cd $GOPATH/github.com/hraban/lush
     $ npm install -g gulp
     $ npm install -D gulp gulp-typescript
     $ gulp
@@ -27,7 +27,7 @@ Download and install:
 To run the program find the executable (somewhere in $GOPATH/bin/) and launch
 it. E.g.:
 
-    $ ${GOPATH%%:*}/bin/lush
+    $ $GOPATH/bin/lush
 
 ## Lush on Windows: Binary (EASY!)
 
