@@ -24,7 +24,7 @@
 /// <reference path="utils.ts" />
 
 import $ = require("jquery");
-import U = require("utils");
+import U = require("lush/utils");
 
 export class Ctrl {
     private ws: WebSocket;

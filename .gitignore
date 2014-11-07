@@ -23,6 +23,6 @@ npm-debug.log
 *.orig
 
 lush
-!static/js/lush
+!src/lush
 lush.exe
 bin/
