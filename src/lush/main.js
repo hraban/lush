@@ -571,7 +571,7 @@ define(["jquery",
         // sexy.
         // ...
         // Oh man.. she was so hot..
-        path($('form#path'), ctrl);
+        path.initPathUI($('form#path'), ctrl);
         if (window.location.hash) {
             processHash(window.location.hash.slice(1), term);
         }
