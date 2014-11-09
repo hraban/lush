@@ -479,11 +479,9 @@ define(["jquery",
         }
         // associate clicked command widget with confwin
         $('#cmds').on('click', '.cmdwidget', function (e) {
-            e.preventDefault();
+            e.stopPropagation();
             var nid = getNidFromNode(this);
             selectCommand(nid, confwin);
-            // really, this is not a click
-            return false;
         }).on('click', 'button.repeatgroup', function (e) {
             // set prompt to this pipeline's textual representation
             e.preventDefault();
@@ -492,6 +490,7 @@ define(["jquery",
             return false;
         }).on('click', 'button.startgroup', function (e) {
             e.preventDefault();
+            e.stopPropagation();
             var cmd = cmds[getGidFromCtrlButton(this)];
             function isCmdStarted(cmd) {
                 return cmd.status.code > 0;
@@ -501,28 +500,21 @@ define(["jquery",
                     cmd.start()
                 }
             });
-            return false;
         }).on('click', 'button.archivegroup', function (e) {
             e.preventDefault();
+            // don't bubble to prevent invoking the "activate command" handler
+            e.stopPropagation();
             cmds[getGidFromCtrlButton(this)].setArchivalState(true);
-            // this isn't really a "click" on this object so don't bubble
-            return false;
-            // (that comment actually makes no sense to me I just felt the need
-            // to justify return false even though I have none)
-            // (you know what? "I don't want the 'activate command' handler to
-            // trigger and preventing bubbling is the easiest way to achieve
-            // that". there.)
         }).on('click', 'button.releasegroup', function (e) {
             e.preventDefault();
+            e.stopPropagation();
             var cmd = cmds[getGidFromCtrlButton(this)];
             cmd.releaseGroup();
-            return false; // I think we're getting the idea by now
         }).on('click', '.rootcontainer', function (e) {
+            e.stopPropagation();
             // clicking in the general container area activates the first
             // command
-            e.preventDefault();
             $(this).find('> .groupwidget > .cmdwidget').click();
-            return false; // why not
         });
         $(ctrl).on('error', function (e, json) {
             var msg = JSON.parse(json);

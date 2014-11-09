@@ -52,19 +52,48 @@ define(["jquery",
         "lush/utils"],
        function ($, React, Command, U) {
 
-    // disable this dom element a specified amount of time (prevent double
-    // click)
-    function disableAWhile(el, ms) {
-        if (ms === undefined) {
-            ms = 1000;
+    var StopButton = React.createClass({
+        getInitialState: function () {
+            return { disabled: false };
+        },
+
+        render: function () {
+            var props = {
+                className: "stop",
+                disabled: this.state.disabled
+            };
+            return React.DOM.button(props, "◼");
+        },
+        
+        componentDidMount: function () {
+            var component = this;
+            // Cannot be registered as onClick property on the button
+            // reactelement because that requires the event to bubble up all the
+            // way to the top. It will be catched mid-way by non-react code (for
+            // selecting the active command in main.js) and that will cancel
+            // event propagation (rightfully so), triggering a wrong event
+            // handler and negating the correct one.
+            this.getDOMNode().onclick = function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                // prevent double clicking by disabling for a second
+                component.setState({disabled: true});
+                setTimeout(function () {
+                    if (component.isMounted()) {
+                        component.setState({disabled: false});
+                    }
+                }, 1000);
+                // Actual handling of click
+                component.props.handleClick();
+            };
         }
-        $(el).prop("disabled", true);
-        setTimeout(function () {
-            $(el).prop("disabled", false);
-        }, ms);
-    }
+    });
 
     var StatusNode = React.createClass({
+        stopCommand: function () {
+            this.props.cmd.stop();
+        },
+
         render: function () {
             var content;
             switch (this.props.cmd.status.code) {
@@ -72,11 +101,10 @@ define(["jquery",
                 content = undefined;
                 break;
             case 1:
-                // TODO: button.onclick:
-                //e.preventDefault();
-                //disableAWhile(this);
-                //cmd.stop();
-                content = React.DOM.button({className: "stop"}, "◼");
+                content = React.createElement(StopButton, {
+                    key: "StopButton" + this.props.cmd.nid,
+                    handleClick: this.stopCommand,
+                });
                 break
             case 2:
                 content = "✓";
