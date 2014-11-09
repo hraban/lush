@@ -107,8 +107,7 @@ class HistoryWidget {
                 var gid = $(this).data('gid');
                 var cmd = cmds[gid];
                 if (cmd.status.code > 1) {
-                    // TODO: Needs (depth-first) recursive release.
-                    cmd.release();
+                    cmd.releaseGroup();
                 }
             });
         });

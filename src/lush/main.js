@@ -515,15 +515,6 @@ define(["jquery",
         }).on('click', 'button.releasegroup', function (e) {
             e.preventDefault();
             var cmd = cmds[getGidFromCtrlButton(this)];
-            // delete command tree bottom-up
-            U.mapCmds(function (cmd) {
-                var d = $.Deferred();
-                // when the command is released, continue to parent
-                $(cmd).on('wasreleased', d.resolve.bind(d));
-                // stdoutto must be unset, or releasing will fail
-                cmd.update({stdoutto: 0}, undefined, cmd.release.bind(cmd));
-                return d;
-            }, cmd, true);
             return false; // I think we're getting the idea by now
         }).on('click', '.rootcontainer', function (e) {
             // clicking in the general container area activates the first

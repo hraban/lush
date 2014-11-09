@@ -434,6 +434,19 @@ define(["jquery", "lush/utils"], function ($, U) {
         cmd.ctrl.send('release', cmd.nid);
     };
 
+    // Delete command tree bottom-up.
+    Command.prototype.releaseGroup = function () {
+        var cmd = this;
+        U.mapCmds(function (cmd) {
+            var d = $.Deferred();
+            // when the command is released, continue to parent
+            $(cmd).on('wasreleased', d.resolve.bind(d));
+            // stdoutto must be unset, or releasing will fail
+            cmd.update({stdoutto: 0}, undefined, cmd.release.bind(cmd));
+            return d;
+        }, cmd, true);
+    };
+
     // called by the control stream when the server indicated that this command
     // was released. generates the jquery 'wasreleased' event on this command
     // object.
