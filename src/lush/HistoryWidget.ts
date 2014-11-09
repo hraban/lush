@@ -22,91 +22,76 @@
 // The logic behind the control window for active commands.
 
 /// <reference path="refs/jquery.d.ts" />
+/// <reference path="refs/react.d.ts" />
+/// <reference path="refs/react-addons.d.ts" />
 /// <reference path="utils.ts" />
 
 import $ = require("jquery");
+import React = require("react");
 import U = require("lush/utils");
 
 declare var cmds: {};
 
+var HistoryEntry = React.createClass({
+    handleClick: function (e) {
+        e.preventDefault();
+        this.props.cmd.setArchivalState(!this.props.cmd.userdata.archived);
+    },
+
+    render: function () {
+        var cmd = this.props.cmd;
+        if (!cmd.isRoot()) {
+            return null;
+        }
+        var classNames = React.addons.classSet({
+            "history-entry": true,
+            archived: cmd.userdata.archived
+        });
+        var myprops = {
+            href: "",
+            "data-gid": cmd.nid,
+            key: "history-entry-" + cmd.nid,
+            className: classNames,
+            onClick: this.handleClick
+        };
+        var txt = cmd.nid + ": " + U.cmdChainToPrompt(cmd);
+        return React.DOM.a(myprops, txt);
+    }
+});
+
+// Scope jquery eventnames to local namespace
+function scopeEvents(...evName: string[]): string {
+    return evName.map(x => x + ".HistoryWidget").join(" ");
+}
+
+// Build a history list entry for this command. Does not modify DOM, does not
+// register cleanup handlers for DOM. Does register cleanup handlers for
+// internal events, but that should be transparent.
+function createHistoryEntry(cmd): HTMLElement {
+
+    var wrapper = document.createElement("div");
+    var reactel = React.createElement(HistoryEntry, {cmd: cmd});
+    var component = React.render(reactel, wrapper);
+
+    var evNames = scopeEvents("updated.cmd", "updated.args", "updated.name",
+            "changedHierarchy", "archival");
+    $(cmd).on(evNames, function () {
+        var cmd = this;
+        component.setProps({cmd: cmd});
+    });
+    var evNames = scopeEvents("parentAdded", "parentRemoved");
+    $(cmd).on(evNames, function (_, dad) {
+        $(cmds[dad.getGid()]).trigger(scopeEvents("changedHierarchy"));
+        component.setProps({cmd: cmd});
+    });
+    $(cmd).on(scopeEvents("wasreleased"), function () {
+        $(cmd).off(".HistoryWidget");
+    });
+
+    return wrapper;
+};
+
 var numInstances = 0;
-
-// update the name of this entire command group in the history list.
-//
-// eg:
-//
-// 1: tar f foo.tar foo
-// 3: echo lala | cat
-//
-// calling updateHistoryLiName(3) will refresh the entire second line
-function updateHistoryLiName(gid) {
-    $('#history_group' + gid + ' .name').text(gid + ': ' + U.cmdChainToPrompt(cmds[gid]));
-};
-
-// build a <li> for this command
-function createHistoryLi(cmd) {
-    var $li = $('<li id=history_group' + cmd.nid + '>')
-        .data('gid', cmd.nid)
-        .append($('<a href class=name>')
-            .click(function (e) {
-                e.preventDefault();
-                var $li = $(this).closest('li');
-                var cmd = cmds[$li.data('gid')];
-                var currentState = $li.hasClass('archived');
-                cmd.setArchivalState(!currentState);
-            }));
-    if (!cmd.isRoot()) {
-        $li.addClass('child');
-    }
-    $(cmd).on('updated.name', function () {
-        var cmd = this;
-        // if my name changes, so does the name of my group.  Set the text
-        // of this li to the name of whatever group I belong to
-        updateHistoryLiName(cmd.getGid());
-    });
-    $(cmd).on('archival', function (_, archived) {
-        var cmd = this;
-        if (archived) {
-            $('#history_group' + cmd.nid).addClass('archived');
-        } else {
-            $('#history_group' + cmd.nid).removeClass('archived');
-        }
-    });
-    function setChild(cmd, childid) {
-        // mark the child's history entry (will hide it)
-        $('#history_group' + childid).addClass('child');
-        // update the name of whatever hierarchy I now belong to
-        updateHistoryLiName(cmd.nid);
-    }
-    $(cmd).on('updated.stdoutto', function () {
-        var cmd = this;
-        if (cmd.stdoutto) {
-            setChild(cmd, cmd.stdoutto);
-        }
-    });
-    $(cmd).on('updated.stdoutto', function () {
-        var cmd = this;
-        if (cmd.stderrto) {
-            setChild(cmd, cmd.stderrto);
-        }
-    });
-    $(cmd).on('parentRemoved', function (_, olddaddy) {
-        var cmd = this;
-        // I'm back!
-        // my name might have changed while I was a child but that will not
-        // have been reflected in this LI
-        updateHistoryLiName(cmd.getGid());
-        // now that I'm not a child of my old hierarchy, its name has
-        // changed
-        updateHistoryLiName(olddaddy.getGid());
-        $('#history_group' + cmd.nid).removeClass('child');
-    });
-    $(cmd).on('wasreleased', function () {
-        var cmd = this;
-        $('#history_group' + cmd.nid).remove();
-    });
-    return $li;
-};
 
 class HistoryWidget {
 
@@ -122,6 +107,7 @@ class HistoryWidget {
                 var gid = $(this).data('gid');
                 var cmd = cmds[gid];
                 if (cmd.status.code > 1) {
+                    // TODO: Needs (depth-first) recursive release.
                     cmd.release();
                 }
             });
@@ -129,7 +115,12 @@ class HistoryWidget {
     }
 
     addCommand(cmd) {
-        $('#history ul').append(createHistoryLi(cmd));
+        var entry = createHistoryEntry(cmd);
+        $('#history').append(entry);
+        $(cmd).on(scopeEvents("wasreleased"), function (e) {
+            React.unmountComponentAtNode(entry);
+            $(entry).remove();
+        });
     }
 
 }

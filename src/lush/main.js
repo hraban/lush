@@ -337,13 +337,26 @@ define(["jquery",
         if (!$.isPlainObject(init)) {
             init = getInitData(nid);
         }
+        var children = [];
         if (init.stdoutto) {
-            initCommandAndChildren(init.stdoutto);
+            children.push(initCommandAndChildren(init.stdoutto));
         }
         if (init.stderrto) {
-            initCommandAndChildren(init.stderrto);
+            children.push(initCommandAndChildren(init.stderrto));
         }
-        return initSingleCommandRaw(init);
+        var cmd = initSingleCommandRaw(init);
+        // children don't know about their parent at init time, but the reverse
+        // is true, so only one direction needs fixing.
+        // TODO: This is quite ugly imo. Better would be to just build up the
+        // entire Model tree and make Model init routines not dependent on these
+        // pseudo events. Then, Control and View can init using the complete
+        // tree and completely initialized Models; they can depend on these
+        // events just fine (which won't be fired but they'll be fully
+        // initialized so that's fine). Anyway, until that time: workaround.
+        children.forEach(function (child) {
+            $(child).trigger('parentAdded', cmd);
+        });
+        return cmd;
     }
 
     function initCommands(historyw) {

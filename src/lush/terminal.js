@@ -52,7 +52,7 @@ define(["jquery",
     }
 
     function scrollTerminalToBottom() {
-        U.scrollToBottom('terminalwrap');
+        U.scrollToBottom('terminaltab');
     }
 
     // Print text to this terminal. Ensures the text always ends in newline.

@@ -125,7 +125,7 @@ div#cmddetailarea_associated > div {
     margin-bottom: 28px;
 }
 
-#terminalwrap {
+#terminaltab {
     overflow-y: scroll;
     overflow-x: hidden;
     padding: 0;
@@ -212,12 +212,12 @@ div.cmdwidget.selected {
  * HISTORY
  */
 
-#history {
+#historytab {
     overflow: auto;
     padding: 6px;
 }
 
-#history ul {
+#history {
     font-family: monospace;
     list-style: none;
     padding: 0.2em;
@@ -225,30 +225,21 @@ div.cmdwidget.selected {
 }
 
 /* unarchived history entry */
-#history li {
+.history-entry {
     padding: .1em 0;
-}
-#history li .name {
     color: #000;
     text-decoration: underline;
 }
 
 /* archived history entry */
-#history li.archived {
+.history-entry.archived {
     padding: 0 0.3em;
     font-size: 7pt;
-}
-#history li.archived .name {
     color: #bbb;
     text-decoration: none;
 }
 
-/* only show entries for root commands */
-#history li.child {
-    display: none;
-}
-
-#history.hide_archived li.archived {
+#history.hide_archived .archived {
     display: none;
 }
 
