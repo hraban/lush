@@ -35,9 +35,13 @@ function startsWithDot(str: string): boolean {
     return str[0] == ".";
 }
 
-// list of files matching a pattern. if showhidden is false this excludes files
-// starting with a dot. if showhidden is not specified this only shows those
+// List of files matching a pattern. If showhidden is false this excludes files
+// starting with a dot. If showhidden is not specified this only shows those
 // files if the pattern itself starts with a dot.
+//
+// TODO: Function does two things: fetching list of files from server and
+// processing it locally. This makes unit testing impossible, which already led
+// to a bug. Needs to be separated and testable.
 function defaultGlob(pattern, showhidden?) {
     var files: string[] = [];
     $.ajax('/files.json', {
@@ -52,7 +56,7 @@ function defaultGlob(pattern, showhidden?) {
     }
     if (!showhidden) {
         // hide files starting with a dot
-        files = files.filter(startsWithDot);
+        files = files.filter(x => !startsWithDot(x));
     }
     return files;
 }
@@ -87,7 +91,7 @@ class Parser {
     // Second layer of parsing: split the text up in separate words (argv)
     private _glob: GlobFunction = defaultGlob;
 
-    constructor(globf: GlobFunction) {
+    constructor(globf?: GlobFunction) {
         var parser = this;
         if (globf) {
             parser._glob = globf;
