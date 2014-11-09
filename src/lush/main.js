@@ -515,6 +515,7 @@ define(["jquery",
         }).on('click', 'button.releasegroup', function (e) {
             e.preventDefault();
             var cmd = cmds[getGidFromCtrlButton(this)];
+            cmd.releaseGroup();
             return false; // I think we're getting the idea by now
         }).on('click', '.rootcontainer', function (e) {
             // clicking in the general container area activates the first
