@@ -1,7 +1,6 @@
 var bowerFiles = require('main-bower-files');
 var gulp = require('gulp');
 var typescript = require('gulp-typescript');
-var filelog = require('gulp-filelog');
 
 gulp.task('default', ['javascript', 'typescript', 'libs'], function () {
     gulp.src(['build/js/*.js'])
@@ -24,6 +23,8 @@ gulp.task('javascript', function () {
 
 gulp.task('libs', function () {
     gulp.src(bowerFiles())
-        .pipe(filelog())
         .pipe(gulp.dest('static/js/ext/'));
+    var base = 'bower_components/jquery-ui/themes';
+    gulp.src(base + '/smoothness/**', {'base': base})
+        .pipe(gulp.dest('static/css/'));
 });

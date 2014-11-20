@@ -336,6 +336,7 @@ body:not([data-status=connection_error]) #connection_error {
     border-radius: 0;
     background: 0;
 }
-.ui-tabs .ui-tabs-nav li a {
-    padding: .1em .2em;
+
+.ui-tabs-anchor {
+    padding: .1em .2em !important;
 }
