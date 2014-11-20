@@ -1,0 +1,29 @@
+{
+  "name": "lush",
+  "version": "0.3.3",
+  "homepage": "https://github.com/hraban/lush",
+  "authors": [
+    "Hraban Luyat <hraban@0brg.net>"
+  ],
+  "description": "Luyat shell",
+  "main": "static/index.html",
+  "moduleType": [
+    "node"
+  ],
+  "keywords": [
+    "shell",
+    "web"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.1",
+    "jquery-ui": "~1.11.2"
+  }
+}
