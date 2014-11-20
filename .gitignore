@@ -22,9 +22,10 @@ bower_components/
 # Just noise
 *~
 *.orig
-build/
 
 lush
 !src/lush
 lush.exe
 bin/
+build/
+static/

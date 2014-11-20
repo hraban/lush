@@ -156,7 +156,6 @@ define(["jquery",
         "lush/terminal",
         "lush/path",
         "lush/utils",
-        "jsPlumb",
         "jquery.ui"],
        function ($,
                  Ctrl,
@@ -252,32 +251,6 @@ define(["jquery",
     // "blabla123" -> int(123)
     function parseTrailingInteger(str) {
         return +(/\d+$/.exec(str)[0]);
-    }
-
-    // the user just connected two widgets
-    function jsPlumbBeforeDropHandler(info) {
-        if ($('#' + info.targetId).closest('.children').length != 0) {
-            // TODO: log to user
-            console.log("stdin of " + info.targetId + " already bound");
-            return false;
-        }
-        var srcid = parseTrailingInteger(info.sourceId);
-        var trgtid = parseTrailingInteger(info.targetId);
-        var srccmd = cmds[srcid];
-        var trgtcmd = cmds[trgtid];
-        if (srccmd === undefined || trgtcmd === undefined) {
-            throw "Illegal source id or target id";
-        }
-        if (srccmd.gid == trgtid) {
-            // TODO: Log to the user
-            console.log("circular pipes not supported by the UI");
-            return false;
-        }
-        var stream = info.connection.endpoints[0].getParameter("stream");
-        requestConnect(srcid, trgtid, stream, globals.ctrl);
-        // if server accepts, it will generate an event that will cause binding
-        // in the UI. don't bind here.
-        return false;
     }
 
     // Complete initialization of a command given its initialization data.
@@ -596,12 +569,6 @@ define(["jquery",
         // I hate this class
         $('.ui-widget').removeClass('ui-widget');
         initCommands();
-        jsPlumb.importDefaults({
-            ConnectionsDetachable: false,
-            // Put all connectors at z-index 3 and endpoints at 4
-            ConnectorZIndex: 3,
-        });
-        jsPlumb.bind("beforeDrop", jsPlumbBeforeDropHandler);
         $('body').attr('data-status', 'ok');
     }
 

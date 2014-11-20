@@ -45,13 +45,11 @@ requirejs.config({
         "lush": "../lush",
         "jquery.ui": "jquery-ui",
         "jquery.terminal": "jquery.terminal-src",
-        "jsPlumb": "jquery.jsPlumb-1.5.3-min",
         "ansi_up": "ansi_up-r7e9940fdad",
         "react": "react-with-addons-0.12.0.min",
     },
     "shim": {
         "jquery.terminal": ["jquery"],
-        "jsPlumb": ["jquery"],
         "jquery.ui": ["jquery"],
     },
     "waitSeconds": 100000, // i have the patience of a monk
