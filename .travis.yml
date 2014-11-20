@@ -10,4 +10,4 @@ before_install:
 
 install: go get -d -v ./... && go build -v ./... && gulp
 
-script: ./test.sh
+script: npm test
