@@ -5,9 +5,13 @@ go: 1.3
 before_install:
 - sudo apt-get update
 - sudo apt-get install npm
-- npm install -g gulp
-- npm install -D gulp gulp-typescript
+- npm install -g gulp bower
+- npm install -D gulp gulp-typescript bower
 
-install: go get -d -v ./... && go build -v ./... && gulp
+install:
+- go get -d -v ./...
+- go build -v ./...
+- bower install
+- gulp
 
 script: npm test
