@@ -6,7 +6,7 @@ before_install:
 - sudo apt-get update
 - sudo apt-get install npm
 - npm install -g gulp bower
-- npm install -D gulp gulp-typescript bower
+- npm install
 
 install:
 - go get -d -v ./...
