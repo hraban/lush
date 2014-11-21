@@ -22,7 +22,6 @@
 /// <reference path="refs/jquery.d.ts" />
 /// <reference path="refs/wolfy87-eventemitter.d.ts" />
 /// <reference path="utils.ts" />
-/// <reference path="main.d.ts" />
 /// <reference path="Ctrl.ts" />
 
 import $ = require("jquery");
