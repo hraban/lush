@@ -170,7 +170,7 @@ class Parser {
     // Store most recently parsed text as the "previous command".  History
     // functions (!$ and !!) operate on this value.  E.g.: parse('foo');
     // commit(); parse('bar'); parse('!!'); will yield 'foo'.
-    commit(txt: string) {
+    commit() {
         var parser = this;
         parser._histExp.setlast(parser._raw);
     }
