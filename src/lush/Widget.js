@@ -133,11 +133,15 @@ define(["jquery",
     });
 
     var GroupWidget = React.createClass({
+        getInitialState: function () {
+            return {};
+        },
+
         propTypes: {
             parentStreamName: React.PropTypes.string,
             onChange: React.PropTypes.func.isRequired,
             cmd: function (props, propName, componentName) {
-                if (!(props[propName] instanceof Command)) {
+                if (!(props[propName] instanceof Command.Command)) {
                     return new Error("cmd property should be a Command");
                 }
             }
@@ -145,20 +149,21 @@ define(["jquery",
 
         componentWillMount: function () {
             var events = [
-                'updated.status',
-                'archival',
-                'updated.cmd',
-                'updated.args',
-                'parentAdded',
-                'parentRemoved',
-                'childAdded',
-                'childRemoved'
-            ].reduce(function (x, y) { return x + y + '.WidgetGroupWidget '; }, '');
-            $(this.props.cmd).on(events, this.props.onChange);
+                Command.ArchivalEvent,
+                Command.ChildAddedEvent,
+                Command.ChildRemovedEvent,
+                Command.ParentAddedEvent,
+                Command.ParentRemovedEvent,
+                Command.UpdatedArgsEvent,
+                Command.UpdatedCmdEvent,
+                Command.UpdatedStatusEvent
+            ];
+            this.state.off = this.props.cmd.onany(events, this.props.onChange);
         },
 
         componentWillUnmount: function () {
-            $(this.props.cmd).off('.WidgetGroupWidget');
+            this.state.off();
+            delete this.state.off;
         },
 
         render: function () {
@@ -250,7 +255,7 @@ define(["jquery",
             // new widget causes bottom of widgets div to scroll away:
             U.scrollToBottom(cmds);
         });
-        $(cmd).one("wasreleased", function () {
+        cmd.one(Command.WasReleasedEvent, function () {
             React.unmountComponentAtNode(wrapper);
             cmds.removeChild(wrapper);
         });

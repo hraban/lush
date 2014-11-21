@@ -29,9 +29,10 @@
 // method is responsibility of the caller.
 
 define(["jquery",
-        'lush/help',
+        "lush/Command",
+        "lush/help",
         "lush/utils"],
-       function ($, help, U) {
+       function ($, Command, help, U) {
 
     var numInstances = 0;
 
@@ -42,7 +43,7 @@ define(["jquery",
         // multiple clients connected to the same lush instance.
         conf._myid = 'CmdConfig' + U.guid();
         if (numInstances++ > 0) {
-            throw "CmdConfig must not be instanciated more than once";
+            throw new Error("CmdConfig must not be instanciated more than once");
             // yeah yeah yeah that means it's not supposed to be a class. it's
             // just more uniform icw modules &c: modules provide classes, they
             // can be instantiated, they have methods to control whatever it is
@@ -84,20 +85,41 @@ define(["jquery",
                 cmd.update({stderrto: 0});
             }
         });
+        // event unbinders
+        conf._offs = [];
+    };
+
+    // Hook up to this event, and call it after association to init the view
+    CmdConfig.prototype._handleAndInit = function (C, handler) {
+        var conf = this;
+        if (undefined === conf._initHandlers) {
+            conf._initHandlers = [];
+        }
+        conf._offs.push(conf._cmd.on(C, handler));
+        conf._initHandlers.push(handler);
+    };
+
+    CmdConfig.prototype._triggerInitHandlers = function () {
+        var conf = this;
+        var ev = new Command.CommandEvent();
+        ev.from = 'init';
+        ev.cmd = conf._cmd;
+        conf._initHandlers.forEach(function (f) { f(ev); });
+        delete conf._initHandlers;
     };
 
     // request the command to be updated. behind the scenes this happens: send
     // "updatecmd" message over ctrl stream.  server will reply with updatecmd,
-    // which will invoke a handler to update the cmd object, which will invoke
-    // $(cmd).trigger('updated') (in the relevant namespace), which will invoke
-    // the handler that updates the view. The argument is the form containing
-    // the properties as a DOM node.
+    // which will invoke a handler to update the cmd object, which will trigger
+    // the relevant Command.Updated****Event, which will invoke the handler that
+    // updates the view. The argument is the form containing the properties as a
+    // DOM node.
     CmdConfig.prototype._submitChanges = function (form) {
         var conf = this;
         var cmd = conf._cmd;
         if (cmd === undefined) {
             // no associated command
-            throw "Select command before saving changes";
+            throw new Error("Select command before saving changes");
         }
         var o = $(form).serializeObject();
         // cast numeric inputs to JS ints
@@ -134,7 +156,7 @@ define(["jquery",
     // exist. Expects the <input> for the arg before to already exist, if any.
     CmdConfig.prototype._ensureArgInput = function (argId) {
         if (!U.isInt(argId)) {
-            throw "Expected integer argument to _ensureArgInput";
+            throw new Error("Expected integer argument to _ensureArgInput");
         }
         var $arg = $('#cmdedit_argv input[name=arg' + argId + ']');
         if ($arg.length === 0) {
@@ -147,11 +169,9 @@ define(["jquery",
         var conf = this;
         var cmd = conf._cmd;
         document.getElementById('cmddetailarea').removeAttribute('data-associated');
-        if (cmd === undefined) {
-            return;
-        }
-        $(cmd).off('.cmdconfig');
         conf._cmd = undefined;
+        conf._offs.forEach(function (f) { f(); });
+        conf._offs = [];
         conf._disassocEdit();
         $('.forwarded').hide();
     };
@@ -164,16 +184,18 @@ define(["jquery",
     CmdConfig.prototype._assocSummary = function () {
         var conf = this;
         var cmd = conf._cmd;
-        $(cmd).on('updated.args.cmd.cmdconfig', function () {
-            var cmd = this;
+        function handleArgvChange(e) {
+            var cmd = e.cmd;
             $('#cmdsummary_argv').text(cmd.getArgv().join(" "));
-        });
-        $(cmd).on('updated.cwd.cmdconfig', function () {
-            var cmd = this;
+        }
+        conf._handleAndInit(Command.UpdatedArgsEvent, handleArgvChange);
+        conf._handleAndInit(Command.UpdatedCmdEvent, handleArgvChange);
+        conf._handleAndInit(Command.UpdatedCwdEvent, function (e) {
+            var cmd = e.cmd;
             $('#cmdsummary_cwd').text(cmd.cwd);
         });
-        $(cmd).on('updated.startwd.cmdconfig', function () {
-            var cmd = this;
+        conf._handleAndInit(Command.UpdatedStartwdEvent, function (e) {
+            var cmd = e.cmd;
             $('#cmdsummary_startwd').text(cmd.startwd);
         });
     };
@@ -183,16 +205,16 @@ define(["jquery",
         var conf = this;
         var $editm = $('#cmdedit');
         var cmd = conf._cmd;
-        $(cmd).on('updated.cmd.cmdconfig', function (e, updateId) {
-            var cmd = this;
-            if (updateId == conf._myid) {
+        conf._handleAndInit(Command.UpdatedCmdEvent, function (e) {
+            var cmd = e.cmd;
+            if (e.from === conf._myid) {
                 return;
             }
             $editm.find('[name=cmd]').val(cmd.cmd);
         });
-        $(cmd).on('updated.args.cmdconfig', function (e, updateId) {
-            var cmd = this;
-            if (updateId == conf._myid) {
+        conf._handleAndInit(Command.UpdatedArgsEvent, function (e) {
+            var cmd = e.cmd;
+            if (e.from === conf._myid) {
                 return;
             }
             var args = cmd.args.slice(0); // copy to modify
@@ -207,21 +229,21 @@ define(["jquery",
             var lastArgId = args.length;
             $editm.find('input[name=arg' + lastArgId + ']').nextAll().remove();
         });
-        $(cmd).on('updated.stdoutScrollback.cmdconfig', function (e, updateId) {
-            var cmd = this;
-            if (updateId == conf._myid) {
+        conf._handleAndInit(Command.UpdatedStdoutScrollbackEvent, function (e) {
+            var cmd = e.cmd;
+            if (e.from === conf._myid) {
                 return;
             }
-            $editm.find('[name=stdoutScrollback]').val(cmd.stdoutScrollback)
+            $editm.find('[name=stdoutScrollback]').val(cmd.stdoutScrollback);
         });
-        $(cmd).on('updated.stderrScrollback.cmdconfig', function (e, updateId) {
-            var cmd = this;
-            if (updateId == conf._myid) {
+        conf._handleAndInit(Command.UpdatedStderrScrollbackEvent, function (e) {
+            var cmd = e.cmd;
+            if (e.from === conf._myid) {
                 return;
             }
-            $editm.find('[name=stderrScrollback]').val(cmd.stderrScrollback)
+            $editm.find('[name=stderrScrollback]').val(cmd.stderrScrollback);
         });
-        $(cmd).on('done.cmdconfig', function () {
+        cmd.one(Command.DoneEvent, function (e) {
             // TODO: Disable inputs somehow (remember to reenable on
             // disassociate)
         });
@@ -230,12 +252,12 @@ define(["jquery",
     CmdConfig.prototype._assocStdout = function () {
         var conf = this;
         var cmd = conf._cmd;
-        $(cmd).on('updated.stdout.cmdconfig', function () {
-            var cmd = this;
+        conf._handleAndInit(Command.UpdatedStdoutEvent, function (e) {
+            var cmd = e.cmd;
             $('#cmdstdout .streamdata').text(cmd.stdout);
         });
-        $(cmd).on('updated.stdoutto.cmdconfig', function () {
-            var cmd = this;
+        conf._handleAndInit(Command.UpdatedStdouttoEvent, function (e) {
+            var cmd = e.cmd;
             if (cmd.stdoutto) {
                 $('#stdouttoid').text(cmd.stdoutto);
                 $('#cmdstdout .forwarded').show();
@@ -248,12 +270,12 @@ define(["jquery",
     CmdConfig.prototype._assocStderr = function () {
         var conf = this;
         var cmd = conf._cmd;
-        $(cmd).on('updated.stderr.cmdconfig', function () {
-            var cmd = this;
+        conf._handleAndInit(Command.UpdatedStderrEvent, function (e) {
+            var cmd = e.cmd;
             $('#cmdstderr .streamdata').text(cmd.stderr);
         });
-        $(cmd).on('updated.stderrto.cmdconfig', function () {
-            var cmd = this;
+        conf._handleAndInit(Command.UpdatedStderrtoEvent, function (e) {
+            var cmd = e.cmd;
             if (cmd.stderrto) {
                 $('#stderrtoid').text(cmd.stderrto);
                 $('#cmdstderr .forwarded').show();
@@ -266,8 +288,8 @@ define(["jquery",
     CmdConfig.prototype._assocHelp = function () {
         var conf = this;
         var cmd = conf._cmd;
-        $(cmd).on('updated.cmd.args.cmdconfig', function () {
-            var cmd = this;
+        function handleArgvChange(e) {
+            var cmd = e.cmd;
             var $help = $('#cmdhelp');
             // clean out help div
             $help.empty();
@@ -277,7 +299,9 @@ define(["jquery",
             } else {
                 // todo: hide help tab?
             }
-        });
+        }
+        conf._handleAndInit(Command.UpdatedArgsEvent, handleArgvChange);
+        conf._handleAndInit(Command.UpdatedCmdEvent, handleArgvChange);
     };
 
     // Update all UI to this cmd (and subscribe to updates)
@@ -291,11 +315,11 @@ define(["jquery",
         conf._assocStderr();
         conf._assocHelp();
         document.getElementById('cmddetailarea').setAttribute('data-associated', cmd.nid);
-        $(cmd).on('wasreleased.cmdconfig', function () {
+        cmd.one(Command.WasReleasedEvent, function () {
             conf.disassociate();
         });
         // view bindings are hooked to updated event, trigger for initialization
-        $(cmd).trigger('updated.cmdconfig');
+        conf._triggerInitHandlers();
     };
 
     return CmdConfig;

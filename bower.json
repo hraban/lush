@@ -25,6 +25,7 @@
   "dependencies": {
     "jquery": "~2.1.1",
     "jquery-ui": "~1.11.2",
-    "jquery.terminal": "0.8.6"
+    "jquery.terminal": "0.8.6",
+    "eventEmitter": "~4.2.9"
   }
 }

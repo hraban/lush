@@ -1,4 +1,3 @@
-var bowerFiles = require('main-bower-files');
 var gulp = require('gulp');
 var typescript = require('gulp-typescript');
 
@@ -31,11 +30,14 @@ gulp.task('statics', function () {
 });
 
 gulp.task('js-libs', ['jquery-ui-theme'], function () {
-    gulp.src(bowerFiles())
-        .pipe(gulp.dest('static/js/ext/'));
-    // has no bower.json
-    gulp.src(['bower_components/jquery.terminal/js/jquery.terminal-src.js'])
-        .pipe(gulp.dest('static/js/ext/'));
+    // tried bunch of extensions, but manual seems to be best
+    // :(
+    gulp.src([
+            'bower_components/jquery/dist/jquery.js',
+            'bower_components/jquery-ui/jquery-ui.js',
+            'bower_components/jquery.terminal/js/jquery.terminal-src.js',
+            'bower_components/eventEmitter/EventEmitter.js'
+        ]).pipe(gulp.dest('static/js/ext/'));
     gulp.src(['bower_components/jquery.terminal/css/jquery.terminal.css'])
         .pipe(gulp.dest('static/css/'));
 });

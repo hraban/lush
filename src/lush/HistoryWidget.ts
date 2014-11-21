@@ -24,11 +24,13 @@
 /// <reference path="refs/jquery.d.ts" />
 /// <reference path="refs/react.d.ts" />
 /// <reference path="refs/react-addons.d.ts" />
+/// <reference path="Command.ts"/>
 /// <reference path="utils.ts" />
 
 import $ = require("jquery");
 import React = require("react");
 import U = require("lush/utils");
+import Command = require("lush/Command");
 
 declare var cmds: {};
 
@@ -64,6 +66,10 @@ function scopeEvents(...evName: string[]): string {
     return evName.map(x => x + ".HistoryWidget").join(" ");
 }
 
+class ChangedHierarchyEvent extends Command.CommandEvent {
+    static eventName = "ChangedHierarchyEvent";
+}
+
 // Build a history list entry for this command. Does not modify DOM, does not
 // register cleanup handlers for DOM. Does register cleanup handlers for
 // internal events, but that should be transparent.
@@ -73,19 +79,31 @@ function createHistoryEntry(cmd): HTMLElement {
     var reactel = React.createElement(HistoryEntry, {cmd: cmd});
     var component = React.render(reactel, wrapper);
 
-    var evNames = scopeEvents("updated.cmd", "updated.args", "updated.name",
-            "changedHierarchy", "archival");
-    $(cmd).on(evNames, function () {
-        var cmd = this;
+    var evs = [
+        Command.UpdatedArgsEvent,
+        Command.UpdatedCmdEvent,
+        Command.UpdatedNameEvent,
+        Command.ArchivalEvent,
+        ChangedHierarchyEvent
+    ];
+    var offs = [cmd.onany(evs, function (e) {
+        var cmd = e.cmd;
         component.setProps({cmd: cmd});
-    });
+    })];
     var evNames = scopeEvents("parentAdded", "parentRemoved");
-    $(cmd).on(evNames, function (_, dad) {
-        $(cmds[dad.getGid()]).trigger(scopeEvents("changedHierarchy"));
+    function handleParentChanged(cmd: Command.Command, dad: Command.Command) {
+        cmds[dad.getGid()].trigger(new ChangedHierarchyEvent());
         component.setProps({cmd: cmd});
-    });
-    $(cmd).on(scopeEvents("wasreleased"), function () {
-        $(cmd).off(".HistoryWidget");
+    }
+    offs.push(cmd.on(Command.ParentAddedEvent, function (e) {
+        handleParentChanged(e.cmd, e.newparent);
+    }));
+    offs.push(cmd.on(Command.ParentRemovedEvent, function (e) {
+        handleParentChanged(e.cmd, e.oldparent);
+    }));
+    cmd.one(Command.WasReleasedEvent, function () {
+        offs.forEach(f => f());
+        delete offs;
     });
 
     return wrapper;
@@ -116,7 +134,7 @@ class HistoryWidget {
     addCommand(cmd) {
         var entry = createHistoryEntry(cmd);
         $('#history').append(entry);
-        $(cmd).on(scopeEvents("wasreleased"), function (e) {
+        cmd.one(Command.WasReleasedEvent, function () {
             React.unmountComponentAtNode(entry);
             $(entry).remove();
         });

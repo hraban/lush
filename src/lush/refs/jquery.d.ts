@@ -2705,6 +2705,13 @@ interface JQuery {
      * @param selector A selector which should match the one originally passed to .on() when attaching event handlers.
      */
     off(events: { [key: string]: any; }, selector?: string): JQuery;
+    /**
+     * Remove an event handler.
+     *
+     * @param events An object where the string keys represent one or more space-separated event types and optional namespaces, and the values represent handler functions previously attached for the event(s).
+     * @param selector A selector which should match the one originally passed to .on() when attaching event handlers.
+     */
+    off(eventObject: JQueryEventObject): JQuery;
 
     /**
      * Attach an event handler function for one or more events to the selected elements.

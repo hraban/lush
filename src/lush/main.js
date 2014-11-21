@@ -269,14 +269,14 @@ define(["jquery",
         if (init.stderrto && !(init.stderrto in cmds)) {
             throw "initializing " + init.nid + " before its stderr child";
         }
-        var cmd = new Command(globals.ctrl, init, globals.moi);
+        var cmd = new Command.Command(globals.ctrl, init, globals.moi);
         cmds[cmd.nid] = cmd;
         var cmddiv = Widget(cmd, document.getElementById("cmds"));
         history_widget.addCommand(cmd);
         // some UI parts are not initialized, just hooked into updated handlers.
         // TODO: NOT MY PROBLEM -- or so I wish :( that should change
-        $(cmd).trigger('updated', ['init']);
-        $(cmd).trigger('archival', [!!cmd.userdata.archived]);
+        //$(cmd).trigger('updated', ['init']); <-- already obsolete?
+        cmd.trigger(new Command.ArchivalEvent(!!cmd.userdata.archived))
         return cmd;
     }
 
@@ -411,18 +411,26 @@ define(["jquery",
         if (cmd.imadethis()) {
             // i made this!
             // capture all stdout and stderr to terminal
-            var printer = function (_, data) {
+            var printer = function (e) {
+                var data = e.data;
                 termPrintlnCmd(globals.term, cmd.nid, data);
             };
-            $(cmd).on('stdout.stream', printer);
-            $(cmd).on('stderr.stream', printer);
-            $(cmd).on('childAdded', function (e, child, stream) {
-                var cmd = this;
-                $(cmd).off(stream + '.stream');
+            var offs = {
+                stdout: cmd.on(Command.StreamStdoutEvent, printer),
+                stderr: cmd.on(Command.StreamStderrEvent, printer)
+            };
+            cmd.on(Command.ChildAddedEvent, function (e) {
+                var stream = e.streamname;
+                offs[stream]();
+                delete offs[stream];
             });
-            $(cmd).on('childRemoved', function (e, child, stream) {
-                var cmd = this;
-                $(cmd).on(stream + '.stream', printer);
+            cmd.on(Command.ChildRemovedEvent, function (e) {
+                var stream = e.streamname;
+                if (e.streamname === 'stdout') {
+                    offs.stdout = cmd.on(Command.StreamStdoutEvent, printer);
+                } else {
+                    offs.stderr = cmd.on(Command.StreamStderrEvent, printer);
+                }
             });
             // subscribe to stream data
             ctrl.send('subscribe', cmd.nid, 'stdout');

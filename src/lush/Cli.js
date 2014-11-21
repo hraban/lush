@@ -76,6 +76,8 @@ define(["jquery",
         // latest call to setprompt()
         cli._syncingPrompt = $.Deferred().resolve();
         cli._setprompt_safe = U.noConcurrentCalls(cli._setprompt_aux.bind(cli));
+        // Event unbinders
+        cli._offs = [];
     };
 
     // ask the server for a new command and put it in "CLI mode"
@@ -122,13 +124,13 @@ define(["jquery",
     function syncPromptToCmd(ast, cmd, updateGUID, getCmd) {
         // sanity checks
         if (ast !== undefined && !(ast instanceof Ast)) {
-            throw "Illegal ast node";
+            throw new Error("Illegal ast node");
         }
-        if (cmd !== undefined && !(cmd instanceof Command)) {
-            throw "Illegal command object";
+        if (cmd !== undefined && !(cmd instanceof Command.Command)) {
+            throw new Error("Illegal command object");
         }
         if (!$.isFunction(getCmd)) {
-            throw "syncPromptToCmd needs a callable getCmd parameter";
+            throw new Error("syncPromptToCmd needs a callable getCmd parameter");
         }
 
         if (cmd === undefined && ast === undefined) {
@@ -153,8 +155,8 @@ define(["jquery",
             // clean up the mess once this command is detached from its parent.
             // can't clean up earlier because a child must exist at the moment
             // of detaching.
-            $(cmd).one('parentRemoved', function () {
-                var cmd = this;
+            cmd.one(ParentRemovedEvent, function (e) {
+                var cmd = e.cmd;
                 U.mapCmdTree(cmd, function (cmd) { cmd.release(); });
             });
             // inform the parent that his child died (hopefully he will
@@ -195,17 +197,17 @@ define(["jquery",
                 return def;
             });
         }
-        throw "hraban done messed up"; // shouldnt reach
+        throw new Error("hraban done messed up"); // shouldnt reach
     }
 
     // Update the synchronized command tree to reflect changes to the prompt.
     // Returns a deferred that is resolved when the command tree is synced with
     // this prompt.
     Cli.prototype._syncPrompt = function (ast) {
-        if (!(ast instanceof Ast)) {
-            throw "ast argument must be an Ast instance";
-        }
         var cli = this;
+        if (!(ast instanceof Ast)) {
+            throw new Error("ast argument must be an Ast instance");
+        }
         var doneDeferred = $.Deferred();
         var getCmd = function (x) {
             return cli._getCmdFromPool(x);
@@ -214,7 +216,7 @@ define(["jquery",
             if (cmd === undefined) {
                 // not rejecting the Deferred here because this is a heavy
                 // assert()-fail; don't expect anything to work anymore anyway.
-                throw "No root command parsed";
+                throw new Error("No root command parsed");
             }
             cli._cmd = cmd;
             // do not pass the command to the next handler
@@ -222,72 +224,66 @@ define(["jquery",
         });
     };
 
-    function stopMonitoringCmd(cmd) {
-        if (!(cmd instanceof Command)) {
-            throw "argument to stopMonitoringCmd must be a Command instance";
-        }
-        delete cmd._prepareCmdForSyncSanityCheck;
-        $(cmd).off('.terminal');
-    }
-
-    function stopMonitoringTree(root) {
-        U.mapCmdTree(root, stopMonitoringCmd);
-    }
+    // Completely disconnect the current sync between CLI and command tree.
+    Cli.prototype._disconnectTree = function () {
+        var cli = this;
+        // by disconnecting the root of this tree from the cli the
+        // updates to the cli cannot be propagated to the commands
+        // anymore. an update causes a search for the ._cmd, if that
+        // is not found an entirely new tree is created.
+        cli._cmd = undefined;
+        this._offs.forEach(function (f) { f(); });
+        this._offs = [];
+    };
 
     // (One-way) sync a command to this cli object: cmd changes -> update me.
     Cli.prototype._monitorCommandChanges = function (cmd) {
         var cli = this;
         // when the associated command (args or cmd) is updated from outside
-        $(cmd).on('updated.args.cmd.terminal', function (e, by) {
-            var cmd = this;
-            if (by == cli._guid || by == 'init') {
+        var evs = [Command.UpdatedArgsEvent, Command.UpdatedCmdEvent];
+        cli._offs.push(cmd.onany(evs, function (e) {
+            var cmd = e.cmd;
+            if (e.from == cli._guid || e.from == 'init') {
                 // ignore init and myself
                 return;
             }
             var newprompt = U.cmdChainToPrompt(cli._cmd);
             // not a jQuery event because I want to crash if unhandled
             cli.onUpdatedPrompt(newprompt);
-        });
-        $(cmd).on('updated.status.terminal', function (e) {
-            var cmd = this;
+        }));
+        cli._offs.push(cmd.on(Command.UpdatedStatusEvent, function (e) {
+            var cmd = e.cmd;
             // if currently bound command is started
             if (cmd.status.code > 0) {
-                // once started, stop worrying about changes
-                stopMonitoringCmd(cmd);
                 var root = cmds[cmd.getGid()];
-                // this command is (part of) the synchronised command tree
-                if (root === cli._cmd) {
-                    // what now? that is the big question. what now. take a step
-                    // back and look at the situation. the user types:
-                    //
-                    // find -name '*.[ch]' -print0 | xargs -0 cat | wc -l
-                    //
-                    // without commiting (hitting enter). this consumes three
-                    // command objects from the pre-allocation pool and sets
-                    // them up in line with the prompt.
-                    //
-                    // now, he (or somebody / something else) starts the xargs
-                    // command asynchronously, through the widget. what do we do
-                    // with the prepared commands? with the prompt? can't just
-                    // leave it hanging around like that; if he changes the sort
-                    // command in the prompt this causes an update to the argv
-                    // of a running command---a client error.
-                    //
-                    // the easiest thing to do here, by far, is to just flush
-                    // the entire tree of prepared commands and start again.
-                    // it's not (at all) what the user expects, unfortunately.
-                    //
-                    // by disconnecting the root of this tree from the cli the
-                    // updates to the cli cannot be propagated to the commands
-                    // anymore. an update causes a search for the ._cmd, if that
-                    // is not found an entirely new tree is created.
-                    cli._cmd = undefined;
-                    // however, changes to the commands themselves are still
-                    // sent to the cli. that needs to stop as well.
-                    stopMonitoringTree(root);
+                if (root !== cli._cmd) {
+                    // Tree is already disconnected: ignore and wait until event
+                    // handler is unbound.
+                    return;
                 }
+                // this command is (part of) the synchronised command tree what
+                // now? that is the big question. what now. take a step back and
+                // look at the situation. the user types:
+                //
+                // find -name '*.[ch]' -print0 | xargs -0 cat | wc -l
+                //
+                // without commiting (hitting enter). this consumes three
+                // command objects from the pre-allocation pool and sets them up
+                // in line with the prompt.
+                //
+                // now, he (or somebody / something else) starts the xargs
+                // command asynchronously, through the widget. what do we do
+                // with the prepared commands? with the prompt? can't just leave
+                // it hanging around like that; if he changes the sort command
+                // in the prompt this causes an update to the argv of a running
+                // command---a client error.
+                //
+                // the easiest thing to do here, by far, is to just flush the
+                // entire tree of prepared commands and start again.  it's not
+                // (at all) what the user expects, unfortunately.
+                cli._disconnectTree();
             }
-        });
+        }));
     };
 
     // When a command is synced with this CLI certain bookkeeping applies: if
@@ -296,12 +292,12 @@ define(["jquery",
     // and taking appropriate action.
     Cli.prototype._prepareCmdForSync = function (cmd) {
         var cli = this;
-        if (!(cmd instanceof Command)) {
-            throw "Argument to _prepareCmdForSync must be a Command";
+        if (!(cmd instanceof Command.Command)) {
+            throw new Error("Argument to _prepareCmdForSync must be a Command");
         }
         // Sneaky integrity check
         if (cmd._prepareCmdForSyncSanityCheck !== undefined) {
-            throw "_prepareCmdForSync already called on this command";
+            throw new Error("_prepareCmdForSync already called on this command");
         }
         cmd._prepareCmdForSyncSanityCheck = true;
         cli._monitorCommandChanges(cmd);
@@ -336,7 +332,7 @@ define(["jquery",
     Cli.prototype._setprompt_aux = function (txt, ignoreParseError) {
         var cli = this;
         if (!(typeof txt == "string")) {
-            throw "argument to setprompt must be the raw prompt, as a string";
+            throw new Error("argument to setprompt must be the raw prompt, as a string");
         }
         cli._latestPromptInput = txt;
         // this specific syncing job (will be rejected on error)
@@ -356,7 +352,7 @@ define(["jquery",
         var cli = this;
         cli._parser.commit();
         if (!cli._cmd) {
-            throw "cmd not ready";
+            throw new Error("cmd not ready");
         }
         var root = cli._cmd;
         cli._cmd = undefined;
@@ -365,9 +361,9 @@ define(["jquery",
         // before He changes His mind.
         var runningCmds = 0;
         // archive when everybody completes succesfully
-        var cmdDone = function (e, status) {
-            var cmd = this;
-            if (status.code == 2) {
+        var cmdDone = function (e) {
+            var cmd = e.cmd;
+            if (e.status.code == 2) {
                 // success!
                 runningCmds -= 1;
             } else {
@@ -375,7 +371,7 @@ define(["jquery",
                 // setting to -1 will prevent the counter from ever reaching 0
                 runningCmds = -1;
                 $('.promptcopy-' + cmd.nid).addClass('failure');
-                cli.onerror(status.err);
+                cli.onerror(e.status.err);
             }
             if (runningCmds == 0) {
                 $('.promptcopy-' + cmd.nid).addClass('success');
@@ -395,7 +391,7 @@ define(["jquery",
                 $promptcpy.addClass('promptcopy-' + cmd.nid);
                 cmd.start();
                 runningCmds += 1;
-                $(cmd).one('done', cmdDone);
+                cli._offs.push(cmd.one(Command.DoneEvent, cmdDone));
             });
         });
     };
@@ -407,7 +403,7 @@ define(["jquery",
         var cmd = cli._cmd;
         if (!cmd) {
             // TODO: prettier
-            throw "cmd not ready for tab completion";
+            throw new Error("cmd not ready for tab completion");
         }
         var argv = cli._parser.ctx.ast.argv;
         if (argv.length < 2) {

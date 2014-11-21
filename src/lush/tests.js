@@ -442,7 +442,7 @@ define(["jquery",
             init.nid = ++uniqueIds;
         }
         var ctrl = buildMockCtrl(handlers);
-        var cmd = new Command(ctrl, init, "foo");
+        var cmd = new Command.Command(ctrl, init, "foo");
         if (callback) {
             callback(cmd);
         } else {
@@ -457,12 +457,13 @@ define(["jquery",
         var updatedNameEventCount = 0;
         var updatedArgsEventCount = 0;
         // a jquery event for just this property: updated.name
-        $(cmd).on('updated.name', function (e, by) {
+        cmd.on(Command.UpdatedNameEvent, function (e) {
+            var by = e.from;
             updatedNameEventCount++;
             equal(by, "batman", "updated.name handler passed 'by' param");
         });
         // a jquery event for a property that was not updated
-        $(cmd).on('updated.args', function (e, name) {
+        cmd.on(Command.UpdatedArgsEvent, function (e) {
             updatedArgsEventCount++;
         });
         
@@ -510,14 +511,17 @@ define(["jquery",
         var stdoutData = [];
         var stderrData = [];
         var stdout, stderr;
-        $(cmd).on('stdout.stream', function (e, data) {
-            stdoutData.push(data);
-        }).on('stderr.stream', function (e, data) {
-            stderrData.push(data);
-        }).on('updated.stdout', function (e, data) {
-            stdout = data;
-        }).on('updated.stderr', function (e, data) {
-            stderr = data;
+        cmd.on(Command.StreamStdoutEvent, function (e) {
+            stdoutData.push(e.data);
+        });
+        cmd.on(Command.StreamStderrEvent, function (e) {
+            stderrData.push(e.data);
+        });
+        cmd.on(Command.UpdatedStdoutEvent, function (e) {
+            stdout = e.stdout;
+        });
+        cmd.on(Command.UpdatedStderrEvent, function (e) {
+            stderr = e.stderr;
         });
 
         cmd.processStream('stdout', 'first out, ');
@@ -554,7 +558,7 @@ define(["jquery",
         };
         var errmsg;
         cli.setprompt("one two three").then(function () {
-            ok(cli._cmd instanceof Command, "synchronized command with prompt");
+            ok(cli._cmd instanceof Command.Command, "synchronized command with prompt");
             equal(cli._cmd.cmd, "one", "command name of synced command");
             deepEqual(cli._cmd.args, ["two", "three"], "args of synced command");
             ok(!cli._cmd.stdoutto, "synced command has no child");

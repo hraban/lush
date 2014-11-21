@@ -290,6 +290,10 @@ export function isInt(i) {
     return (typeof i === 'number') && (i % 1 === 0);
 }
 
+export function isString(x) {
+    return typeof x === "string";
+}
+
 export function splitn(str, sep, n) {
     var components = str.split(sep);
     var res = [];
