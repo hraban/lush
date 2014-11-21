@@ -232,8 +232,10 @@ define(["jquery",
         // anymore. an update causes a search for the ._cmd, if that
         // is not found an entirely new tree is created.
         cli._cmd = undefined;
-        this._offs.forEach(function (f) { f(); });
+        var offs = this._offs;
+        // Clear this first so exceptions in off functions only occur once
         this._offs = [];
+        offs.forEach(function (f) { f(); });
     };
 
     // (One-way) sync a command to this cli object: cmd changes -> update me.
