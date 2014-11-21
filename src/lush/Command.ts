@@ -25,9 +25,9 @@
 /// <reference path="Ctrl.ts" />
 
 import $ = require("jquery");
-import U = require("lush/utils");
-import Ctrl = require("lush/Ctrl");
 import EventEmitter = require("EventEmitter");
+import Ctrl = require("lush/Ctrl");
+import U = require("lush/utils");
 
 
 // declare main.js

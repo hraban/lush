@@ -629,6 +629,11 @@ interface JQueryCoordinates {
     top: number;
 }
 
+interface JQuerySerializeArrayElement {
+    name: string;
+    value: string;
+}
+
 interface JQueryAnimationOptions { 
     /**
      * A string or number determining how long the animation will run.
@@ -1321,7 +1326,7 @@ interface JQuery {
     /**
      * Encode a set of form elements as an array of names and values.
      */
-    serializeArray(): Object[];
+    serializeArray(): JQuerySerializeArrayElement[];
 
     /**
      * Adds the specified class(es) to each of the set of matched elements.

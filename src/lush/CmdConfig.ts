@@ -18,8 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-"use strict";
-
 
 // Control window for active commands (that box in the bottom right). Click on a
 // command widget to "select" a command. In this file, selecting is called
@@ -28,20 +26,33 @@
 // for "click" events on the widget; binding that event to this associateCmd
 // method is responsibility of the caller.
 
-define(["jquery",
-        "lush/Command",
-        "lush/help",
-        "lush/utils"],
-       function ($, Command, help, U) {
+/// <reference path="refs/jquery.d.ts" />
+/// <reference path="refs/jqueryui.d.ts" />
+/// <reference path="refs/jquery-lush.d.ts"/>
+/// <reference path="utils.ts" />
 
-    var numInstances = 0;
+import $ = require("jquery");
+import Command = require("lush/Command");
+import help = require("lush/help");
+import U = require("lush/utils");
 
-    var CmdConfig = function () {
+// declare main.js
+declare var cmds: { [nid: number]: Command.Command };
+
+var numInstances = 0;
+
+class CmdConfig {
+    private _cmd: Command.Command;
+    private _initHandlers: { (ev: Command.CommandEvent): void }[];
+    private _myid = 'CmdConfig' + U.guid();
+    // event unbinders
+    private _offs: Function[] = [];
+
+    constructor() {
         var conf = this;
         // Identifier that allows me to ignore my own update() calls. The GUID
         // helps distinguish this CmdConfig widget from other ones if there are
         // multiple clients connected to the same lush instance.
-        conf._myid = 'CmdConfig' + U.guid();
         if (numInstances++ > 0) {
             throw new Error("CmdConfig must not be instanciated more than once");
             // yeah yeah yeah that means it's not supposed to be a class. it's
@@ -85,28 +96,26 @@ define(["jquery",
                 cmd.update({stderrto: 0});
             }
         });
-        // event unbinders
-        conf._offs = [];
-    };
+    }
 
     // Hook up to this event, and call it after association to init the view
-    CmdConfig.prototype._handleAndInit = function (C, handler) {
+    private _handleAndInit(C, handler) {
         var conf = this;
         if (undefined === conf._initHandlers) {
             conf._initHandlers = [];
         }
         conf._offs.push(conf._cmd.on(C, handler));
         conf._initHandlers.push(handler);
-    };
+    }
 
-    CmdConfig.prototype._triggerInitHandlers = function () {
+    private _triggerInitHandlers() {
         var conf = this;
         var ev = new Command.CommandEvent();
         ev.from = 'init';
         ev.cmd = conf._cmd;
         conf._initHandlers.forEach(function (f) { f(ev); });
         delete conf._initHandlers;
-    };
+    }
 
     // request the command to be updated. behind the scenes this happens: send
     // "updatecmd" message over ctrl stream.  server will reply with updatecmd,
@@ -114,14 +123,14 @@ define(["jquery",
     // the relevant Command.Updated****Event, which will invoke the handler that
     // updates the view. The argument is the form containing the properties as a
     // DOM node.
-    CmdConfig.prototype._submitChanges = function (form) {
+    private _submitChanges(form) {
         var conf = this;
         var cmd = conf._cmd;
         if (cmd === undefined) {
             // no associated command
             throw new Error("Select command before saving changes");
         }
-        var o = $(form).serializeObject();
+        var o = <{[key: string]: any}>$(form).serializeObject();
         // cast numeric inputs to JS ints
         $.each(o, function (key, val) {
             if (/^\d+$/.test(val)) {
@@ -136,7 +145,7 @@ define(["jquery",
         // actually delete it, maybe special case strip the last arg if it's
         // empty because that one is create automatically.
         args = U.removeFalse(args);
-        o.args = args;
+        o['args'] = args;
         // delete old arg properties
         for (var k in o) {
             if (/^arg\d/.test(k)) {
@@ -144,17 +153,17 @@ define(["jquery",
             }
         }
         // set command name to argv
-        o.name = o.cmd;
+        o['name'] = o['cmd'];
         for (var i = 0; i < args.length; i++) {
-            o.name += ' ' + args[i];
+            o['name'] += ' ' + args[i];
         }
-        o.userdata = $(form).data();
+        o['userdata'] = $(form).data();
         cmd.update(o, conf._myid);
     }
 
     // Return the <input> (DOM node) for this argument, create it if it doesn't
     // exist. Expects the <input> for the arg before to already exist, if any.
-    CmdConfig.prototype._ensureArgInput = function (argId) {
+    private _ensureArgInput(argId: number): HTMLInputElement {
         if (!U.isInt(argId)) {
             throw new Error("Expected integer argument to _ensureArgInput");
         }
@@ -162,10 +171,10 @@ define(["jquery",
         if ($arg.length === 0) {
             var $arg = $('<input name=arg' + argId + '>').appendTo('#cmdedit_argv');
         }
-        return $arg[0];
-    };
+        return <HTMLInputElement>$arg.get(0);
+    }
 
-    CmdConfig.prototype.disassociate = function () {
+    disassociate() {
         var conf = this;
         var cmd = conf._cmd;
         document.getElementById('cmddetailarea').removeAttribute('data-associated');
@@ -174,14 +183,14 @@ define(["jquery",
         conf._offs = [];
         conf._disassocEdit();
         $('.forwarded').hide();
-    };
+    }
 
-    CmdConfig.prototype._disassocEdit = function () {
+    private _disassocEdit() {
         $('fieldset#cmdedit_argv input[name=arg1] ~ input[name^=arg]').remove();
         $('#cmdedit input').val('');
-    };
+    }
 
-    CmdConfig.prototype._assocSummary = function () {
+    private _assocSummary() {
         var conf = this;
         var cmd = conf._cmd;
         function handleArgvChange(e) {
@@ -198,10 +207,10 @@ define(["jquery",
             var cmd = e.cmd;
             $('#cmdsummary_startwd').text(cmd.startwd);
         });
-    };
+    }
 
     // initialize the edit tab for the newly associated command
-    CmdConfig.prototype._assocEdit = function () {
+    private _assocEdit() {
         var conf = this;
         var $editm = $('#cmdedit');
         var cmd = conf._cmd;
@@ -247,9 +256,9 @@ define(["jquery",
             // TODO: Disable inputs somehow (remember to reenable on
             // disassociate)
         });
-    };
+    }
 
-    CmdConfig.prototype._assocStdout = function () {
+    private _assocStdout() {
         var conf = this;
         var cmd = conf._cmd;
         conf._handleAndInit(Command.UpdatedStdoutEvent, function (e) {
@@ -265,9 +274,9 @@ define(["jquery",
                 $('#cmdstdout .forwarded').hide();
             }
         });
-    };
+    }
 
-    CmdConfig.prototype._assocStderr = function () {
+    private _assocStderr() {
         var conf = this;
         var cmd = conf._cmd;
         conf._handleAndInit(Command.UpdatedStderrEvent, function (e) {
@@ -283,9 +292,9 @@ define(["jquery",
                 $('#cmdstderr .forwarded').hide();
             }
         });
-    };
+    }
 
-    CmdConfig.prototype._assocHelp = function () {
+    private _assocHelp() {
         var conf = this;
         var cmd = conf._cmd;
         function handleArgvChange(e) {
@@ -302,10 +311,10 @@ define(["jquery",
         }
         conf._handleAndInit(Command.UpdatedArgsEvent, handleArgvChange);
         conf._handleAndInit(Command.UpdatedCmdEvent, handleArgvChange);
-    };
+    }
 
     // Update all UI to this cmd (and subscribe to updates)
-    CmdConfig.prototype.associateCmd = function (cmd) {
+    associateCmd(cmd) {
         var conf = this;
         conf.disassociate();
         conf._cmd = cmd;
@@ -320,8 +329,7 @@ define(["jquery",
         });
         // view bindings are hooked to updated event, trigger for initialization
         conf._triggerInitHandlers();
-    };
+    }
+}
 
-    return CmdConfig;
-
-});
+export = CmdConfig;

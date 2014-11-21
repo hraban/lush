@@ -27,14 +27,13 @@
 // made in the mean time.
 
 /// <reference path="refs/jquery.d.ts" />
-/// <reference path="Command.ts"/>
 
 import $ = require("jquery");
-import Ast = require("Ast");
-import Command = require("Command");
-import Parser = require("Parser");
-import Pool = require("Pool");
-import U = require("utils");
+import Ast = require("lush/Ast");
+import Command = require("lush/Command");
+import Parser = require("lush/Parser");
+import Pool = require("lush/Pool");
+import U = require("lush/utils");
 
 // declare main.js
 declare var cmds: { [nid: number]: Command.Command };

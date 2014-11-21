@@ -31,10 +31,9 @@
 // anyway some mc'lovin would be much much appreciated here.
 
 /// <reference path="refs/jquery.d.ts" />
-/// <reference path="Command.ts"/>
 
 import $ = require("jquery");
-import Command = require("Command");
+import Command = require("lush/Command");
 
 interface helpHandler {
     (cmd: Command.Command, $help: JQuery): void;
