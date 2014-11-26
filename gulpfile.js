@@ -15,7 +15,6 @@ gulp.task('default', ['js', 'statics'], function () {
 
 gulp.task('js', ['js-src', 'typescript', 'js-libs'], function () {
     var bundle = browserify({
-            entries: ['./build/js/lush/startlush.js'],
             debug: true,
             paths: ['./build/js'],
         }).transform(aliasify.configure({
