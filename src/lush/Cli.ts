@@ -155,7 +155,7 @@ class Cli {
     // Event unbinders
     private _offs: Function[] = [];
     private _parser = new Parser();
-    private _setprompt_safe: (txt: string, ignoreErrors: boolean) => void;
+    private _setprompt_safe: (txt: string, ignoreErrors: boolean) => JQueryPromise<Command.Command>;
     // a Deferred that resolves when the command tree is synced with the latest
     // call to setprompt()
     // TODO ehh this seems somehow messed up---never actually not resolved?
@@ -216,7 +216,7 @@ class Cli {
     // Update the synchronized command tree to reflect changes to the prompt.
     // Returns a deferred that is resolved when the command tree is synced with
     // this prompt.
-    private _syncPrompt(ast: Ast) {
+    private _syncPrompt(ast: Ast): JQueryPromise<Command.Command> {
         var cli = this;
         if (!(ast instanceof Ast)) {
             throw new Error("ast argument must be an Ast instance");
@@ -334,13 +334,13 @@ class Cli {
     //
     // beware: this function uses noConcurrentCalls thus, if called
     // concurrently, returns deferreds that are never resolved nor rejected.
-    setprompt(txt: string, ignoreParseError: boolean) {
+    setprompt(txt: string, ignoreParseError?: boolean): JQueryPromise<Command.Command> {
         var cli = this;
-        return cli._setprompt_safe(txt, ignoreParseError);
+        return cli._setprompt_safe(txt, !!ignoreParseError);
     }
 
     // bare version of setprompt (no locking)
-    private _setprompt_aux(txt: string, ignoreParseError: boolean) {
+    private _setprompt_aux(txt: string, ignoreParseError: boolean): JQueryPromise<Command.Command> {
         var cli = this;
         if (!(typeof txt == "string")) {
             throw new Error("argument to setprompt must be the raw prompt, as a string");

@@ -1762,3 +1762,6 @@ interface JQueryStatic {
     widget: JQueryUI.Widget;
     Widget: JQueryUI.Widget;
 }
+
+declare module "jquery-ui" {
+}

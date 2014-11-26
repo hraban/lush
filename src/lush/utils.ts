@@ -111,7 +111,7 @@ export function lcpbi(x, y) {
 }
 
 // longest common prefix
-export function lcp(seqs, i) {
+export function lcp(seqs: string[]) {
     if (seqs.length == 0) {
         return "";
     }
