@@ -46,11 +46,15 @@
 //
 // all this is wrapped in a <div class=rootcontainer>
 
-define(["jquery",
-        "react",
-        "lush/Command",
-        "lush/utils"],
-       function ($, React, Command, U) {
+var $ = require("jquery");
+var React = require("react");
+
+var Command = require("./Command");
+var U = require("./utils");
+ 
+ 
+ 
+ 
 
     var StopButton = React.createClass({
         getInitialState: function () {
@@ -246,7 +250,7 @@ define(["jquery",
     });
 
     // create root widget for this command
-    return function (cmd, cmds) {
+    function createWidget(cmd, cmds) {
         var wrapper = document.createElement('div');
         cmds.appendChild(wrapper);
         var props = {cmd: cmd, key: 'root' + cmd.nid};
@@ -260,6 +264,6 @@ define(["jquery",
             cmds.removeChild(wrapper);
         });
         return wrapper;
-    };
+    }
 
-});
+module.exports = createWidget;

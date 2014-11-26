@@ -20,19 +20,19 @@
 
 "use strict";
 
-var cmds = {};
+require("./globals");
 
-define(["jquery",
-        "lush/Ast",
-        "lush/Cli",
-        "lush/Command",
-        "lush/HistoryExpander",
-        "lush/lexer",
-        "lush/Parser",
-        "lush/Pool",
-        "lush/utils"],
-       function ($, Ast, Cli, Command, HistoryExpander, lexer, Parser, Pool, U) {
-
+var $ = require("jquery");
+var Ast = require("./Ast");
+var Cli = require("./Cli");
+var Command = require("./Command");
+var HistoryExpander = require("./HistoryExpander");
+var lexer = require("./lexer");
+var Parser = require("./Parser");
+var Pool = require("./Pool");
+var U = require("./utils");
+ 
+function testLush() {
     test("lcp(): longest common prefix", function () {
         equal(U.lcp(["abcd", "abab", "abba"]), "ab");
         equal(U.lcp([]), "", "common prefix of 0 strings");
@@ -709,4 +709,6 @@ define(["jquery",
         ok(!U.isInt(Infinity), "Infinity is not integer");
         ok(U.isInt(-3), "-3 is integer");
     });
-});
+}
+
+module.exports = testLush;

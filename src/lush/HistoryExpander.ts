@@ -25,7 +25,7 @@
 
 /// <reference path="lexer.ts" />
 
-import lexer = require("lush/lexer");
+import lexer = require("./lexer");
 
 class HistoryExpander {
     private _lastCmd = '';

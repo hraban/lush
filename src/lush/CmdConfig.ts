@@ -32,9 +32,9 @@
 /// <reference path="utils.ts" />
 
 import $ = require("jquery");
-import Command = require("lush/Command");
-import help = require("lush/help");
-import U = require("lush/utils");
+import Command = require("./Command");
+import help = require("./help");
+import U = require("./utils");
 
 // declare main.js
 declare var cmds: { [nid: number]: Command.Command };

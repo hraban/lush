@@ -29,8 +29,6 @@ SOFTWARE.
 <link rel=stylesheet href=/css/smoothness/jquery-ui.min.css>
 <link rel=stylesheet href=/css/jquery.terminal.css>
 <link type="text/css" rel="stylesheet" href="/css/base.css">
-<script src="/js/ext/require.js"></script>
-<script src="/js/lush.js"></script>
 
 </head>
 <body data-status=loading>
@@ -164,21 +162,13 @@ focus. -->
 
 </dealwithit>
 
+<script src="/js/lush.js"></script>
 
 <script>
-requirejs(["jquery", "lush/main"], function ($, main) {
-    $.get("/config/websocketbase.txt").then(function (url) {
-        return url.trim();
-    }, function () {
-        var d = $.Deferred();
-        // default baseurl is empty string
-        d.resolve("");
-        // continue on the success path (return ""; continues on fail path)
-        return d;
-    }).then(function (baseurl) {
-        main(baseurl + "/ctrl");
-    });
-});
+var startLush = require("lush/start");
+
+startLush();
 </script>
+
 </body>
 </html>

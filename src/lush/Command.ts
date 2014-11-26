@@ -26,8 +26,8 @@
 
 import $ = require("jquery");
 import EventEmitter = require("EventEmitter");
-import Ctrl = require("lush/Ctrl");
-import U = require("lush/utils");
+import Ctrl = require("./Ctrl");
+import U = require("./utils");
 
 
 // declare main.js

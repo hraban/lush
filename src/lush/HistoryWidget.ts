@@ -29,8 +29,8 @@
 
 import $ = require("jquery");
 import React = require("react");
-import U = require("lush/utils");
-import Command = require("lush/Command");
+import U = require("./utils");
+import Command = require("./Command");
 
 declare var cmds: {};
 
@@ -92,7 +92,7 @@ function createHistoryEntry(cmd): HTMLElement {
     })];
     var evNames = scopeEvents("parentAdded", "parentRemoved");
     function handleParentChanged(cmd: Command.Command, dad: Command.Command) {
-        cmds[dad.getGid()].trigger(new ChangedHierarchyEvent());
+        dad.trigger(new ChangedHierarchyEvent());
         component.setProps({cmd: cmd});
     }
     offs.push(cmd.on(Command.ParentAddedEvent, function (e) {

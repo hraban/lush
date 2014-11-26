@@ -23,15 +23,21 @@
 
 // TERMINAL HANDLING
 
-define(["jquery",
-        "ansi_up",
-        "lush/Cli",
-        "lush/Ctrl",
-        "lush/Parser",
-        "lush/utils",
-        "jquery.terminal",
-        "jquery.ui"],
-       function ($, ansi_up, Cli, Ctrl, Parser, U) {
+var ansi_up = require("ansi_up");
+var $ = require("jquery");
+require("jquery.terminal");
+require("jquery.ui");
+
+var Cli = require("./Cli");
+var Ctrl = require("./Ctrl");
+var Parser = require("./Parser");
+var U = require("./utils");
+ 
+ 
+ 
+ 
+ 
+ 
 
     // prepare raw data for passing to jQuery.terminal's .echo method
     function escapeTerminalOutput(text) {
@@ -98,7 +104,7 @@ define(["jquery",
 
 
     // set up the terminal window
-    return function (processCmd, ctrl) {
+    function terminal(processCmd, ctrl) {
         if (!(ctrl instanceof Ctrl)) {
             throw "second argument to terminal.js main function must be a Ctrl";
         }
@@ -181,6 +187,6 @@ define(["jquery",
         globals.cli = cli;
         globals.terminal = $term;
         return $term;
-    };
+    }
 
-});
+module.exports = terminal;

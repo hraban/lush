@@ -26,10 +26,10 @@
 /// <reference path="lexer.ts" />
 /// <reference path="utils.ts" />
 
-import Ast = require("lush/Ast");
-import HistoryExpander = require("lush/HistoryExpander");
-import lexer = require("lush/lexer");
-import U = require("lush/utils");
+import Ast = require("./Ast");
+import HistoryExpander = require("./HistoryExpander");
+import lexer = require("./lexer");
+import U = require("./utils");
 
 function startsWithDot(str: string): boolean {
     return str[0] == ".";

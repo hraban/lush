@@ -124,48 +124,19 @@
 //
 // good luck.
 
+require("./globals");
 
-// Project-wide globals in one object. Always refer to this object and the
-// elements within it by full name for easy greping. Initialization of this
-// object should be done only by main functions of modules, and only once. No
-// reinitializing later.
-// TODO: (Assert)Exception if get before set
-// TODO: (Assert)Exception if set unknown key
-var globals = {
-    // websocket connection for control events
-    ctrl: undefined,
-    // (shell-sessionlocal) ID of this client
-    moi: undefined,
-    // Cli instance. Useful for debugging.
-    cli: undefined,
-    // jQuery.terminal instance. also for debugging.
-    terminal: undefined,
-};
+var $ = require("jquery");
+require("jquery.ui");
 
-// object containing running command metadata: key is system id, value is cmd
-// object
-// TODO: Should be in globals
-var cmds = {};
-
-define(["jquery",
-        "lush/Ctrl",
-        "lush/Command",
-        "lush/Widget",
-        "lush/CmdConfig",
-        "lush/HistoryWidget",
-        "lush/terminal",
-        "lush/path",
-        "lush/utils",
-        "jquery.ui"],
-       function ($,
-                 Ctrl,
-                 Command,
-                 Widget,
-                 CmdConfig,
-                 HistoryWidget,
-                 terminal,
-                 path,
-                 U) {
+var Ctrl = require("./Ctrl");
+var Command = require("./Command");
+var Widget = require("./Widget");
+var CmdConfig = require("./CmdConfig");
+var HistoryWidget = require("./HistoryWidget");
+var terminal = require("./terminal");
+var path = require("./path");
+var U = require("./utils");
 
     // Reference to the history widget (needed for command initialization)
     var history_widget;
@@ -599,6 +570,4 @@ define(["jquery",
         });
     }
 
-    return lushMain;
-
-});
+module.exports = lushMain;
