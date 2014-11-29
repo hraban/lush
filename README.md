@@ -60,8 +60,9 @@ Download and install:
 
     $ go get github.com/hraban/lush
     $ cd $GOPATH/github.com/hraban/lush
-    $ npm install -g gulp
-    $ npm install -D gulp gulp-typescript
+    $ npm install -g gulp bower
+    $ npm install
+    $ bower install
     $ gulp
 
 To run the program find the executable (somewhere in $GOPATH/bin/) and launch
