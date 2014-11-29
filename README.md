@@ -33,11 +33,12 @@ Execute:
 It will download lush (to `c:\go3d\src\github.com\hraban\lush`) and install it
 (as `c:\go3d\bin\lush.exe`).
 
-**Install gulp and gulp-typescript** 
+**Install dependencies: gulp, bower, and the rest** 
 
     cd c:\go3d\src\github.com\hraban\lush
-    npm install -g gulp
-    npm install -D gulp gulp-typescript
+    npm install -g gulp bower
+    npm install
+    bower install
     gulp
 
 **Run lush by double clicking the .exe!** Create a shortcut to your desktop for
