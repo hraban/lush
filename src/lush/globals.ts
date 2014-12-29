@@ -26,4 +26,6 @@ var globals = {
     cmds: <{ [key: number]: Command.Command }> {},
 };
 
+// nice for debugging, but defeats type safety so don't use internally
+window['lushglobals'] = globals;
 export = globals;

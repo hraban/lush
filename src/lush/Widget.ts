@@ -160,10 +160,14 @@ var GroupWidget = React.createClass({
             Command.UpdatedStatusEvent
         ];
         this.state.off = this.props.cmd.onany(events, this.props.onChange);
+        var that = this;
+        this.props.cmd.one(Command.WasReleasedEvent, function (e: Command.WasReleasedEvent) {
+            that.state.off = null;
+        });
     },
 
     componentWillUnmount: function () {
-        this.state.off();
+        this.state.off && this.state.off();
         delete this.state.off;
     },
 

@@ -28,11 +28,10 @@
 /// <reference path="utils.ts" />
 
 import $ = require("jquery");
+import Command = require("./Command");
+import globals = require("./globals");
 import React = require("react");
 import U = require("./utils");
-import Command = require("./Command");
-
-declare var cmds: {};
 
 var HistoryEntry = React.createClass({
     handleClick: function (e) {
@@ -123,7 +122,7 @@ class HistoryWidget {
             e.preventDefault();
             $('#history .archived').each(function () {
                 var gid = $(this).data('gid');
-                var cmd = cmds[gid];
+                var cmd = globals.cmds[gid];
                 if (cmd.status.code > 1) {
                     cmd.releaseGroup();
                 }

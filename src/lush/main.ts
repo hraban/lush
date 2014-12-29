@@ -274,7 +274,7 @@ function initCommandAndChildren(nid: number, init?): Command.Command {
     if (!$.isPlainObject(init)) {
         init = getInitData(nid);
     }
-    var children = [];
+    var children: Command.Command[] = [];
     if (init.stdoutto) {
         children.push(initCommandAndChildren(init.stdoutto));
     }
@@ -290,9 +290,7 @@ function initCommandAndChildren(nid: number, init?): Command.Command {
     // they can depend on these events just fine (which won't be fired but
     // they'll be fully initialized so that's fine). Anyway, until that time:
     // workaround.
-    children.forEach(function (child) {
-        $(child).trigger('parentAdded', cmd);
-    });
+    children.forEach(x => x.trigger(new Command.ParentAddedEvent(cmd)));
     return cmd;
 }
 
@@ -303,7 +301,7 @@ function initCommands() {
         async: false, // TODO: async
         success: function (data) {
             if (!$.isArray(data)) {
-                console.log("Expected array from /nids.json, got: " +
+                console.error("Expected array from /nids.json, got: " +
                     JSON.stringify(data));
                 err = "Received illegal response from server";
                 return;
@@ -311,7 +309,7 @@ function initCommands() {
             nids = data;
         },
         error: function (_, textStatus, errorThrown) {
-            console.log("Retrieving /nids.json failed: " + textStatus);
+            console.error("Retrieving /nids.json failed: " + textStatus);
             err = errorThrown || textStatus;
         },
     });

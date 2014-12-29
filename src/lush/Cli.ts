@@ -30,13 +30,11 @@
 
 import $ = require("jquery");
 import Ast = require("./Ast");
+import globals = require("./globals");
 import Command = require("./Command");
 import Parser = require("./Parser");
 import Pool = require("./Pool");
 import U = require("./utils");
-
-// declare main.js
-declare var cmds: { [nid: number]: Command.Command };
 
 // propagate changes in the prompt to the given cmd tree.
 //
@@ -83,9 +81,8 @@ function syncPromptToCmd(ast: Ast, cmd: Command.Command, updateGUID: string, get
         // clean up the mess once this command is detached from its parent.
         // can't clean up earlier because a child must exist at the moment
         // of detaching.
-        cmd.one(Command.ParentRemovedEvent, function (e) {
-            var cmd = e.cmd;
-            cmd.mapTree(c => c.release());
+        cmd.one(Command.ParentRemovedEvent, function (e: Command.ParentRemovedEvent) {
+            e.cmd.releaseGroup();
         });
         // inform the parent that his child died (hopefully he will
         // disconnect) (otherwise we're in trouble)
@@ -125,7 +122,7 @@ function syncPromptToCmd(ast: Ast, cmd: Command.Command, updateGUID: string, get
             return def;
         });
     }
-    throw new Error("hraban done messed up"); // shouldnt reach
+    throw new Error("cannot reach");
 }
 
 // Manage context of a command line interface. purely conceptual, no UI.
@@ -266,7 +263,7 @@ class Cli {
             var cmd = e.cmd;
             // if currently bound command is started
             if (cmd.status.code > 0) {
-                var root = cmds[cmd.getGid()];
+                var root = globals.cmds[cmd.getGid()];
                 if (root !== cli._cmd) {
                     // Tree is already disconnected: ignore and wait until event
                     // handler is unbound.

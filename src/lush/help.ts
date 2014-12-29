@@ -35,11 +35,11 @@
 import $ = require("jquery");
 import Command = require("./Command");
 
-interface helpHandler {
+interface HelpHandler {
     (cmd: Command.Command, $help: JQuery): void;
 }
 
-var actions: { [name: string]: helpHandler } = {
+var actions: { [name: string]: HelpHandler } = {
     tar: function (cmd, $help) {
         $help.append($('<a href="http://unixhelp.ed.ac.uk/CGI/man-cgi?tar" target=_blank>online man page</a>'));
         $help.append($('<br>'));
@@ -85,7 +85,7 @@ function defaultHelp(cmd: Command.Command, $help: JQuery) {
     $help.html('This tab is intended for interactive management of command line flags. Currently only a proof of concept, if you happen to be a programmer willing to help me out here that would be great. Shoot me an e-mail at hraban@0brg.net or go to <a target=_blank href=http://github.com/hraban/lush>github.com/hraban/lush</a> and have a look around! Especially in the <a target=_blank href=http://github.com/hraban/lush/blob/master/static/js/lush/help.js>/static/js/lush/help.js</a> file.');
 }
 
-function getHelp(cmd: Command.Command): helpHandler {
+function getHelp(cmd: Command.Command): HelpHandler {
     return actions[cmd.cmd] || defaultHelp;
 }
 

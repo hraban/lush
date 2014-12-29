@@ -125,10 +125,12 @@ function terminal(processCmd, ctrl: Ctrl) {
             if (typeof e === "string") {
                 errmsg = e;
             } else {
-                if (e.message === undefined) {
+                if (e.message !== undefined) {
+                    errmsg = e.message;
+                } else {
+                    errmsg = "unknown error";
                     console.log("Unexpected parse error type: " + e);
                 }
-                errmsg = "unknown error";
             }
             $term.error('Parse error: ' + errmsg);
             scrollTerminalToBottom();

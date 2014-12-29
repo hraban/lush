@@ -26,6 +26,7 @@
 /// <reference path="lexer.ts" />
 /// <reference path="utils.ts" />
 
+import $ = require("jquery");
 import Ast = require("./Ast");
 import HistoryExpander = require("./HistoryExpander");
 import lexer = require("./lexer");
@@ -88,14 +89,10 @@ class Parser {
     private _lexer = new lexer.Lexer();
     // First layer of parsing: find all !$ and !! and expand them.
     private _histExp = new HistoryExpander();
-    // Second layer of parsing: split the text up in separate words (argv)
-    private _glob: GlobFunction = defaultGlob;
 
-    constructor(globf?: GlobFunction) {
+    // Second layer of parsing: split the text up in separate words (argv)
+    constructor(private globf: GlobFunction = defaultGlob) {
         var parser = this;
-        if (globf) {
-            parser._glob = globf;
-        }
         var lex = parser._lexer;
         var ctx = parser.ctx;
         lex.oninit = function () {
@@ -115,7 +112,7 @@ class Parser {
         };
         function onboundary() {
             if (ctx.ast.hasglob) {
-                var matches = parser._glob(ctx.ast.newarg);
+                var matches = parser.globf(ctx.ast.newarg);
                 // TODO: error if matches is empty
                 ctx.ast.argv.push.apply(ctx.ast.argv, matches);
             } else {
@@ -153,7 +150,7 @@ class Parser {
                 onboundary();
                 break;
             default:
-                throw "unknown parser error: " + err;
+                throw new Error("unknown parser error: " + err);
             }
         };
     }

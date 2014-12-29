@@ -287,9 +287,10 @@ export class Command {
 
     // Handler gets generic CommandEvent instance
     onany(C: EventCls[], f: Handler<CommandEvent>) {
-        var f_ = (e: CommandEvent) => f.call(this, e);
-        C.forEach(C_ => this.ee.on(C_.eventName, f_));
-        return () => C.forEach(C_ => this.ee.off(C_.eventName, f_));
+        var cmd = this;
+        var f_ = (e: CommandEvent) => f.call(cmd, e);
+        C.forEach(C_ => cmd.ee.on(C_.eventName, f_));
+        return () => C.forEach(C_ => cmd.ee.off(C_.eventName, f_));
     }
 
     on<T extends CommandEvent>(C: EventCls, f: Handler<T>) {
@@ -614,6 +615,8 @@ export class Command {
         }, true);
     }
 
+    private wasReleased = false;
+
     // called by the control stream when the server indicated that this command
     // was released. generates the jquery 'wasreleased' event on this command
     // object and removes many internal references to make the object unusable.
@@ -634,7 +637,6 @@ export class Command {
         delete cmd.god;
         delete cmd.htmlid;
         delete cmd.name;
-        delete cmd.nid;
         delete cmd.startwd;
         delete cmd.status;
         delete cmd.stderr;
@@ -644,6 +646,9 @@ export class Command {
         delete cmd.stdoutScrollback;
         delete cmd.stdoutto;
         delete cmd.userdata;
+        // Leave this one in for debugging
+        //delete cmd.nid;
+        cmd.wasReleased = true;
     }
 
     // Called by control stream object (ctrl) when the command generated data
@@ -721,7 +726,6 @@ export class Command {
     // serialize a pipeline
     cmdChainToPrompt() {
         var argvs:string[] = [];
-        // couldn't resist.
         this.mapTree(function (cmd) {
             var argv = cmd.getArgv().map(U.parserEscape);
             argvs.push.apply(argvs, argv);
