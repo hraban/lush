@@ -56,7 +56,7 @@ var HistoryEntry = React.createClass({
             className: classNames,
             onClick: this.handleClick
         };
-        var txt = cmd.nid + ": " + U.cmdChainToPrompt(cmd);
+        var txt = cmd.nid + ": " + cmd.cmdChainToPrompt();
         return React.DOM.a(myprops, txt);
     }
 });

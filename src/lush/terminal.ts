@@ -39,8 +39,7 @@ import Cli = require("./Cli");
 import Ctrl = require("./Ctrl");
 import Parser = require("./Parser");
 import U = require("./utils");
- 
-declare var globals: any;
+import globals = require("./globals");
 
 // prepare raw data for passing to jQuery.terminal's .echo method
 function escapeTerminalOutput(text) {

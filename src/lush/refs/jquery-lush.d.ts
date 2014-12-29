@@ -24,6 +24,6 @@
 /// <reference path="jqueryui.d.ts"/>
 
 interface JQuery {
-    tabsBottom(options: JQueryUI.TabsOptions): JQuery;
+    tabsBottom(options?: JQueryUI.TabsOptions): JQuery;
     serializeObject(): {[key: string]: string};
 }

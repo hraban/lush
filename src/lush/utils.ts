@@ -21,6 +21,7 @@
 // GENERIC UTILITIES
 
 /// <reference path="refs/jquery.d.ts" />
+/// <reference path="Command.ts"/>
 
 import $ = require("jquery");
 
@@ -161,54 +162,31 @@ export function monitorstream(sysid, stream, callback) {
     return ws;
 }
 
+function isPromise(x: any) {
+    return x !== undefined && $.isFunction(x.then);
+}
+
 // f acts on l, which is a tree with implicit nodes, the next node is extracted
-// using nextkey, which returns undefined if there is no next node. also f
-// returns a deferred and this function only progresses on success. as does this
-// function. if reversed is true, call last element first.
-export function mapf(f, l, nextkey, reversed) {
+// using nextkey, which returns undefined if there is no next node. If f
+// returns a deferred, this function only progresses on success. if reversed is
+// true, call last element first.
+// TODO: return type should be void|JQueryDeferred<void>
+export function mapf<T>(f: (node: T) => any, l: T, nextkey: (node: T) => T, reversed?: boolean): any {
     if (l === undefined) {
         return $.Deferred().resolve();
     }
-    if (!$.isFunction(nextkey)) {
-        throw "mapf: nextkey MUST be a function";
-    }
     if (reversed) {
-        return mapf(f, nextkey(l), nextkey, true).then(f.bind(this, l))
+        // always a promise in reverse mode
+        return mapf(f, nextkey(l), nextkey, true).then(f(l));
     } else {
-        return f(l).then(mapf.bind(this, f, nextkey(l), nextkey));
-    }
-}
-
-export function mapCmds(f, cmd, reverse) {
-    return mapf(f, cmd, function (cmd) { return cmd.stdoutCmd(); }, reverse);
-}
-
-// execute f on cmd and all its children, serially and top-down (not too happy
-// about the code dupe with mapCmds but hey)
-export function mapCmdTree(cmd, f) {
-    if (cmd === undefined) {
-        return;
-    }
-    // TODO: if cmd not instanceof Command yada yada dynamic typing suck bla bla
-    if (!$.isFunction(f)) {
-        throw "f must be a function";
-    }
-    f(cmd);
-    mapCmdTree(cmd.stdoutCmd(), f);
-}
-
-// serialize a pipeline
-export function cmdChainToPrompt(cmd) {
-    var argvs = [];
-    // couldn't resist.
-    mapCmdTree(cmd, function (cmd) {
-        var argv = cmd.getArgv().map(parserEscape);
-        argvs.push.apply(argvs, argv);
-        if (cmd.stdoutto > 0) {
-            argvs.push('|');
+        var ret = f(l);
+        var continuation = () => mapf(f, nextkey(l), nextkey);
+        if (isPromise(ret)) {
+            return ret.then(continuation);
+        } else {
+            return continuation();
         }
-    });
-    return argvs.join(' ');
+    }
 }
 
 // PUZZLE BELOW!

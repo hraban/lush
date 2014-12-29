@@ -3,19 +3,27 @@
 // object should be done only by main functions of modules, and only once. No
 // reinitializing later.
 // TODO: (Assert)Exception if get before set
-// TODO: (Assert)Exception if set unknown key
-window.globals = {
+
+/// <reference path="./Cli.ts"/>
+/// <reference path="./Command.ts"/>
+/// <reference path="./Ctrl.ts"/>
+
+import Cli = require("Cli");
+import Ctrl = require("Ctrl");
+import Command = require("Command");
+
+var globals = {
     // websocket connection for control events
-    ctrl: undefined,
+    ctrl: <Ctrl> undefined,
     // (shell-sessionlocal) ID of this client
-    moi: undefined,
+    moi: <string> undefined,
     // Cli instance. Useful for debugging.
-    cli: undefined,
+    cli: <Cli> undefined,
     // jQuery.terminal instance. also for debugging.
     terminal: undefined,
+    // object containing running command metadata: key is system id, value is
+    // cmd object
+    cmds: <{ [key: number]: Command.Command }> {},
 };
 
-// object containing running command metadata: key is system id, value is cmd
-// object
-// TODO: Should be in globals
-window.cmds = {};
+export = globals;

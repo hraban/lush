@@ -70,6 +70,9 @@ class Ctrl {
             $('body').attr('data-status', 'connection_error');
             // this is RAUNG! what about clean exits, kyle? what about them?!
         };
+        ctrl.ws.onerror = function () {
+            console.error('Websocket connection error');
+        };
         $(ctrl).on('exiting', function () {
             var ctrl = this;
             ctrl.ws.close(1000, "Server shut itself down");

@@ -28,10 +28,7 @@ import $ = require("jquery");
 import EventEmitter = require("EventEmitter");
 import Ctrl = require("./Ctrl");
 import U = require("./utils");
-
-
-// declare main.js
-declare var cmds: { [nid: number]: Command };
+import globals = require("./globals");
 
 interface StatusData {
     code: number;
@@ -395,8 +392,8 @@ export class Command {
 
         function makeChildModObject(fromid: number, toid: number) {
             return {
-                from: cmds[fromid],
-                to: cmds[toid],
+                from: globals.cmds[fromid],
+                to: globals.cmds[toid],
             };
         }
 
@@ -607,14 +604,14 @@ export class Command {
     // Delete command tree bottom-up.
     releaseGroup(): void {
         var cmd = this;
-        U.mapCmds(function (cmd) {
+        cmd.mapTree(function (cmd) {
             var d = $.Deferred();
             // when the command is released, continue to parent
             cmd.on(WasReleasedEvent, () => d.resolve());
             // stdoutto must be unset, or releasing will fail
             cmd.update({stdoutto: 0}, undefined, () => cmd.release());
             return d;
-        }, cmd, true);
+        }, true);
     }
 
     // called by the control stream when the server indicated that this command
@@ -689,21 +686,21 @@ export class Command {
     stdoutCmd(): Command {
         var cmd = this;
         if (cmd.stdoutto) {
-            return cmds[cmd.stdoutto];
+            return globals.cmds[cmd.stdoutto];
         }
     }
 
     stderrCmd(): Command {
         var cmd = this;
         if (cmd.stderrto) {
-            return cmds[cmd.stderrto];
+            return globals.cmds[cmd.stderrto];
         }
     }
 
     getParentCmd(): Command {
         var cmd = this;
         if (cmd.parentId) {
-            return cmds[cmd.parentId];
+            return globals.cmds[cmd.parentId];
         }
     }
 
@@ -714,5 +711,24 @@ export class Command {
         } else {
             return cmd.getParentCmd().getGid();
         }
+    }
+
+    // TODO TS 1.4: return type void|JQueryPromise<void>
+    mapTree(f: (c: Command) => any, reverse?: boolean): any {
+        return U.mapf(f, this, c => c.stdoutCmd(), reverse);
+    }
+
+    // serialize a pipeline
+    cmdChainToPrompt() {
+        var argvs:string[] = [];
+        // couldn't resist.
+        this.mapTree(function (cmd) {
+            var argv = cmd.getArgv().map(U.parserEscape);
+            argvs.push.apply(argvs, argv);
+            if (cmd.stdoutto > 0) {
+                argvs.push('|');
+            }
+        });
+        return argvs.join(' ');
     }
 }

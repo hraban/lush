@@ -246,18 +246,18 @@ var RootContainer = React.createClass({
 });
 
 // create root widget for this command
-function createWidget(cmd: Command.Command, cmds: HTMLElement) {
+function createWidget(cmd: Command.Command, container: HTMLElement) {
     var wrapper = document.createElement('div');
-    cmds.appendChild(wrapper);
+    container.appendChild(wrapper);
     var props = {cmd: cmd, key: 'root' + cmd.nid};
     var reactel = React.createElement(RootContainer, props);
     var component = React.render(reactel, wrapper, function () {
         // new widget causes bottom of widgets div to scroll away:
-        U.scrollToBottom(cmds);
+        U.scrollToBottom(container);
     });
     cmd.one(Command.WasReleasedEvent, function () {
         React.unmountComponentAtNode(wrapper);
-        cmds.removeChild(wrapper);
+        container.removeChild(wrapper);
     });
     return wrapper;
 }

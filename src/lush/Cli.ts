@@ -85,7 +85,7 @@ function syncPromptToCmd(ast: Ast, cmd: Command.Command, updateGUID: string, get
         // of detaching.
         cmd.one(Command.ParentRemovedEvent, function (e) {
             var cmd = e.cmd;
-            U.mapCmdTree(cmd, function (cmd) { cmd.release(); });
+            cmd.mapTree(c => c.release());
         });
         // inform the parent that his child died (hopefully he will
         // disconnect) (otherwise we're in trouble)
@@ -245,7 +245,7 @@ class Cli {
         var offs = this._offs;
         // Clear this first so exceptions in off functions only occur once
         this._offs = [];
-        offs.forEach(function (f) { f(); });
+        offs.forEach(f => f());
     }
 
     // (One-way) sync a command to this cli object: cmd changes -> update me.
@@ -258,7 +258,7 @@ class Cli {
                 // ignore init and myself
                 return;
             }
-            var newprompt = U.cmdChainToPrompt(cli._cmd);
+            var newprompt = cli._cmd.cmdChainToPrompt();
             // not a jQuery event because I want to crash if unhandled
             cli.onUpdatedPrompt(newprompt);
         }));
@@ -371,7 +371,7 @@ class Cli {
         // before He changes His mind.
         var runningCmds = 0;
         // archive when everybody completes succesfully
-        var cmdDone = function (e) {
+        var cmdDone = function (e: Command.DoneEvent) {
             var cmd = e.cmd;
             if (e.status.code == 2) {
                 // success!
@@ -397,7 +397,7 @@ class Cli {
         var $promptcpy = $('.terminal-output > div:not([class*=output])').last();
         return cli._syncingPrompt.done(function () {
             // when the prompt has been set, all commands can be started.
-            U.mapCmdTree(root, function (cmd) {
+            root.mapTree(function (cmd) {
                 $promptcpy.addClass('promptcopy-' + cmd.nid);
                 cmd.start();
                 runningCmds += 1;
