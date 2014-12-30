@@ -213,34 +213,40 @@ function requestConnect(srcid, trgtid, stream, ctrl: Ctrl) {
 }
 
 // "blabla123" -> int(123)
-function parseTrailingInteger(str: string) {
-    return +(/\d+$/.exec(str)[0]);
+function parseTrailingInteger(str: string): number {
+    var match = /\d+$/.exec(str);
+    if (match === null) {
+        throw new Error("No trailing numbers in input");
+    }
+    return +(match[0]);
 }
 
-// Complete initialization of a command given its initialization data.  Throws
-// an exception if its children are not initialized.
-function initSingleCommandRaw(init) {
+// Model initialization of a command given its initialization data.  Throws
+// an exception if its children are not initialized. Does NOT initialize the
+// view or controllers (Widget and HistoryWidget).
+function initCommandModel(init): Command.Command {
     if (!$.isPlainObject(init)) {
-        throw "init data must be a plain object";
+        throw new Error("init data must be a plain object");
     }
-    if (history_widget === undefined) {
-        throw "history widget must be defined before initialization";
-    }
-    // init children first
     if (init.stdoutto && !(init.stdoutto in globals.cmds)) {
-        throw "initializing " + init.nid + " before its stdout child";
+        throw new Error("initializing " + init.nid + " before its stdout child");
     }
     if (init.stderrto && !(init.stderrto in globals.cmds)) {
-        throw "initializing " + init.nid + " before its stderr child";
+        throw new Error("initializing " + init.nid + " before its stderr child");
     }
+
     var cmd = new Command.Command(globals.ctrl, init, globals.moi);
+    // Generating these events as part of init, out of normal event flow, feels
+    // ugly. In this particular case, it's acceptable: the Command constructor
+    // does not know anything about parents, it always assumes it is root and
+    // that all its children exist. It will not require any external triggering
+    // of events for initialisation. However, adding a new command as its
+    // parent is not considered initialisation of the child command. This is a
+    // compromise between keeping the Command constructor clean vs the rest.
+    [cmd.stdoutCmd(), cmd.stderrCmd()].filter(U.identity).forEach(function (child) {
+        child.trigger(new Command.ParentAddedEvent(cmd));
+    });
     globals.cmds[cmd.nid] = cmd;
-    var cmddiv = Widget(cmd, document.getElementById("cmds"));
-    history_widget.addCommand(cmd);
-    // some UI parts are not initialized, just hooked into updated handlers.
-    // TODO: NOT MY PROBLEM -- or so I wish :( that should change
-    //$(cmd).trigger('updated', ['init']); <-- already obsolete?
-    cmd.trigger(new Command.ArchivalEvent(!!cmd.userdata.archived))
     return cmd;
 }
 
@@ -265,9 +271,10 @@ function getInitData(nid) {
     return init;
 }
 
+// Initialize the model of this command and all its children. Idempotent.
 // Second argument is the init data. If not supplied it is fetched from the
-// server. If command is already initialized this is a NOP.
-function initCommandAndChildren(nid: number, init?): Command.Command {
+// server.
+function initCommandTreeModel(nid: number, init?): Command.Command {
     if (nid in globals.cmds) {
         return globals.cmds[nid];
     }
@@ -276,25 +283,25 @@ function initCommandAndChildren(nid: number, init?): Command.Command {
     }
     var children: Command.Command[] = [];
     if (init.stdoutto) {
-        children.push(initCommandAndChildren(init.stdoutto));
+        children.push(initCommandTreeModel(init.stdoutto));
     }
     if (init.stderrto) {
-        children.push(initCommandAndChildren(init.stderrto));
+        children.push(initCommandTreeModel(init.stderrto));
     }
-    var cmd = initSingleCommandRaw(init);
-    // children don't know about their parent at init time, but the reverse is
-    // true, so only one direction needs fixing.  TODO: This is quite ugly imo.
-    // Better would be to just build up the entire Model tree and make Model
-    // init routines not dependent on these pseudo events. Then, Control and
-    // View can init using the complete tree and completely initialized Models;
-    // they can depend on these events just fine (which won't be fired but
-    // they'll be fully initialized so that's fine). Anyway, until that time:
-    // workaround.
-    children.forEach(x => x.trigger(new Command.ParentAddedEvent(cmd)));
-    return cmd;
+    return initCommandModel(init);
+}
+
+// Init the view (and controller) for this command only.
+function initCommandView(cmd: Command.Command) {
+    console.log("Initializing view for " + cmd.htmlid + "(root: " + cmd.isRoot() + ")");
+    Widget(cmd, document.getElementById("cmds"));
+    history_widget.addCommand(cmd);
 }
 
 function initCommands() {
+    if (history_widget === undefined) {
+        throw new Error("history widget must be defined before initialization");
+    }
     var nids: number[];
     var err;
     $.ajax('/cmdids.json', {
@@ -325,8 +332,9 @@ function initCommands() {
         }
         return 0;
     });
-    // build the command objects without triggering update handlers
-    nids.forEach(initCommandAndChildren);
+    nids.map(initCommandTreeModel)
+        .filter(c => c.isRoot())
+        .forEach(c => c.mapTree(initCommandView, true));
 }
 
 function selectCommand(nid, confwin) {
@@ -339,7 +347,7 @@ function selectCommand(nid, confwin) {
 // client list passed as an array).
 function pruneStalePreparedCommands(activeClients) {
     if (!$.isArray(activeClients)) {
-        throw "pruneStalePreparedCommands requires array of active clients";
+        throw new Error("pruneStalePreparedCommands requires array of active clients");
     }
     // require set access
     var clients = {};
@@ -357,7 +365,7 @@ function pruneStalePreparedCommands(activeClients) {
 
 // the server said that there is a new command
 function processNewCmdEvent(ctrl, init) {
-    var cmd = initCommandAndChildren(init.nid, init);
+    var cmd = initCommandTreeModel(init.nid, init);
     if (cmd.imadethis()) {
         // i made this!
         // capture all stdout and stderr to terminal

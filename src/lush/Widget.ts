@@ -173,7 +173,7 @@ var GroupWidget = React.createClass({
 
     render: function () {
         var myProps = this.props;
-        var cmd = myProps.cmd;
+        var cmd: Command.Command = myProps.cmd;
         var children = [];
         function addChild(cmd, parentStreamName) {
             if (typeof parentStreamName !== "string") {
@@ -221,29 +221,30 @@ var WindowButtons = React.createClass({
 
 var RootContainer = React.createClass({
     render: function () {
-        if (!this.props.cmd.isRoot()) {
+        var cmd: Command.Command = this.props.cmd;
+        if (!cmd.isRoot()) {
             return null;
         }
         var myProps = {
             id: "root" + this.props.cmd.nid,
             className: React.addons.classSet({
                 rootcontainer: true,
-                archived: this.props.cmd.userdata.archived,
+                archived: cmd.userdata.archived,
             })
         };
-        var component = this;
+        var that = this;
         var childProps = {
-            cmd: this.props.cmd,
+            cmd: cmd,
             // for some reason calling .render() doesn't do anything. I
             // don't understand react and I also don't care. bite me.
             onChange: function () {
-                component.setProps({cmd: component.props.cmd});
+                that.setProps({cmd: cmd});
             },
-            key: this.props.cmd.htmlid
+            key: cmd.htmlid
         }
         return (
             React.DOM.div(myProps,
-                React.createElement(WindowButtons, {cmd: this.props.cmd}),
+                React.createElement(WindowButtons, {cmd: cmd}),
                 React.createElement(GroupWidget, childProps))
         );
     }

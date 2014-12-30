@@ -311,9 +311,10 @@ export class Command {
             e.from = from;
         }
         // Typescript doesn't support declaring a constructor with arbitrary
-        // arguments, so setting T to implement Factory<T> will cause an error
-        // if you overload the constructor in an event subclass.
+        // arguments, so declaring C to implement Factory<T> will cause an
+        // error if you overload the constructor in an event subclass.
         var C: EventCls = <any>e.constructor;
+        console.log("cmds[" + this.nid + "].trigger(" + C.eventName + ", ...)");
         this.ee.trigger(C.eventName, [e]);
     }
 
@@ -347,31 +348,6 @@ export class Command {
             cmd.stderr += e.data;
             cmd.trigger(new UpdatedStderrEvent(cmd.stderr))
         });
-        if (cmd.stdoutto) {
-            var child = cmd.stdoutCmd();
-            // This is fucking terrible. Excuse the swearing but it truly is,
-            // it's a mess. Triggering this event before initialization
-            // completes is a disaster; callbacks will now fire, assuming the
-            // parent is ready, which it's not. E.g. it's not in cmds[] array
-            // yet, so child.getParentCmd() will fail, and thus so will
-            // getGid(). This is absolutely hopeless and I am deeply deeply
-            // ashamed. In dire, DIRE need of a rewrite. Simplification, static
-            // typing, removal of these jquery events (use normal, typesafe
-            // events on this object itself), the whole shebang.
-            //
-            // This.
-            //
-            // Is.
-            //
-            // A.
-            //
-            // Disaster.
-            child.trigger(new ParentAddedEvent(cmd));
-        }
-        if (cmd.stderrto) {
-            var child = cmd.stderrCmd();
-            child.trigger(new ParentAddedEvent(cmd));
-        }
     }
 
     imadethis(): boolean {
@@ -516,7 +492,7 @@ export class Command {
                 if (!(U.isInt(val) && val >= 0)) {
                     throw new Error("illegal value for " + key + ": " + val);
                 }
-                if (val == cmd[key]) {
+                if (val === cmd[key]) {
                     return;
                 }
                 break;
@@ -525,7 +501,7 @@ export class Command {
                 if (!U.isString(val)) {
                     throw new Error("illegal value for " + key + ": " + val);
                 }
-                if (val == cmd[key]) {
+                if (val === cmd[key]) {
                     return;
                 }
                 break;
