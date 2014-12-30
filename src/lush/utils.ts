@@ -175,16 +175,16 @@ export function mapf<T>(f: (node: T) => any, l: T, nextkey: (node: T) => T, reve
     if (l === undefined) {
         return $.Deferred().resolve();
     }
+    var recurse = () => mapf(f, nextkey(l), nextkey, reversed);
     if (reversed) {
         // always a promise in reverse mode
-        return mapf(f, nextkey(l), nextkey, true).then(f(l));
+        return recurse().then(f(l));
     } else {
         var ret = f(l);
-        var continuation = () => mapf(f, nextkey(l), nextkey);
         if (isPromise(ret)) {
-            return ret.then(continuation);
+            return ret.then(recurse);
         } else {
-            return continuation();
+            return recurse();
         }
     }
 }
