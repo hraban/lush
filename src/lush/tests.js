@@ -435,7 +435,7 @@ function testLush() {
         var handlers = {
             setprop: function (reqjson) {
                 var req = JSON.parse(reqjson);
-                cmd.processUpdate(req);
+                cmd.processUpdateResponse(req);
             }
         };
         if (!init.nid) {
