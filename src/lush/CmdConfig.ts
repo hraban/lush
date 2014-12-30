@@ -314,7 +314,7 @@ class CmdConfig {
     }
 
     // Update all UI to this cmd (and subscribe to updates)
-    associateCmd(cmd) {
+    associateCmd(cmd: Command.Command) {
         var conf = this;
         conf.disassociate();
         conf._cmd = cmd;
@@ -323,7 +323,7 @@ class CmdConfig {
         conf._assocStdout();
         conf._assocStderr();
         conf._assocHelp();
-        document.getElementById('cmddetailarea').setAttribute('data-associated', cmd.nid);
+        document.getElementById('cmddetailarea').setAttribute('data-associated', ''+cmd.nid);
         cmd.one(Command.WasReleasedEvent, function () {
             conf.disassociate();
         });

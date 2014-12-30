@@ -284,6 +284,15 @@ export function splitn(str, sep, n) {
     return res;
 }
 
+// "blabla123" -> int(123)
+export function parseTrailingInteger(str: string): number {
+    var match = /\d+$/.exec(str);
+    if (match === null) {
+        throw new Error("No trailing numbers in input");
+    }
+    return +(match[0]);
+}
+
 // haha stupid phantomjs
 if (!Function.prototype.bind) {
   Function.prototype.bind = function (oThis) {
@@ -339,6 +348,15 @@ if (!$.fn.tabsBottom) {
             .addClass("ui-corner-bottom");
         // move the nav DOM node to the bottom of its parent
         this.find(".tabs-bottom").append(this.find(".ui-tabs-nav"));
+        return this;
+    };
+}
+
+if (!$.fn.assertNum) {
+    $.fn.assertNum = function (num: number) {
+        if (this.length != num) {
+            throw new Error("Expected " + num + " elements, but got " + this.length + ".");
+        }
         return this;
     };
 }

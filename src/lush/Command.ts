@@ -35,9 +35,22 @@ interface StatusData {
     err: string;
 }
 
-interface Userdata {
+export interface Userdata {
     archived: boolean;
-    god: string;
+    // Internal: used by "create command on server" routine to identify which
+    // callback to invoke when server replies (asynchronously) that command has
+    // been created.
+    callback?: string;
+    // Opaque value set to identify which module requested the creation of this
+    // command. Can be used to filter which "new command" events to ignore or
+    // act on.
+    creator?: string;
+    // Set by "create command on server" routine to the ID of this client
+    // instance (globals.moi). Useful to filter which command was created by
+    // whom. Optional to allow UserData types for initialisation by modules,
+    // but always set when part of a Command.
+    god?: string;
+    unused?: boolean;
 }
 
 /***** Events *****/
@@ -314,7 +327,6 @@ export class Command {
         // arguments, so declaring C to implement Factory<T> will cause an
         // error if you overload the constructor in an event subclass.
         var C: EventCls = <any>e.constructor;
-        console.log("cmds[" + this.nid + "].trigger(" + C.eventName + ", ...)");
         this.ee.trigger(C.eventName, [e]);
     }
 
@@ -324,13 +336,6 @@ export class Command {
     constructor(private ctrl: Ctrl, init, private _moi: string) {
         var cmd = this;
         this.processInitData(init);
-        // stock event handlers
-        cmd.on(ParentAddedEvent, function (e: ParentAddedEvent) {
-            e.cmd.parentId = e.newparent.nid;
-        });
-        cmd.on(ParentRemovedEvent, function (e: ParentRemovedEvent) {
-            e.cmd.parentId = undefined;
-        });
         var off = cmd.on(UpdatedStatusEvent, function (e: UpdatedStatusEvent) {
             var cmd: Command = e.cmd;
             if (e.newstatus.code > 1) {
@@ -361,7 +366,9 @@ export class Command {
         cmd.update({userdata: {archived: state}});
     }
 
-    processUpdate(response) {
+    // Process response data from server after sending an update request.
+    // Request may have been sent by another client.
+    processUpdateResponse(response) {
         var cmd = this;
         var prop = response.prop;
         var value = response.value;
@@ -379,18 +386,17 @@ export class Command {
             callbackId = response.userdata.callback;
         }
         // Track modifications to hierarchy for appropriate event raising later
-        // map(streamname => map({from, to} => [Command | null]))
-        var childMod: any = {};
+        var childMod: { [streamname: string]: { from: Command; to: Command } } = {};
         if (prop == "stdoutto") {
-            childMod.stdout = 
+            childMod['stdout'] = 
                 makeChildModObject(cmd.stdoutto, value);
         } else if (prop == "stderrto") {
-            childMod.stderr = 
+            childMod['stderr'] = 
                 makeChildModObject(cmd.stderrto, value);
         }
         var archivalStateChanged =
             (
-                prop == "userdata" &&
+                prop === "userdata" &&
                 value.archived !== undefined &&
                 value.archived !== cmd.userdata.archived
             );
@@ -398,16 +404,17 @@ export class Command {
         // per-property update event
         cmd.trigger(createUpdatedEvent(prop, value, updatedby));
         // trigger child/parent add/remove event if relevant
-        $.map(childMod, function (mod, stream) {
+        for (var stream in childMod) {
+            var mod = childMod[stream];
             if (mod.from !== undefined) {
-                mod.from.trigger(new ParentRemovedEvent(cmd));
+                mod.from.processSetParent(null);
                 cmd.trigger(new ChildRemovedEvent(mod.from, stream));
             }
             if (mod.to !== undefined) {
-                mod.to.trigger(new ParentAddedEvent(cmd));
+                mod.to.processSetParent(cmd);
                 cmd.trigger(new ChildAddedEvent(mod.to, stream));
             }
-        });
+        }
         if (archivalStateChanged) {
             // if the server tells me that I've been (de)archived, generate an
             // "archival" jQuery event
@@ -538,6 +545,24 @@ export class Command {
         // edit: actually, this screams json diff. there are probably a
         // gazillion jsondelta libs out there, esp for JS. would be nice to just
         // use that instead of reinventing the wheel.
+    }
+
+    // A new parent has been set, or current parent unset.
+    processSetParent(newparent: Command) {
+        var cmd = this;
+        var oldparent = cmd.getParentCmd();
+        if (newparent === null && oldparent === undefined) {
+            throw new Error("Unsetting parent of root");
+        }
+        if (oldparent !== undefined) {
+            cmd.parentId = undefined;
+            cmd.trigger(new ParentRemovedEvent(oldparent));
+        }
+        // not else if because not mutually exclusive
+        if (newparent !== null) {
+            cmd.parentId = newparent.nid;
+            cmd.trigger(new ParentAddedEvent(newparent));
+        }
     }
 
     getArgv(): string[] {

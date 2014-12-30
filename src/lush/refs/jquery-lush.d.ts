@@ -25,5 +25,6 @@
 
 interface JQuery {
     tabsBottom(options?: JQueryUI.TabsOptions): JQuery;
-    serializeObject(): {[key: string]: string};
+    serializeObject(): { [key: string]: string };
+    assertNum(n: number): JQuery;
 }

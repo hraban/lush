@@ -116,6 +116,8 @@
 //
 // good luck.
 
+/// <reference path="refs/es6-promise.d.ts"/>
+/// <reference path="refs/jquery.d.ts"/>
 /// <reference path="refs/jqueryui.d.ts"/>
 
 import $ = require("jquery");
@@ -135,7 +137,7 @@ import U = require("./utils");
 import Widget = require("./Widget");
 
 // Reference to the history widget (needed for command initialization)
-var history_widget: HistoryWidget;
+var historyWidget: HistoryWidget;
 
 // print text to this terminal's output and mark it as coming from this
 // command. sets a class in the div that holds the output in the terminal.
@@ -166,7 +168,7 @@ function processCmd(options, callback?: (c: Command.Command) => {}) {
         // namespace), which will trigger all callbacks, including this one.
         var cbid = 'newcmdcallback.' + U.guid();
         options.userdata.callback = cbid;
-        $(window).on(cbid, function (e, cmd) {
+        $(window).on(cbid, function (e, cmd: Command.Command) {
             if (cmd === undefined) {
                 console.log('new commmand callback time-out: ' + JSON.stringify(options));
                 $(window).unbind(e);
@@ -212,15 +214,6 @@ function requestConnect(srcid, trgtid, stream, ctrl: Ctrl) {
     ctrl.send('connect', JSON.stringify(options));
 }
 
-// "blabla123" -> int(123)
-function parseTrailingInteger(str: string): number {
-    var match = /\d+$/.exec(str);
-    if (match === null) {
-        throw new Error("No trailing numbers in input");
-    }
-    return +(match[0]);
-}
-
 // Model initialization of a command given its initialization data.  Throws
 // an exception if its children are not initialized. Does NOT initialize the
 // view or controllers (Widget and HistoryWidget).
@@ -244,7 +237,7 @@ function initCommandModel(init): Command.Command {
     // parent is not considered initialisation of the child command. This is a
     // compromise between keeping the Command constructor clean vs the rest.
     [cmd.stdoutCmd(), cmd.stderrCmd()].filter(U.identity).forEach(function (child) {
-        child.trigger(new Command.ParentAddedEvent(cmd));
+        child.processSetParent(cmd);
     });
     globals.cmds[cmd.nid] = cmd;
     return cmd;
@@ -271,16 +264,78 @@ function getInitData(nid) {
     return init;
 }
 
+function sortArray(ar: number[]): number[] {
+    // oh my god javascript-dev what are you guys doing?
+    return ar.sort(function (a, b) {
+        if (a < b) {
+            return -1;
+        } else if (a > b) {
+            return 1;
+        }
+        return 0;
+    });
+}
+
+function isNumericalArray(obj): boolean {
+    return $.isArray(obj) && obj.every(U.isInt);
+}
+
+// Array of all currently existing command IDs
+function getCmdIds(): Promise<number[]> {
+    return new Promise<number[]>(function (ok, bad) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/cmdids.json');
+        xhr.responseType = 'json';
+        xhr.onload = function () {
+            if (xhr.status !== 200) {
+                var errmsg = 'XHR error: ' + xhr.status + ' ' + xhr.statusText;
+                bad(new Error(errmsg));
+                return;
+            }
+            ok(xhr.response);
+        };
+        xhr.onerror = function () {
+            bad(new Error("XHR error: GET /cmdids.json failed"));
+        };
+        xhr.send();
+    }).then(function (data): any {
+        if (!isNumericalArray(data)) {
+            console.error("Expected numerical array from /nids.json, got: " +
+                JSON.stringify(data));
+            return Promise.reject(new Error("Received illegal response"));
+        }
+        return data;
+    }).then(sortArray);
+}
+
+function getCtrlKey(ctrlurl: string): Promise<string> {
+    return new Promise<string>(function (ok, bad) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', ctrlurl);
+        xhr.onload = function () {
+            if (xhr.status !== 200) {
+                var errmsg = 'XHR error: ' + xhr.status + ' ' + xhr.statusText;
+                bad(new Error(errmsg));
+                return;
+            }
+            ok(xhr.response);
+        };
+        xhr.onerror = function () {
+            bad(new Error('XHR error: GET ' + ctrlurl + ' failed'));
+        };
+        xhr.send();
+    });
+}
+
 // Initialize the model of this command and all its children. Idempotent.
-// Second argument is the init data. If not supplied it is fetched from the
-// server.
-function initCommandTreeModel(nid: number, init?): Command.Command {
+// Init data is fetched from the server.
+// TODO: I don't like the naming + this arg being the nid, and the other
+// non-recursive function initCommandModel accepting init data.
+function initCommandTreeModel(nid: number): Command.Command {
     if (nid in globals.cmds) {
         return globals.cmds[nid];
     }
-    if (!$.isPlainObject(init)) {
-        init = getInitData(nid);
-    }
+    var init = getInitData(nid);
     var children: Command.Command[] = [];
     if (init.stdoutto) {
         children.push(initCommandTreeModel(init.stdoutto));
@@ -292,52 +347,25 @@ function initCommandTreeModel(nid: number, init?): Command.Command {
 }
 
 // Init the view (and controller) for this command only.
-function initCommandView(cmd: Command.Command) {
-    console.log("Initializing view for " + cmd.htmlid + "(root: " + cmd.isRoot() + ")");
+function initCommandView(cmd: Command.Command): Command.Command {
+    if (document.getElementById('root' + cmd.nid) !== null) {
+        throw new Error("View already initialized for " + cmd.htmlid);
+    }
     Widget(cmd, document.getElementById("cmds"));
-    history_widget.addCommand(cmd);
+    historyWidget.addCommand(cmd);
+    return cmd;
 }
 
-function initCommands() {
-    if (history_widget === undefined) {
+function initCommands(nids: number[]) {
+    if (historyWidget === undefined) {
         throw new Error("history widget must be defined before initialization");
     }
-    var nids: number[];
-    var err;
-    $.ajax('/cmdids.json', {
-        async: false, // TODO: async
-        success: function (data) {
-            if (!$.isArray(data)) {
-                console.error("Expected array from /nids.json, got: " +
-                    JSON.stringify(data));
-                err = "Received illegal response from server";
-                return;
-            }
-            nids = data;
-        },
-        error: function (_, textStatus, errorThrown) {
-            console.error("Retrieving /nids.json failed: " + textStatus);
-            err = errorThrown || textStatus;
-        },
-    });
-    if (undefined !== err) {
-        throw err;
-    }
-    // oh my god javascript-dev what are you guys doing?
-    nids = nids.sort(function (a, b) {
-        if (a < b) {
-            return -1;
-        } else if (a > b) {
-            return 1;
-        }
-        return 0;
-    });
     nids.map(initCommandTreeModel)
         .filter(c => c.isRoot())
         .forEach(c => c.mapTree(initCommandView, true));
 }
 
-function selectCommand(nid, confwin) {
+function selectCommand(nid: number, confwin: CmdConfig) {
     $('.selected').removeClass('selected');
     $('#cmd' + nid).addClass('selected');
     confwin.associateCmd(globals.cmds[nid]);
@@ -345,14 +373,14 @@ function selectCommand(nid, confwin) {
 
 // remove all commands that are not owned by any of the active clients (active
 // client list passed as an array).
-function pruneStalePreparedCommands(activeClients) {
+function pruneStalePreparedCommands(activeClients: number[]) {
     if (!$.isArray(activeClients)) {
         throw new Error("pruneStalePreparedCommands requires array of active clients");
     }
     // require set access
     var clients = {};
-    activeClients.forEach(function (nid) { clients[nid] = 58008; });
-    $.each(globals.cmds, function (nid, cmd) {
+    activeClients.forEach(nid => clients[nid] = 58008);
+    $.each(globals.cmds, function (_, cmd: Command.Command) {
         // someone left an unused prepared command lying around
         if (cmd.userdata.creator == "prompt" &&
             cmd.userdata.unused &&
@@ -365,7 +393,7 @@ function pruneStalePreparedCommands(activeClients) {
 
 // the server said that there is a new command
 function processNewCmdEvent(ctrl, init) {
-    var cmd = initCommandTreeModel(init.nid, init);
+    var cmd = initCommandView(initCommandModel(init));
     if (cmd.imadethis()) {
         // i made this!
         // capture all stdout and stderr to terminal
@@ -398,14 +426,19 @@ function processNewCmdEvent(ctrl, init) {
     }
 }
 
-// server is ready: init client.
-function main_aux(ctrl, moi) {
+// server is ready: init client. Asks a lot of data as parameters to avoid race
+// conditions while setting up different modules. E.g. CLI module will prefetch
+// some commands, which interferes with the list of existing command ids. If
+// that is done in the wrong order some commands will be doubly initialized.
+// Asking that list as a parameter here ensures order is proper. Bonus: allows
+// parallel fetching of all initialization data in the init routine.
+function main_aux(ctrl: Ctrl, moi: string, existingCmdIds: number[]) {
     globals.ctrl = ctrl;
     globals.moi = moi;
     var term = terminal(processCmd, ctrl);
     globals.terminal = term;
     var confwin = new CmdConfig();
-    history_widget = new HistoryWidget();
+    historyWidget = new HistoryWidget();
     // turn DOM node's ID into a numerical one (strip off leading "cmd")
     function getNidFromNode(node) {
         return +(/\d+$/.exec(node.id)[0]);
@@ -417,7 +450,7 @@ function main_aux(ctrl, moi) {
         return getNidFromNode(node.parentNode.parentNode);
     }
     // associate clicked command widget with confwin
-    $('#cmds').on('click', '.cmdwidget', function (e) {
+    $('#cmds').assertNum(1).on('click', '.cmdwidget', function (e) {
         e.stopPropagation();
         var nid = getNidFromNode(this);
         selectCommand(nid, confwin);
@@ -452,7 +485,7 @@ function main_aux(ctrl, moi) {
     }).on('click', '.rootcontainer', function (e) {
         e.stopPropagation();
         // clicking in the general container area activates the first command
-        $(this).find('> .groupwidget > .cmdwidget').click();
+        $(this).find('> .groupwidget > .cmdwidget').assertNum(1).click();
     });
     $(ctrl).on('error', function (e, json) {
         var msg = JSON.parse(json);
@@ -475,9 +508,9 @@ function main_aux(ctrl, moi) {
         var match = /^cmd(\d+)/.exec(propdata.name);
         if (match) {
             // it is a command property
-            var cmd = globals.cmds[match[1]];
+            var cmd = globals.cmds[+match[1]];
             if (cmd) {
-                cmd.processUpdate(propdata);
+                cmd.processUpdateResponse(propdata);
             } else {
                 console.log("property for unknown command: " + propdata);
             }
@@ -500,10 +533,6 @@ function main_aux(ctrl, moi) {
         var activeClients = JSON.parse(payload);
         pruneStalePreparedCommands(activeClients);
     });
-    // also, excuse me, but was that sexy or was that sexy? I think that was
-    // sexy. maybe not ThatGirlFromRioIMetInBelem-sexy, but still quite sexy.
-    // ...
-    // Oh man.. she was so hot..
     path.initPathUI($('form#path'), ctrl);
     if (window.location.hash) {
         processHash(window.location.hash.slice(1), term);
@@ -530,7 +559,7 @@ function main_aux(ctrl, moi) {
     $("#left").tabsBottom();
     // I hate this class
     $('.ui-widget').removeClass('ui-widget');
-    initCommands();
+    initCommands(existingCmdIds);
     $('body').attr('data-status', 'ok');
 }
 
@@ -538,15 +567,22 @@ function lushMain(ctrlurl) {
     if (typeof ctrlurl !== "string") {
         throw "invalid argument for lush: requires url of control stream";
     }
-    $.get("/ctrl").done(function (key) {
+    var ctrlPromise = getCtrlKey(ctrlurl).then(function (ctrlKey: string) {
         // Control stream (Websocket)
-        var ctrl = new Ctrl(ctrlurl, key);
-        // wait for the server
-        $(ctrl).one('clientid', function (_, myid) {
-            main_aux(ctrl, myid);
+        return new Ctrl(ctrlurl, ctrlKey);
+    });
+    var myidPromise: Promise<number> = ctrlPromise.then(function (ctrl: Ctrl) {
+        return new Promise<number>(function (ok) {
+            $(ctrl).one('clientid', function (_, myid) {
+                ok(myid);
+            });
         });
-    }).fail(function () {
-        throw "Failed to get the websocket key";
+    });
+    Promise.all([ctrlPromise, myidPromise, getCmdIds()]).then(function (values: any[]) {
+        main_aux.apply(this, values);
+    }, function (err) {
+        console.error("Failed to get initialization data: " + err.message);
+        console.log(err);
     });
 }
 

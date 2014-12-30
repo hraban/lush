@@ -99,7 +99,7 @@ function syncPromptToCmd(ast: Ast, cmd: Command.Command, updateGUID: string, get
             // the prompt. don't worry about race conditions: as long as
             // this session is in the server's allclients set this command
             // won't be pruned.
-            userdata: {
+            userdata: <Command.Userdata>{
                 unused: false,
                 archived: false,
             }
@@ -183,12 +183,12 @@ class Cli {
     private _prefetchCmd() {
         var cli = this;
         var options = {
-            userdata: {
+            userdata: <Command.Userdata>{
                 // set to false once command is taken out of pool
                 unused: true,
                 // set to false once command starts being used
                 archived: true,
-                creator: "prompt",
+                creator: "prompt"
             }
         };
         cli._processCmd(options, function (cmd) {

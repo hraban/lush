@@ -423,7 +423,7 @@ function testLush() {
                 if (h) {
                     h(argv.slice(1));
                 } else {
-                    throw "websocket event not in mock: " + argv[0];
+                    throw new Error("websocket event not in mock: " + argv[0]);
                 }
             },
         };
@@ -578,7 +578,7 @@ function testLush() {
             deepEqual(cli._cmd.args, [], "updated entire prompt: args");
             return cli.setprompt("parse 'error");
         }).then(function () {
-            throw "parse error didn't reject deferred!";
+            throw new Error("parse error didn't reject deferred!");
         }, function (e) {
             ok(e instanceof Error, "deferred returned by setprompt() rejected with Error on parse error");
             equal(e.name, "ParseError", "error instance is a ParseError");
@@ -589,7 +589,7 @@ function testLush() {
             deepEqual(cli._cmd.args, ["error"], "ignored parse error doesn't affect output");
             return cli.setprompt("parse 'error");
         }).then(function () {
-            throw "repeated parse error didn't reject deferred!";
+            throw new Error("repeated parse error didn't reject deferred!");
         }, function (e) {
             ok(true, "alternating ignoreErrors parameter does not spoil cache");
             return cli.setprompt("echo monk");
@@ -618,7 +618,7 @@ function testLush() {
         var d2 = $.Deferred().done(function (x, y) {
             equal(x * y, 15, "pass arguments to success handler");
         }).fail(function () {
-            throw "failure handler called";
+            throw new Error("failure handler called");
         }).always(function () { start(); });
         U.pipeDeferred(d1, d2);
         d1.resolve(3, 5);
@@ -628,7 +628,7 @@ function testLush() {
         expect(1);
         var d3 = $.Deferred().reject(2, 10);
         var d4 = $.Deferred().done(function () {
-            throw "success handler called";
+            throw new Error("success handler called");
         }).fail(function (x, y) {
             equal(x * y, 20, "pass arguments to failure handler");
         }).always(function () { start(); });
@@ -657,7 +657,7 @@ function testLush() {
         });
         f("b");
         f("c").always(function () {
-            throw "I should have been overwritten";
+            throw new Error("I should have been overwritten");
         });
         f("d");
         f("e");
@@ -668,7 +668,7 @@ function testLush() {
                 equal(msg, "crashed", "rejecting original deferred rejects wrapped deferred");
             });
             f("h", true).always(function () {
-                throw "I should have been overwritten";
+                throw new Error("I should have been overwritten");
             });
             f("i", true);
             return f("j");
@@ -679,13 +679,12 @@ function testLush() {
 
     asyncTest("U.mapf", function () {
         expect(2);
-        // 1536 = 3 * 2^9
         var last;
         var str = "";
         U.mapf(function (i) {
             last = i;
             return $.Deferred().resolve();
-        }, 1536, function (i) { if (i % 2 == 0) return i / 2; })
+        }, (1 << 9) * 3, function (i) { if (i % 2 == 0) return i / 2; })
         .then(function () {
             equal(last, 3, "last call was on first odd number");
             return U.mapf(function (s) {
@@ -693,7 +692,7 @@ function testLush() {
                 return $.Deferred().resolve();
             }, "abcd", function (s) { return s.substr(1) || undefined; }, true);
         }, function () {
-            throw "deferred should have completed succesfully"
+            throw new Error("deferred should have completed succesfully");
         }).done(function () {
             equal(str, "dcba", "reverse order flag respected");
         }).always(function () { start(); });
