@@ -435,7 +435,7 @@ function processNewCmdEvent(ctrl, init) {
 function main_aux(ctrl: Ctrl.Ctrl, moi: string, existingCmdIds: number[]) {
     globals.ctrl = ctrl;
     globals.moi = moi;
-    var term = terminal(processCmd, ctrl);
+    var term = terminal(document.getElementById('terminal'), processCmd, ctrl);
     globals.terminal = term;
     var confwin = new CmdConfig();
     historyWidget = new HistoryWidget();
@@ -565,7 +565,7 @@ function main_aux(ctrl: Ctrl.Ctrl, moi: string, existingCmdIds: number[]) {
 
 function lushMain(ctrlurl) {
     if (typeof ctrlurl !== "string") {
-        throw "invalid argument for lush: requires url of control stream";
+        throw new Error("invalid argument for lush: requires url of control stream");
     }
     var ctrlPromise = getCtrlKey(ctrlurl).then(function (ctrlKey: string) {
         // Control stream (Websocket)

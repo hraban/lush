@@ -36,6 +36,7 @@ var _: any = jqueryui;
 _ = jqueryterm;
 
 import Cli = require("./Cli");
+import Command = require("./Command");
 import Ctrl = require("./Ctrl");
 import Parser = require("./Parser");
 import U = require("./utils");
@@ -106,11 +107,11 @@ function tabcompleteCallback(term, partial: string, files: string[]) {
 
 
 // set up the terminal window
-function terminal(processCmd, ctrl: Ctrl.Ctrl) {
+function terminal(container: HTMLElement, processCmd: (init: any, callback?: (cmd: Command.Command) => void) => void, ctrl: Ctrl.Ctrl) {
     var cli = new Cli(processCmd);
     var latestParseError;
-    var $term = $('#terminal').terminal(function (x: string) {
-        if (x.trim() == "") {
+    var $term = $(container).terminal(function (x: string) {
+        if (x.trim() === "") {
             scrollTerminalToBottom();
             return;
         }
@@ -126,7 +127,7 @@ function terminal(processCmd, ctrl: Ctrl.Ctrl) {
                     errmsg = e.message;
                 } else {
                     errmsg = "unknown error";
-                    console.log("Unexpected parse error type: " + e);
+                    console.error("Unexpected parse error type: " + e);
                 }
             }
             $term.error('Parse error: ' + errmsg);
@@ -156,7 +157,7 @@ function terminal(processCmd, ctrl: Ctrl.Ctrl) {
             // because of other jQuery.terminal bugs, this is actually what
             // happens anyway (it does not call setprompt() when the user
             // hits backspace).
-            if (txt == "") {
+            if (txt === "") {
                 return;
             }
             cli.setprompt(txt, true);
