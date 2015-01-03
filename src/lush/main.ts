@@ -560,7 +560,7 @@ function main_aux(ctrl: Ctrl, moi: string, existingCmdIds: number[]) {
     // I hate this class
     $('.ui-widget').removeClass('ui-widget');
     initCommands(existingCmdIds);
-    $('body').attr('data-status', 'ok');
+    document.body.dataset['status'] = 'ok';
 }
 
 function lushMain(ctrlurl) {
