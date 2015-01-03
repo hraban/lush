@@ -221,7 +221,7 @@ export function pipeDeferred(d1, d2) {
 // now the first call is done: back to initial state.
 //
 // see unit tests for details
-export function noConcurrentCalls(f) {
+export function noConcurrentCalls<T>(f: (...args: any[]) => JQueryPromise<T>): (...args: any[]) => JQueryPromise<T> {
     var running:JQueryPromise<any> = $.Deferred().resolve();
     var pendingf;
     return function () {

@@ -54,7 +54,7 @@ function createPathInput(dir) {
 };
 
 // Initialization for the PATH UI
-export function initPathUI($form, ctrl: Ctrl) {
+export function initPathUI($form, ctrl: Ctrl.Ctrl) {
     // Hook up form submission to ctrl channel
     $form.submit(function () {
             var paths = $.map($('input', $form), U.attrgetter('value'));

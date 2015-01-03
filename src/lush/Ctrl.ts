@@ -26,7 +26,11 @@
 import $ = require("jquery");
 import U = require("./utils");
 
-class Ctrl {
+export interface Ctrl {
+    send(...args: string[]);
+}
+
+export class WebsocketCtrl implements Ctrl {
     private ws: WebSocket;
 
     constructor(url: string, key: string) {
@@ -99,12 +103,12 @@ class Ctrl {
             // no race bc js is single threaded
             $(ctrl).one('open', function () {
                 // try again (and detach after handling)
-                Ctrl.prototype.send.apply(ctrl, args)
+                ctrl.send.apply(ctrl, args)
             });
             return;
         default:
             // closing / closed? send is error
-            throw "sending over closed control channel";
+            throw new Error("sending over closed control channel");
         }
         // normal send
         if (args.length == 1) {
@@ -115,4 +119,3 @@ class Ctrl {
     }
 }
 
-export = Ctrl;

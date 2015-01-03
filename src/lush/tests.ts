@@ -18,19 +18,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-"use strict";
 
-require("./globals");
+/// <reference path="refs/jquery.d.ts"/>
+/// <reference path="refs/qunit.d.ts"/>
 
-var $ = require("jquery");
-var Ast = require("./Ast");
-var Cli = require("./Cli");
-var Command = require("./Command");
-var HistoryExpander = require("./HistoryExpander");
-var lexer = require("./lexer");
-var Parser = require("./Parser");
-var Pool = require("./Pool");
-var U = require("./utils");
+import $ = require("jquery");
+import Ast = require("./Ast");
+import Cli = require("./Cli");
+import Command = require("./Command");
+import Ctrl = require("./Ctrl");
+import globals = require("./globals");
+import HistoryExpander = require("./HistoryExpander");
+import lexer = require("./lexer");
+import Parser = require("./Parser");
+import Pool = require("./Pool");
+import U = require("./utils");
  
 function testLush() {
     test("lcp(): longest common prefix", function () {
@@ -154,9 +156,10 @@ function testLush() {
         lex.onglobQuestionmark = function (idx) {
             ctx.gotquestionmark = idx;
         };
-        lex.onglobChoice = function (choices, idx) {
-            ctx.gotchoice = choices;
-        };
+        // Not implemented yet
+        //lex.onglobChoice = function (choices, idx) {
+        //    ctx.gotchoice = choices;
+        //};
         lex.parse('*');
         strictEqual(ctx.gotstar, 0, 'indexed wildcard: * (0)');
         lex.parse('foo*bar');
@@ -410,11 +413,9 @@ function testLush() {
     });
 
     // Mock (websocket) control line to server
-    function buildMockCtrl(handlers) {
+    function buildMockCtrl(handlers): Ctrl.Ctrl {
         return {
-            send: function () {
-                var argv = Array.prototype.slice.call(arguments);
-                // normal send
+            send: function (...argv: string[]) {
                 if (argv.length == 1) {
                     // needs at least 1 argument
                     argv.push("");
@@ -430,10 +431,10 @@ function testLush() {
     }
 
     var uniqueIds = 0;
-    function buildMockCommand(init, callback) {
+    function buildMockCommand(init, callback?: (cmd: Command.Command) => void) {
         // simulate server-side websocket event handlers
         var handlers = {
-            setprop: function (reqjson) {
+            'setprop': function (reqjson) {
                 var req = JSON.parse(reqjson);
                 cmd.processUpdateResponse(req);
             }
@@ -511,16 +512,16 @@ function testLush() {
         var stdoutData = [];
         var stderrData = [];
         var stdout, stderr;
-        cmd.on(Command.StreamStdoutEvent, function (e) {
+        cmd.on(Command.StreamStdoutEvent, function (e: Command.StreamStdoutEvent) {
             stdoutData.push(e.data);
         });
-        cmd.on(Command.StreamStderrEvent, function (e) {
+        cmd.on(Command.StreamStderrEvent, function (e: Command.StreamStderrEvent) {
             stderrData.push(e.data);
         });
-        cmd.on(Command.UpdatedStdoutEvent, function (e) {
+        cmd.on(Command.UpdatedStdoutEvent, function (e: Command.UpdatedStdoutEvent) {
             stdout = e.stdout;
         });
-        cmd.on(Command.UpdatedStderrEvent, function (e) {
+        cmd.on(Command.UpdatedStderrEvent, function (e: Command.UpdatedStderrEvent) {
             stderr = e.stderr;
         });
 
@@ -551,6 +552,9 @@ function testLush() {
     asyncTest("command-line interface model", function () {
         expect(15);
         var cli = new Cli(buildMockCommand);
+        function getCmd(): Command.Command {
+            return (<any>cli)._cmd;
+        }
         var updatedPrompt;
         cli.onUpdatedPrompt = function (txt) {
             equal(typeof txt, "string", "prompt updated with string");
@@ -558,12 +562,13 @@ function testLush() {
         };
         var errmsg;
         cli.setprompt("one two three").then(function () {
-            ok(cli._cmd instanceof Command.Command, "synchronized command with prompt");
-            equal(cli._cmd.cmd, "one", "command name of synced command");
-            deepEqual(cli._cmd.args, ["two", "three"], "args of synced command");
-            ok(!cli._cmd.stdoutto, "synced command has no child");
+            var cmd = getCmd();
+            ok(cmd instanceof Command.Command, "synchronized command with prompt");
+            equal(cmd.cmd, "one", "command name of synced command");
+            deepEqual(cmd.args, ["two", "three"], "args of synced command");
+            ok(!cmd.stdoutto, "synced command has no child");
             var def = $.Deferred();
-            cli._cmd.update({args: ["tzö", "tzree"]}, "lebatman", function () {
+            cmd.update({args: ["tzö", "tzree"]}, "lebatman", function () {
                 def.resolve(); // let's settle this, batman
             })
             return def;
@@ -574,19 +579,22 @@ function testLush() {
             equal(updatedPrompt, "one tzö tzree", "updating synced command syncs prompt");
             return cli.setprompt("blabla");
         }).then(function () {
-            equal(cli._cmd.cmd, "blabla", "updated entire prompt: command");
-            deepEqual(cli._cmd.args, [], "updated entire prompt: args");
+            var cmd = getCmd();
+            equal(cmd.cmd, "blabla", "updated entire prompt: command");
+            deepEqual(cmd.args, [], "updated entire prompt: args");
             return cli.setprompt("parse 'error");
         }).then(function () {
             throw new Error("parse error didn't reject deferred!");
         }, function (e) {
+            var cmd = getCmd();
             ok(e instanceof Error, "deferred returned by setprompt() rejected with Error on parse error");
             equal(e.name, "ParseError", "error instance is a ParseError");
-            equal(cli._cmd.cmd, "blabla", "parse error doesn't affect old command");
+            equal(cmd.cmd, "blabla", "parse error doesn't affect old command");
             return cli.setprompt("parse 'error", true);
         }).then(function () {
-            equal(cli._cmd.cmd, "parse", "parse error ignored");
-            deepEqual(cli._cmd.args, ["error"], "ignored parse error doesn't affect output");
+            var cmd = getCmd();
+            equal(cmd.cmd, "parse", "parse error ignored");
+            deepEqual(cmd.args, ["error"], "ignored parse error doesn't affect output");
             return cli.setprompt("parse 'error");
         }).then(function () {
             throw new Error("repeated parse error didn't reject deferred!");
@@ -615,7 +623,7 @@ function testLush() {
     asyncTest("U.pipeDeferred: success", function () {
         expect(1);
         var d1 = $.Deferred();
-        var d2 = $.Deferred().done(function (x, y) {
+        var d2 = $.Deferred().done(function (x: number, y: number) {
             equal(x * y, 15, "pass arguments to success handler");
         }).fail(function () {
             throw new Error("failure handler called");
@@ -629,7 +637,7 @@ function testLush() {
         var d3 = $.Deferred().reject(2, 10);
         var d4 = $.Deferred().done(function () {
             throw new Error("success handler called");
-        }).fail(function (x, y) {
+        }).fail(function (x: number, y: number) {
             equal(x * y, 20, "pass arguments to failure handler");
         }).always(function () { start(); });
         U.pipeDeferred(d3, d4);
@@ -684,13 +692,13 @@ function testLush() {
         U.mapf(function (i) {
             last = i;
             return $.Deferred().resolve();
-        }, (1 << 9) * 3, function (i) { if (i % 2 == 0) return i / 2; })
+        }, (1 << 9) * 3, function (i: number) { if (i % 2 == 0) return i / 2; })
         .then(function () {
             equal(last, 3, "last call was on first odd number");
             return U.mapf(function (s) {
                 str += s[0];
                 return $.Deferred().resolve();
-            }, "abcd", function (s) { return s.substr(1) || undefined; }, true);
+            }, "abcd", function (s: string) { return s.substr(1) || undefined; }, true);
         }, function () {
             throw new Error("deferred should have completed succesfully");
         }).done(function () {
@@ -710,4 +718,4 @@ function testLush() {
     });
 }
 
-module.exports = testLush;
+export = testLush;

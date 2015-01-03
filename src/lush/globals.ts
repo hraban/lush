@@ -14,7 +14,7 @@ import Command = require("Command");
 
 var globals = {
     // websocket connection for control events
-    ctrl: <Ctrl> undefined,
+    ctrl: <Ctrl.Ctrl> undefined,
     // (shell-sessionlocal) ID of this client
     moi: <string> undefined,
     // Cli instance. Useful for debugging.

@@ -205,7 +205,7 @@ function processHash(h, term) {
 }
 
 // ask the server to connect these two commands
-function requestConnect(srcid, trgtid, stream, ctrl: Ctrl) {
+function requestConnect(srcid, trgtid, stream, ctrl: Ctrl.Ctrl) {
     var options = {
         from: srcid,
         to: trgtid,
@@ -432,7 +432,7 @@ function processNewCmdEvent(ctrl, init) {
 // that is done in the wrong order some commands will be doubly initialized.
 // Asking that list as a parameter here ensures order is proper. Bonus: allows
 // parallel fetching of all initialization data in the init routine.
-function main_aux(ctrl: Ctrl, moi: string, existingCmdIds: number[]) {
+function main_aux(ctrl: Ctrl.Ctrl, moi: string, existingCmdIds: number[]) {
     globals.ctrl = ctrl;
     globals.moi = moi;
     var term = terminal(processCmd, ctrl);
@@ -569,9 +569,9 @@ function lushMain(ctrlurl) {
     }
     var ctrlPromise = getCtrlKey(ctrlurl).then(function (ctrlKey: string) {
         // Control stream (Websocket)
-        return new Ctrl(ctrlurl, ctrlKey);
+        return new Ctrl.WebsocketCtrl(ctrlurl, ctrlKey);
     });
-    var myidPromise: Promise<number> = ctrlPromise.then(function (ctrl: Ctrl) {
+    var myidPromise: Promise<number> = ctrlPromise.then(function (ctrl: Ctrl.Ctrl) {
         return new Promise<number>(function (ok) {
             $(ctrl).one('clientid', function (_, myid) {
                 ok(myid);

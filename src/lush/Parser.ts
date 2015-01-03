@@ -155,7 +155,7 @@ class Parser {
         };
     }
 
-    parse(txt: string, ignoreParseErrors: boolean): Ast {
+    parse(txt: string, ignoreParseErrors: boolean = false): Ast {
         var parser = this;
         parser._ignoreErrors = ignoreParseErrors;
         var expanded = parser._histExp.expand(txt);

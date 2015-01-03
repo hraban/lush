@@ -333,7 +333,7 @@ export class Command {
     /***** Rest *****/
 
     // third arg is a uuid identifying this session
-    constructor(private ctrl: Ctrl, init, private _moi: string) {
+    constructor(private ctrl: Ctrl.Ctrl, init, private _moi: string) {
         var cmd = this;
         this.processInitData(init);
         var off = cmd.on(UpdatedStatusEvent, function (e: UpdatedStatusEvent) {

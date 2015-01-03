@@ -106,10 +106,7 @@ function tabcompleteCallback(term, partial: string, files: string[]) {
 
 
 // set up the terminal window
-function terminal(processCmd, ctrl: Ctrl) {
-    if (!(ctrl instanceof Ctrl)) {
-        throw "second argument to terminal.js main function must be a Ctrl";
-    }
+function terminal(processCmd, ctrl: Ctrl.Ctrl) {
     var cli = new Cli(processCmd);
     var latestParseError;
     var $term = $('#terminal').terminal(function (x: string) {
