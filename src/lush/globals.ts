@@ -11,6 +11,7 @@
 import Cli = require("Cli");
 import Ctrl = require("Ctrl");
 import Command = require("Command");
+import Terminal = require("terminal");
 
 var globals = {
     // websocket connection for control events
@@ -20,7 +21,7 @@ var globals = {
     // Cli instance. Useful for debugging.
     cli: <Cli> undefined,
     // jQuery.terminal instance. also for debugging.
-    terminal: undefined,
+    terminal: <Terminal> undefined,
     // object containing running command metadata: key is system id, value is
     // cmd object
     cmds: <{ [key: number]: Command.Command }> {},

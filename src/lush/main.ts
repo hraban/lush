@@ -132,7 +132,7 @@ import Ctrl = require("./Ctrl");
 import HistoryWidget = require("./HistoryWidget");
 import globals = require("./globals");
 import path = require("./path");
-import terminal = require("./terminal");
+import Terminal = require("./terminal_jquery");
 import U = require("./utils");
 import Widget = require("./Widget");
 
@@ -435,7 +435,7 @@ function processNewCmdEvent(ctrl, init) {
 function main_aux(ctrl: Ctrl.Ctrl, moi: string, existingCmdIds: number[]) {
     globals.ctrl = ctrl;
     globals.moi = moi;
-    var term = terminal(document.getElementById('terminal'), processCmd, ctrl);
+    var term = Terminal(document.getElementById('terminal'), processCmd, ctrl);
     globals.terminal = term;
     var confwin = new CmdConfig();
     historyWidget = new HistoryWidget();
@@ -458,7 +458,8 @@ function main_aux(ctrl: Ctrl.Ctrl, moi: string, existingCmdIds: number[]) {
         // set prompt to this pipeline's textual representation
         e.preventDefault();
         var cmd = globals.cmds[getGidFromCtrlButton(this)];
-        term.set_command(cmd.cmdChainToPrompt()).focus();
+        term.set_command(cmd.cmdChainToPrompt());
+        term.focus();
         return false;
     }).on('click', 'button.startgroup', function (e) {
         e.preventDefault();
