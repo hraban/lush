@@ -2,6 +2,7 @@
 // elements within it by full name for easy greping. Initialization of this
 // object should be done only by main functions of modules, and only once. No
 // reinitializing later.
+
 // TODO: (Assert)Exception if get before set
 
 /// <reference path="./Cli.ts"/>
