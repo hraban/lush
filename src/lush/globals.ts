@@ -1,3 +1,7 @@
+// Copyright © 2013 - 2015 Hraban Luyat <hraban@0brg.net>
+//
+// This source code is licensed under the AGPLv3. Details in the LICENSE file.
+
 // Project-wide globals in one object. Always refer to this object and the
 // elements within it by full name for easy greping. Initialization of this
 // object should be done only by main functions of modules, and only once. No
