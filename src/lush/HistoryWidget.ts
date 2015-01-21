@@ -7,14 +7,13 @@
 
 /// <reference path="refs/jquery.d.ts" />
 /// <reference path="refs/react.d.ts" />
-/// <reference path="refs/react-addons.d.ts" />
 /// <reference path="Command.ts"/>
 /// <reference path="utils.ts" />
 
+import React = require("react/addons");
 import $ = require("jquery");
 import Command = require("./Command");
 import globals = require("./globals");
-import React = require("react");
 import U = require("./utils");
 
 var HistoryEntry = React.createClass({

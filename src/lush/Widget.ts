@@ -32,7 +32,7 @@
 /// <reference path="refs/react.d.ts" />
 
 import $ = require("jquery");
-import React = require("react");
+import React = require("react/addons");
 
 import Command = require("./Command");
 import U = require("./utils");

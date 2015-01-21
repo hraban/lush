@@ -563,7 +563,7 @@ function lushMain(ctrlurl) {
             });
         });
     });
-    Promise.all([ctrlPromise, myidPromise, getCmdIds()]).then(function (values: any[]) {
+    Promise.all<any>([ctrlPromise, myidPromise, getCmdIds()]).then(function (values: any[]) {
         main_aux.apply(this, values);
     }, function (err) {
         console.error("Failed to get initialization data: " + err.message);
