@@ -15,9 +15,9 @@ import (
 	"strings"
 
 	"bitbucket.org/kardianos/osext"
+	"github.com/hraban/httpauth"
 	"github.com/hraban/lush/liblush"
 	"github.com/hraban/web"
-	"github.com/icub3d/httpauth"
 )
 
 type server struct {
