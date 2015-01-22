@@ -685,9 +685,9 @@ function testLush() {
             }, "abcd", function (s: string) { return s.substr(1) || undefined; }, true);
         }, function () {
             throw new Error("deferred should have completed succesfully");
-        }).done(function () {
+        }).then(function () {
             equal(str, "dcba", "reverse order flag respected");
-        }).always(function () { start(); });
+        }).then(() => start(), () => start());
     });
 
     test("U.isInt", function () {

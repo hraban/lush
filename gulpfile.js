@@ -10,44 +10,51 @@ var source = require('vinyl-source-stream');
 // awww already?? please, more plugins! I love spending time learning how to use
 // and configure the build step dujour instead of coding, so much!
 
-var BOWER_LIBS = [
-    'bower_components/jquery/dist/jquery.js',
-    'bower_components/jquery-ui/jquery-ui.js',
-    'bower_components/jquery.terminal/js/jquery.terminal-src.js',
-    'bower_components/eventEmitter/EventEmitter.js'
+var VENDOR_LIBS = [
+    {
+        require: './bower_components/jquery/dist/jquery.js',
+        expose: 'jquery',
+    },
+    {
+        require: './bower_components/jquery-ui/jquery-ui.js',
+        expose: 'jquery-ui',
+    },
+    {
+        require: './bower_components/jquery.terminal/js/jquery.terminal-src.js',
+        expose: 'jquery.terminal'
+    },
+    {
+        require: './bower_components/eventEmitter/EventEmitter.js',
+        expose: 'EventEmitter',
+    },
+    {
+        require: './src/vendor/ansi_up-r7e9940fdad.js',
+        expose: 'ansi_up'
+    },
+    {
+        require: './src/vendor/react-with-addons-0.12.0.min.js',
+        expose: 'react',
+    }
 ];
 
-// like the eponymous unix tool
-function basename(path) {
-    return path.split('/').slice(-1)[0];
-}
+gulp.task('default', ['js', 'statics', 'vendor']);
 
-gulp.task('default', ['js', 'statics'], function () {
-});
-
-gulp.task('js', ['js-src', 'typescript', 'js-libs'], function () {
-    var bundle = browserify({
+gulp.task('js', ['js-src', 'typescript'], function () {
+    var b = browserify({
             debug: true,
             paths: ['./build/js'],
-            // This doesn't work and debugging this is harder than a diamond
-            // I'm so frustrated at this build process it's unbelievable. How do
-            // people not go take to the streets and start murdering the
-            // innocent? If this were my full time job I would contemplate self
-            // mutilation every. single. day.
-            noParse: BOWER_LIBS.map(basename),
         }).transform(aliasify.configure({
             aliases: {
-                "jquery.ui": "jquery-ui",
-                'jquery.terminal': 'jquery.terminal-src',
-                'ansi_up': 'ansi_up-r7e9940fdad',
-                'react': 'react-with-addons-0.12.0.min',
-                'react/addons': 'react-with-addons-0.12.0.min',
+                'react/addons': 'react',
             },
         })).require("./build/js/lush/startlush.js", {expose: "lush/start"})
-        .require("./build/js/lush/tests.js", {expose: "lush/tests"})
-        .bundle();
+        .require("./build/js/lush/tests.js", {expose: "lush/tests"});
 
-    return bundle
+    VENDOR_LIBS.forEach(function (lib) {
+        b.external(lib.expose);
+    });
+
+    b.bundle()
         .pipe(source('lush.js'))
         .pipe(buffer())
         .pipe(sourcemaps.init({loadMaps: true}))
@@ -79,19 +86,18 @@ gulp.task('statics', function () {
         .pipe(gulp.dest('static'));
 });
 
-gulp.task('js-libs', ['js-libs-bower', 'js-libs-local']);
-
-gulp.task('js-libs-local', function () {
-    gulp.src(['src/static/js/ext/*'])
-        .pipe(gulp.dest('build/js/'));
-});
-
-gulp.task('js-libs-bower', ['jquery-ui-theme'], function () {
-    // tried bunch of extensions, but manual seems to be best
-    // :(
-    gulp.src(BOWER_LIBS).pipe(gulp.dest('build/js/'));
+// 3rd party dependencies
+gulp.task('vendor', ['jquery-ui-theme'], function () {
     gulp.src(['bower_components/jquery.terminal/css/jquery.terminal.css'])
         .pipe(gulp.dest('static/css/'));
+
+    var b = browserify();
+    VENDOR_LIBS.forEach(function (lib) {
+        b.require(lib.require, {expose: lib.expose});
+    });
+    b.bundle()
+        .pipe(source('vendor.js'))
+        .pipe(gulp.dest('static/js/'));
 });
 
 gulp.task('jquery-ui-theme', function () {

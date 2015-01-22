@@ -424,14 +424,14 @@ function main_aux(ctrl: Ctrl.Ctrl, moi: string, existingCmdIds: number[]) {
     var confwin = new CmdConfig();
     historyWidget = new HistoryWidget();
     // turn DOM node's ID into a numerical one (strip off leading "cmd")
-    function getNidFromNode(node) {
-        return +(/\d+$/.exec(node.id)[0]);
+    function getNidFromNode(node: HTMLElement) {
+        return U.parseTrailingInteger(node.id);
     }
-    // this... well this is just a doozie. or it helps you getting the group ID
+    // Get the group ID
     // (i.e. nid of the root cmd) of the pipeline that the button element (arg)
     // belongs to.
-    function getGidFromCtrlButton(node) {
-        return getNidFromNode(node.parentNode.parentNode);
+    function getGidFromCtrlButton(node: HTMLButtonElement) {
+        return getNidFromNode(<HTMLElement>node.parentNode.parentNode);
     }
     // associate clicked command widget with confwin
     $('#cmds').assertNum(1).on('click', '.cmdwidget', function (e) {

@@ -152,21 +152,24 @@ function isPromise(x: any) {
 
 // f acts on l, which is a tree with implicit nodes, the next node is extracted
 // using nextkey, which returns undefined if there is no next node. If f
-// returns a deferred, this function only progresses on success. if reversed is
+// returns a promise, this function only progresses on success. if reversed is
 // true, call last element first.
-// TODO: return type should be void|JQueryDeferred<void>
-export function mapf<T>(f: (node: T) => any, l: T, nextkey: (node: T) => T, reversed?: boolean): any {
+export function mapf<T>(f: (node: T) => any, l: T, nextkey: (node: T) => T, reversed?: boolean): Promise<void> {
     if (l === undefined) {
-        return $.Deferred().resolve();
+        return Promise.resolve<void>();
     }
     var recurse = () => mapf(f, nextkey(l), nextkey, reversed);
     if (reversed) {
-        // always a promise in reverse mode
-        return recurse().then(f(l));
+        var ret1 = recurse();
+        if (isPromise(ret1)) {
+            return ret1.then<any>(f(l));
+        } else {
+            throw new Error("Assert: return Promise on reversed mapf");
+        }
     } else {
-        var ret = f(l);
-        if (isPromise(ret)) {
-            return ret.then(recurse);
+        var ret2 = f(l);
+        if (isPromise(ret2)) {
+            return ret2.then(recurse);
         } else {
             return recurse();
         }

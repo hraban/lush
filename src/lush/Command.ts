@@ -703,8 +703,7 @@ export class Command {
         }
     }
 
-    // TODO TS 1.4: return type void|JQueryPromise<void>
-    mapTree(f: (c: Command) => any, reverse?: boolean): any {
+    mapTree(f: (c: Command) => any, reverse?: boolean): Promise<void> {
         return U.mapf(f, this, c => c.stdoutCmd(), reverse);
     }
 
