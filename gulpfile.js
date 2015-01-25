@@ -68,7 +68,7 @@ gulp.task('typescript', function () {
         .pipe(sourcemaps.init())
         .pipe(typescript({
             declarationFiles: false,
-            //module: "amd",
+            module: "commonjs",
             sortOutput: true
         })).js
         .pipe(sourcemaps.write())
