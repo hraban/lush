@@ -29,7 +29,7 @@
 // all this is wrapped in a <div class=rootcontainer>
 
 /// <reference path="refs/jquery.d.ts" />
-/// <reference path="refs/react.d.ts" />
+/// <reference path="refs/react-0.13.0.d.ts" />
 
 import $ = require("jquery");
 import React = require("react/addons");

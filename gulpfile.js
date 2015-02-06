@@ -32,7 +32,7 @@ var VENDOR_LIBS = [
         expose: 'ansi_up'
     },
     {
-        require: './src/vendor/react-with-addons-0.12.0.min.js',
+        require: './node_modules/react',
         expose: 'react',
     }
 ];
@@ -45,7 +45,9 @@ gulp.task('js', ['js-src', 'typescript'], function () {
             paths: ['./build/js'],
         }).transform(aliasify.configure({
             aliases: {
-                'react/addons': 'react',
+                // Commented out lest I forget this syntax and have to spend yet
+                // more time reading js build tool documentation
+                //'react/addons': 'react',
             },
         })).require("./build/js/lush/startlush.js", {expose: "lush/start"})
         .require("./build/js/lush/tests.js", {expose: "lush/tests"});

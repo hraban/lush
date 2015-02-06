@@ -6,7 +6,7 @@
 // The logic behind the control window for active commands.
 
 /// <reference path="refs/jquery.d.ts" />
-/// <reference path="refs/react.d.ts" />
+/// <reference path="refs/react-0.13.0.d.ts" />
 /// <reference path="Command.ts"/>
 /// <reference path="utils.ts" />
 
@@ -58,7 +58,7 @@ class ChangedHierarchyEvent extends Command.CommandEvent {
 function createHistoryEntry(cmd): HTMLElement {
 
     var wrapper = document.createElement("div");
-    var reactel = React.createElement(HistoryEntry, {cmd: cmd});
+    var reactel = React.createElement(HistoryEntry, { cmd: cmd });
     var component = React.render(reactel, wrapper);
 
     var evs = [
