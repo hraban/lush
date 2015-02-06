@@ -30,5 +30,8 @@
   "bugs": {
     "url": "https://github.com/hraban/lush/issues"
   },
-  "homepage": "https://github.com/hraban/lush"
+  "homepage": "https://github.com/hraban/lush",
+  "dependencies": {
+    "es6-promise": "^2.0.1"
+  }
 }

@@ -1,8 +1,17 @@
 #!/bin/bash
 
+set -eu -o pipefail
+
+fatal () {
+	echo "$@" >&2
+	exit 1
+}
+
+pidof lush && fatal "Lush already running, can't run tests"
+
 go build ./posixtools/echo || exit 1
 ECHOBIN=$PWD/echo
-function cleanecho {
+cleanecho () {
 	rm -f $ECHOBIN
 }
 trap cleanecho EXIT
@@ -20,10 +29,14 @@ fi
 go build || exit 1
 ./lush -l 127.0.0.1:4737 &
 lushpid=$!
+cleanuplush() {
+	cleanecho
+	kill $lushpid
+}
+trap cleanuplush EXIT
 sleep 3
 
 phantomjs phantom-qunit-runner.js http://127.0.0.1:4737/test.html
 phantomexit=$?
 
-kill $lushpid
 exit $phantomexit

@@ -30,10 +30,6 @@ var VENDOR_LIBS = [
     {
         require: './src/vendor/ansi_up-r7e9940fdad.js',
         expose: 'ansi_up'
-    },
-    {
-        require: './node_modules/react',
-        expose: 'react',
     }
 ];
 

@@ -305,6 +305,11 @@ if (!Function.prototype.bind) {
   };
 }
 
+if (typeof Promise === "undefined") {
+    var require: any;
+    require("es6-promise").polyfill();
+}
+
 // serialize html form to jquery object ready for jsoning
 // http://stackoverflow.com/a/1186309
 if (!$.fn.serializeObject) {
