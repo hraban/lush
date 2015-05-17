@@ -14,10 +14,10 @@ import (
 	"os"
 	"strings"
 
-	"bitbucket.org/kardianos/osext"
 	"github.com/hraban/httpauth"
 	"github.com/hraban/lush/liblush"
 	"github.com/hraban/web"
+	"github.com/kardianos/osext"
 )
 
 type server struct {
