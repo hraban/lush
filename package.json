@@ -26,7 +26,7 @@
     "web"
   ],
   "author": "Hraban Luyat <hraban@0brg.net>",
-  "license": "MIT",
+  "license": "AGPLv3",
   "bugs": {
     "url": "https://github.com/hraban/lush/issues"
   },
