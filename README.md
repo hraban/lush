@@ -59,7 +59,7 @@ For this, you will need node.js and go.
 Download and install:
 
     $ go get github.com/hraban/lush
-    $ cd $GOPATH/github.com/hraban/lush
+    $ cd $GOPATH/src/github.com/hraban/lush
     $ npm install -g gulp bower
     $ npm install
     $ bower install
