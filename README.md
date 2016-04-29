@@ -56,9 +56,9 @@ Installing Lush on Linux or Mac OS X is only possible from source.
 
 For this, you will need node.js and go.
 
-(Note: if you don't regularly use go, you may not have a `GOPATH` set up. Do something
-like this: `echo 'export GOPATH="$HOME"/gopath' >> ~/.bashrc; mkdir -p $GOPATH` and
-restart your shell before continuing these instructions.) 
+(Note: if you don't regularly use go, you may not have a `GOPATH` set up. Do
+something like this: `echo 'export GOPATH="$HOME"/gopath' >> ~/.bashrc; mkdir -p
+~/gopath` and restart your shell before continuing these instructions.) 
 
 Download and install:
 
