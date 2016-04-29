@@ -50,11 +50,15 @@ To update lush:
     cd c:\go3d\src\github.com\hraban\lush
     gulp
 
-## Lush on Linux
+## Lush on Linux or Mac OS X
 
-Installing Lush on Linux is only possible from source.
+Installing Lush on Linux or Mac OS X is only possible from source.
 
 For this, you will need node.js and go.
+
+(Note: if you don't regularly use go, you may not have a `GOPATH` set up. Do something
+like this: `echo 'export GOPATH="$HOME"/gopath' >> ~/.bashrc; mkdir -p $GOPATH` and
+restart your shell before continuing these instructions.) 
 
 Download and install:
 
