@@ -16,7 +16,12 @@ import Command = require("./Command");
 import globals = require("./globals");
 import U = require("./utils");
 
-var HistoryEntry = React.createClass({
+// Getting a TS warning on the handleClick mixin---there's probably a better
+// way but I need to read up on the advancements in both TS and React since
+// I've last been here to find out what that is. For now just <any> all the
+// things.
+// TODO
+var HistoryEntry = React.createClass(<any>{
     handleClick: function (e) {
         e.preventDefault();
         this.props.cmd.setArchivalState(!this.props.cmd.userdata.archived);
@@ -58,7 +63,8 @@ class ChangedHierarchyEvent extends Command.CommandEvent {
 function createHistoryEntry(cmd): HTMLElement {
 
     var wrapper = document.createElement("div");
-    var reactel = React.createElement(HistoryEntry, { cmd: cmd });
+    // TODO: React mixins (or something)
+    var reactel = React.createElement(HistoryEntry, <any>{ cmd: cmd });
     var component = React.render(reactel, wrapper);
 
     var evs = [
@@ -85,7 +91,7 @@ function createHistoryEntry(cmd): HTMLElement {
     }));
     cmd.one(Command.WasReleasedEvent, function () {
         offs.forEach(f => f());
-        delete offs;
+        offs = undefined;
     });
 
     return wrapper;
@@ -104,7 +110,11 @@ class HistoryWidget {
         $('#delete_archived_and_completed').click(function (e) {
             e.preventDefault();
             $('#history .archived').each(function () {
-                var gid = $(this).data('gid');
+                // compiler is getting confused about the type. I think I
+                // should upgrade compilers, but I want to get it to work
+                // again with this one, first. <any> all the things.
+                // TODO
+                var gid: any = $(this).data('gid');
                 var cmd = globals.cmds[gid];
                 if (cmd.status.code > 1) {
                     cmd.releaseGroup();

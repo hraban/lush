@@ -48,7 +48,7 @@ class CmdConfig {
         $('#cmdedit input[name=cmd]').autocomplete({source: "/new/names.json"});
         $('#cmddetailarea').tabsBottom({
             collapsible: true,
-            selected: -1,
+            active: -1,
         });
         $('#cmdedit form').on('keydown', 'input[name^=arg]', function (e) {
             var argId = +(this.name.slice(3));

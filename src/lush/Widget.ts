@@ -74,7 +74,8 @@ var StopButton = React.createClass({
     }
 });
 
-var StatusNode = React.createClass({
+// TODO: Learn about react mixins (or something)
+var StatusNode = React.createClass(<any>{
     stopCommand: function () {
         this.props.cmd.stop();
     },
@@ -86,7 +87,8 @@ var StatusNode = React.createClass({
             content = undefined;
             break;
         case 1:
-            content = React.createElement(StopButton, {
+            // TODO: Learn about react mixins (or something)
+            content = React.createElement(StopButton, <any>{
                 key: "StopButton" + this.props.cmd.nid,
                 handleClick: this.stopCommand,
             });
@@ -112,7 +114,8 @@ var CommandWidget = React.createClass({
                                         className: "cmdwidget"},
                 this.props.cmd.nid + ":",
                 React.createElement("tt", null, argvtxt),
-                React.createElement(StatusNode, {cmd: this.props.cmd}))
+                // TODO: React mixins (or something)
+                React.createElement(StatusNode, <any>{cmd: this.props.cmd}))
         );
     }
 });
@@ -187,7 +190,8 @@ var GroupWidget = React.createClass({
         };
         return (
             React.DOM.div(divProps,
-                React.createElement(CommandWidget, {cmd: cmd}),
+                // TODO: React mixins (or something)
+                React.createElement(CommandWidget, <any>{cmd: cmd}),
                 React.DOM.div({className: "children"}, children))
         );
     }
@@ -230,7 +234,8 @@ var RootContainer = React.createClass({
         }
         return (
             React.DOM.div(myProps,
-                React.createElement(WindowButtons, {cmd: cmd}),
+                // TODO: React mixins (or something)
+                React.createElement(WindowButtons, <any>{cmd: cmd}),
                 React.createElement(GroupWidget, childProps))
         );
     }

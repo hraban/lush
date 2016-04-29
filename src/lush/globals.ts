@@ -13,10 +13,10 @@
 /// <reference path="./Command.ts"/>
 /// <reference path="./Ctrl.ts"/>
 
-import Cli = require("Cli");
-import Ctrl = require("Ctrl");
-import Command = require("Command");
-import Terminal = require("terminal");
+import Cli = require("./Cli");
+import Ctrl = require("./Ctrl");
+import Command = require("./Command");
+import Terminal = require("./terminal");
 
 var globals = {
     // websocket connection for control events
