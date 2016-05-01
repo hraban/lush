@@ -7,7 +7,8 @@ fatal () {
 	exit 1
 }
 
-pidof lush && fatal "Lush already running, can't run tests"
+# Try pidof and pgrep
+pidof lush || pgrep lush && fatal "Lush already running, can't run tests"
 
 go build ./posixtools/echo || exit 1
 ECHOBIN=$PWD/echo
