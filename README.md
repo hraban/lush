@@ -81,6 +81,6 @@ The code is available on github at https://github.com/hraban/lush
 See https://github.com/hraban/lush/wiki for more info, and feel free to contact
 me:
 
-Hraban Luyat
-hraban@0brg.net
+Hraban Luyat  
+hraban@0brg.net  
 November 2014
