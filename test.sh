@@ -10,14 +10,14 @@ fatal () {
 # Try pidof and pgrep
 pidof lush || pgrep lush && fatal "Lush already running, can't run tests"
 
-go build ./posixtools/echo || exit 1
+go build ./posixtools/echo
 ECHOBIN=$PWD/echo
 cleanecho () {
 	rm -f $ECHOBIN
 }
 trap cleanecho EXIT
 
-ECHOBIN=$ECHOBIN go test . ./liblush  || exit 1
+ECHOBIN=$ECHOBIN go test . ./liblush
 
 phantompath="$(which phantomjs)"
 if [[ -z "$phantompath" ]]
@@ -27,7 +27,7 @@ then
 fi
 
 # start a lush server
-go build || exit 1
+go build
 ./lush -l 127.0.0.1:4737 &
 lushpid=$!
 cleanuplush() {
@@ -38,6 +38,3 @@ trap cleanuplush EXIT
 sleep 3
 
 phantomjs phantom-qunit-runner.js http://127.0.0.1:4737/test.html
-phantomexit=$?
-
-exit $phantomexit
