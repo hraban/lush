@@ -5,6 +5,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -73,9 +74,10 @@ func connectWebsocketNoHandshake(t *testing.T, server *httptest.Server, header h
 	conn := connectToTestServer(t, server)
 	url := urlMustParse(server.URL)
 	url.Path = "/ctrl"
+	url.Scheme = "ws"
 	ws, _, err := websocket.NewClient(conn, url, header, 1024, 1024)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("raw websocket client: %v", err)
 	}
 	return ws, nil
 }
@@ -83,7 +85,7 @@ func connectWebsocketNoHandshake(t *testing.T, server *httptest.Server, header h
 func connectWebsocket(t *testing.T, server *httptest.Server, header http.Header) (*websocket.Conn, error) {
 	ws, err := connectWebsocketNoHandshake(t, server, header)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("raw websocket connection: %v", err)
 	}
 	performWebsocketHandshake(t, ws)
 	return ws, nil
@@ -93,8 +95,7 @@ func connectWebsocket(t *testing.T, server *httptest.Server, header http.Header)
 func connectWebsocketSimple(t *testing.T, server *httptest.Server) *websocket.Conn {
 	ws, err := connectWebsocket(t, server, nil)
 	if err != nil {
-		ws.Close()
-		t.Fatal("Couldn't open client websocket connection:", err)
+		t.Fatal("lush websocket connection:", err)
 	}
 	return ws
 }
@@ -116,7 +117,6 @@ func TestWebsocketAuthentication(t *testing.T) {
 	defer ts.Close()
 	ws, err := connectWebsocket(t, ts, nil)
 	if err == nil {
-		ws.Close()
 		t.Error("Expected error when connecting without authentication")
 	}
 	// prehashed credentials: lush:test (net/http.Header does not support
