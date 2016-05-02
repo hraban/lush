@@ -296,7 +296,7 @@ func init() {
 	serverinitializers = append(serverinitializers, func(s *server) {
 		s.userdata = map[string]string{}
 		// public handlers
-		s.web.Get(`/`, http.FileServer(http.Dir(getRoot()+"/static")))
+		s.web.Get(`/`, http.FileServer(http.Dir(getAssets().Web)))
 		s.web.Get(`/cmdids.json`, handleGetCmdidsJson)
 		s.web.Get(`/(\d+).json`, handleGetCmdJson)
 		s.web.Get(`/ctrl`, handleWsCtrl)

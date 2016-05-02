@@ -7,7 +7,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"go/build"
 	"log"
 	"net"
 	"net/http"
@@ -17,12 +16,10 @@ import (
 	"github.com/hraban/httpauth"
 	"github.com/hraban/lush/liblush"
 	"github.com/hraban/web"
-	"github.com/kardianos/osext"
 )
 
 type server struct {
 	session liblush.Session
-	root    string
 	web     *web.Server
 	l       net.Listener
 	// The front-facing HTTP handler. Defaults to the raw web.go server, but can
@@ -40,9 +37,6 @@ type server struct {
 	password string
 }
 
-// name of this package (used to find the static resource files)
-const basePkg = "github.com/hraban/lush/"
-
 // functions added to this slice at init() time will be called for every new
 // instance of *server created through newServer.
 var serverinitializers []func(*server)
@@ -50,47 +44,14 @@ var serverinitializers []func(*server)
 // PATH
 var path string
 
-// find the directory containing the lush resource files. looks for a directory
-// called "static" in the directory of the executable. if not found try to look
-// for them in GOPATH ($GOPATH/src/github.com/....). Panics if no resources are
-// found.
-func resourceDir() string {
-	root, err := osext.ExecutableFolder()
-	if err == nil {
-		if _, err = os.Stat(root + "/static"); err == nil {
-			return root
-		}
-	}
-	// didn't find <dir of executable>/static
-	p, err := build.Default.Import(basePkg, "", build.FindOnly)
-	if err != nil {
-		panic("Couldn't find lush resource files")
-	}
-	return p.Dir
-}
-
-var _rootCache string
-
-// directory containing lush resources (containing static/). initializing the
-// variable in the getter removes all doubt about the order of init() functions;
-// call getRoot(), no matter where, and you're sure to either panic() or get a
-// valid root directory.
-func getRoot() string {
-	if _rootCache == "" {
-		_rootCache = resourceDir()
-	}
-	return _rootCache
-}
-
 func newServer() *server {
-	root := getRoot()
+	assets := getAssets()
 	s := &server{
 		session: liblush.NewSession(),
-		root:    root,
 		web:     web.NewServer(),
 	}
 	s.httpHandler = s.web
-	s.web.Config.StaticDirs = []string{root + "/static"}
+	s.web.Config.StaticDirs = []string{assets.Web}
 	s.web.User = s
 	for _, f := range serverinitializers {
 		f(s)
@@ -172,9 +133,9 @@ Happy Hanukkah!
 }
 
 func init() {
-	root := getRoot()
+	assets := getAssets()
 	// also search for binaries local /bin folder
-	path = appendPath(os.Getenv("PATH"), root+"/bin")
+	path = appendPath(os.Getenv("PATH"), assets.Bin)
 	err := os.Setenv("PATH", path)
 	if err != nil {
 		log.Print("Failed to add ./bin to the PATH: ", err)

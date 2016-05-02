@@ -35,7 +35,7 @@ It will download lush (to `c:\go3d\src\github.com\hraban\lush`) and install it
 
 **Install dependencies: gulp, bower, and the rest** 
 
-    cd c:\go3d\src\github.com\hraban\lush
+    cd c:\go3d\src\github.com\hraban\lush\client
     npm install -g gulp bower
     npm install
     bower install
@@ -63,7 +63,7 @@ something like this: `echo 'export GOPATH="$HOME"/gopath' >> ~/.bashrc; mkdir -p
 Download and install:
 
     $ go get github.com/hraban/lush
-    $ cd $GOPATH/src/github.com/hraban/lush
+    $ cd $GOPATH/src/github.com/hraban/lush/client
     $ npm install -g gulp bower
     $ npm install
     $ bower install
