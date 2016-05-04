@@ -26,7 +26,7 @@
     "web"
   ],
   "author": "Hraban Luyat <hraban@0brg.net>",
-  "license": "AGPLv3",
+  "license": "AGPL-3.0",
   "bugs": {
     "url": "https://github.com/hraban/lush/issues"
   },
