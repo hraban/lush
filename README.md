@@ -22,31 +22,36 @@ Includes grep, cat, etc. for that real "terminal feel".
 
 (Only tested this on Mac. Should work on Linux and Windows, too.)
 
-The server first needs to be downloaded and compiled using go:
+First, download and install using go:
 
     $ go get github.com/hraban/lush
 
-Regardless of platform (Windows, Mac, Linux); you just need go installed.
+Works regardless of platform (Windows, Mac, Linux); you just need go installed.
 
 (Note: if you don't regularly use go, you may not have a `GOPATH` set up. Do
 something like this: `echo 'export GOPATH="$HOME"/gopath' >> ~/.bashrc; mkdir -p
 ~/gopath` and restart your shell before continuing these instructions. On
-Windows, it's a little trickier.) 
+Windows, [it's a little
+trickier](https://github.com/hraban/lush/wiki/Installing-Go-on-Windows).) 
 
-After this, navigate to the go source directory, create a docker client builder
-image and build the client using that:
+After this, build the client using docker:
 
     $ cd $GOPATH/src/github.com/hraban/lush/client
     $ docker build -t lush-client .
     $ ./build-docker.sh
 
-Lush can now be started:
+Now you can start lush:
 
     $ $GOPATH/bin/lush
 
+To update lush:
+
+    $ go get -u github.com/hraban/lush
+    $ $GOPATH/src/github.com/hraban/lush/client/build-docker.sh
+
 ## Windows from Source
 
-Prerequisites: Make sure you have Go, Git, Mercurial, Node.js and npm installed.
+Prerequisites: Go, Git, Mercurial, Node.js and npm.
 
 For instructions on installing Go, see
 https://github.com/hraban/lush/wiki/Installing-Go-on-Windows.
