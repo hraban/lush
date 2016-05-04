@@ -6,12 +6,14 @@ before_install:
 - sudo apt-get update
 - sudo apt-get install npm
 - npm install -g gulp bower
-- npm install
 
 install:
 - go get -d -v ./...
 - go build -v ./...
+- pushd client
+- npm install
 - bower install
 - gulp
+- popd
 
-script: npm test
+script: ./test.sh
