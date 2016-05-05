@@ -18,25 +18,15 @@ Download the latest .zip. Unzip, find lush.exe, double click it. Done.
 
 Includes grep, cat, etc. for that real "terminal feel".
 
-## All platforms from source (Go & Docker)
+## All platforms using Docker
 
 (Only tested this on Mac. Should work on Linux and Windows, too.)
 
-First, download and install using go:
+Build the client and server using docker:
 
-    $ go get github.com/hraban/lush
-
-Works regardless of platform (Windows, Mac, Linux); you just need go installed.
-
-(Note: if you don't regularly use go, you may not have a `GOPATH` set up. Do
-something like this: `echo 'export GOPATH="$HOME"/gopath' >> ~/.bashrc; mkdir -p
-~/gopath` and restart your shell before continuing these instructions. On
-Windows, [it's a little
-trickier](https://github.com/hraban/lush/wiki/Installing-Go-on-Windows).) 
-
-After this, build the client using docker:
-
-    $ cd $GOPATH/src/github.com/hraban/lush/client
+    $ docker build -t lush-server .
+    $ docker run 
+    $ cd client
     $ docker build -t lush-client .
     $ ./build-docker.sh
 
@@ -80,11 +70,15 @@ To update lush:
     cd c:\go3d\src\github.com\hraban\lush
     gulp
 
-## Linux or Mac OS X
+## Linux or Mac OS X from Source
 
-Installing Lush on Linux or Mac OS X is only possible from source.
+You will need node.js and go.
 
-For this, you will need node.js and go.
+(Note: if you don't regularly use go, you may not have a `GOPATH` set up. Do
+something like this: `echo 'export GOPATH="$HOME"/gopath' >> ~/.bashrc; mkdir -p
+~/gopath` and restart your shell before continuing these instructions. On
+Windows, [it's a little
+trickier](https://github.com/hraban/lush/wiki/Installing-Go-on-Windows).) 
 
 Download and install:
 
