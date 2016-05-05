@@ -23,9 +23,12 @@ bower_components/
 *~
 *.orig
 
+# build noise
 lush
 !src/lush
-lush.exe
-bin/
-build/
-static/
+*.exe
+/bin/
+/client/build/
+/client/static/
+lush-*-386
+lush-*-amd64
