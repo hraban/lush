@@ -22,13 +22,24 @@ Includes grep, cat, etc. for that real "terminal feel".
 
 (Only tested this on Mac. Should work on Linux and Windows, too.)
 
+Determine your OS:
+
+* darwin (mac)
+* linux
+* windows
+
+and your architecture:
+
+* 386
+* amd64
+
 Build the client and server using docker:
 
     $ docker build -t lush-server .
-    $ docker run 
+    $ ./build-server.sh <OS> <architecture>
     $ cd client
     $ docker build -t lush-client .
-    $ ./build-docker.sh
+    $ ./build-client.sh
 
 Now you can start lush:
 
