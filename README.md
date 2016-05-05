@@ -33,22 +33,26 @@ and your architecture:
 * 386
 * amd64
 
-Build the client and server using docker:
+Set up the client and server build images:
 
     $ docker build -t lush-server .
-    $ ./build-server.sh <OS> <architecture>
-    $ cd client
+    $ pushd client
     $ docker build -t lush-client .
-    $ ./build-client.sh
+    $ popd
+
+Build everything:
+
+    $ ./build.sh <OS> <architecture>
 
 Now you can start lush:
 
-    $ $GOPATH/bin/lush
+    $ ./lush-<OS>-<architecture>
 
-To update lush:
+(or double click the .exe)
 
-    $ go get -u github.com/hraban/lush
-    $ $GOPATH/src/github.com/hraban/lush/client/build-docker.sh
+To update, download the newest source code and repeat. It is not always
+necessary to rebuild the build images, only when the dependencies change. Just
+try `./build.sh`; if it fails, try rebuilding the build images, first.
 
 ## Windows from Source
 
