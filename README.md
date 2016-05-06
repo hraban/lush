@@ -36,9 +36,7 @@ and your architecture:
 Set up the client and server build images:
 
     $ docker build -t lush-server .
-    $ pushd client
-    $ docker build -t lush-client .
-    $ popd
+    $ docker build -t lush-client ./client
 
 Build everything:
 

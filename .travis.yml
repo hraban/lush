@@ -8,8 +8,10 @@ before_install:
 - npm install -g gulp bower
 
 install:
+# Compile the server
 - go get -d -v ./...
 - go build -v ./...
+# Build the client
 - pushd client
 - npm install
 - bower install
