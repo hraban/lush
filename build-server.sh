@@ -29,6 +29,5 @@ docker run \
 	-e GOARCH="$GOARCH" \
 	-v "$MYDIR:/go/src/github.com/hraban/lush" \
 	-w /go/src/github.com/hraban/lush \
-	--name "$container_name" \
 	lush-server \
 	go build ${DEBUGSH:+ -v} -o "$bin_name"
