@@ -22,6 +22,9 @@ This source code is licensed under the AGPLv3. Details in the LICENSE file.
 <script src="/js/lush.js"></script>
 
 <script>
+// phantomjs doesn't have promises
+require('es6-promise').polyfill();
+
 var tests = require("lush/tests");
 
 tests.tests();

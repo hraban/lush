@@ -31,7 +31,11 @@ var VENDOR_LIBS = [
     {
         require: './src/vendor/ansi_up-r7e9940fdad.js',
         expose: 'ansi_up'
-    }
+    },
+    {
+        require: "es6-promise",
+        expose: "es6-promise"
+    },
 ];
 
 gulp.task('default', ['js', 'statics', 'vendor']);
