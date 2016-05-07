@@ -14,8 +14,6 @@ MYDIR="$(cd "$MYDIR"; pwd -P)"
 ## Build the server using docker
 ## Run this first: docker build -t lush-server .
 
-container_name="$(date "+lush-server-%Y-%m-%dT%H_%M_%sZ")"
-
 bin_ext=""
 if [[ "$GOOS" == "windows" ]]; then
 	bin_ext=.exe
@@ -26,6 +24,7 @@ bin_name="lush-$GOOS-$GOARCH$bin_ext"
 # any new dependencies (but not update existing ones) and install in
 # /go/bin/lush.
 docker run \
+	--rm \
 	-e GOOS="$GOOS" \
 	-e GOARCH="$GOARCH" \
 	-v "$MYDIR:/go/src/github.com/hraban/lush" \
@@ -33,6 +32,3 @@ docker run \
 	--name "$container_name" \
 	lush-server \
 	go build ${DEBUGSH:+ -v} -o "$bin_name"
-
-docker cp "$container_name:/go/src/github.com/hraban/lush/$bin_name" "$MYDIR/$bin_name"
-docker rm "$container_name" > /dev/null
