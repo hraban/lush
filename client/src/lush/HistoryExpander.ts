@@ -9,9 +9,9 @@
 
 /// <reference path="lexer.ts" />
 
-import lexer = require("./lexer");
+import * as lexer from "./lexer";
 
-class HistoryExpander {
+export default class HistoryExpander {
     private _lastCmd = '';
     private _lastArg = '';
     private _lexer = new lexer.Lexer();
@@ -59,5 +59,3 @@ class HistoryExpander {
         }
     }
 }
-
-export = HistoryExpander;

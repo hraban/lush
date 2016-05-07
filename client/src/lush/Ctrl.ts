@@ -7,8 +7,8 @@
 /// <reference path="refs/jquery.d.ts" />
 /// <reference path="utils.ts" />
 
-import $ = require("jquery");
-import U = require("./utils");
+import * as $ from "jquery";
+import * as U from "./utils";
 
 export interface Ctrl {
     send(...args: string[]);

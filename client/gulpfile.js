@@ -7,6 +7,7 @@ var typescript = require('gulp-typescript');
 var uglify = require('gulp-uglify');
 var buffer = require('vinyl-buffer');
 var source = require('vinyl-source-stream');
+var babel = require('gulp-babel');
 // awww already?? please, more plugins! I love spending time learning how to use
 // and configure the build step dujour instead of coding, so much!
 
@@ -35,7 +36,7 @@ var VENDOR_LIBS = [
 
 gulp.task('default', ['js', 'statics', 'vendor']);
 
-gulp.task('js', ['js-src', 'typescript'], function () {
+gulp.task('js', ['typescript'], function () {
     var b = browserify({
             debug: true,
             paths: ['./build/js'],
@@ -62,19 +63,19 @@ gulp.task('js', ['js-src', 'typescript'], function () {
 });
 
 gulp.task('typescript', function () {
-    return gulp.src(['src/lush/*.ts'])
+    return gulp.src(['src/lush/*.ts', 'src/lush/*.js'])
         .pipe(sourcemaps.init())
         .pipe(typescript({
             declarationFiles: false,
             module: "commonjs",
-            sortOutput: true
+            sortOutput: true,
+            target: 'ES6',
+            allowJs: true,
         })).js
+        .pipe(babel({
+            presets: ['es2015'],
+        }))
         .pipe(sourcemaps.write())
-        .pipe(gulp.dest('build/js/lush/'));
-});
-
-gulp.task('js-src', function () {
-    return gulp.src(['src/lush/*.js'])
         .pipe(gulp.dest('build/js/lush/'));
 });
 

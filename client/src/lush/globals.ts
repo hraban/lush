@@ -13,10 +13,10 @@
 /// <reference path="./Command.ts"/>
 /// <reference path="./Ctrl.ts"/>
 
-import Cli = require("./Cli");
-import Ctrl = require("./Ctrl");
-import Command = require("./Command");
-import Terminal = require("./terminal");
+import Cli from "./Cli";
+import * as Ctrl from "./Ctrl";
+import * as Command from "./Command";
+import Terminal from "./terminal";
 
 var globals = {
     // websocket connection for control events
@@ -32,6 +32,8 @@ var globals = {
     cmds: <{ [key: number]: Command.Command }> {},
 };
 
+export default globals;
+
 // nice for debugging, but defeats type safety so don't use internally
 window['lushglobals'] = globals;
-export = globals;
+

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -eu -o pipefail
+set -x
 
 fatal () {
 	echo "$@" >&2

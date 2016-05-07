@@ -6,19 +6,19 @@
 /// <reference path="refs/jquery.d.ts"/>
 /// <reference path="refs/qunit.d.ts"/>
 
-import $ = require("jquery");
-import Ast = require("./Ast");
-import Cli = require("./Cli");
-import Command = require("./Command");
-import Ctrl = require("./Ctrl");
-import globals = require("./globals");
-import HistoryExpander = require("./HistoryExpander");
-import lexer = require("./lexer");
-import Parser = require("./Parser");
-import Pool = require("./Pool");
-import U = require("./utils");
+import * as $ from "jquery";
+import Ast from "./Ast";
+import Cli from "./Cli";
+import * as Command from "./Command";
+import * as Ctrl from "./Ctrl";
+import * as globals from "./globals";
+import HistoryExpander from "./HistoryExpander";
+import * as lexer from "./lexer";
+import Parser from "./Parser";
+import Pool from "./Pool";
+import * as U from "./utils";
  
-function testLush() {
+export function tests() {
     test("lcp(): longest common prefix", function () {
         equal(U.lcp(["abcd", "abab", "abba"]), "ab");
         equal(U.lcp([]), "", "common prefix of 0 strings");
@@ -701,5 +701,3 @@ function testLush() {
         ok(U.isInt(-3), "-3 is integer");
     });
 }
-
-export = testLush;

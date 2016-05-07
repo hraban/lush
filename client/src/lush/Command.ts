@@ -8,11 +8,11 @@
 /// <reference path="utils.ts" />
 /// <reference path="Ctrl.ts" />
 
-import $ = require("jquery");
-import EventEmitter = require("EventEmitter");
-import Ctrl = require("./Ctrl");
-import U = require("./utils");
-import globals = require("./globals");
+import * as $ from "jquery";
+import * as EventEmitter from "EventEmitter";
+import * as Ctrl from "./Ctrl";
+import * as U from "./utils";
+import globals from "./globals";
 
 interface StatusData {
     code: number;

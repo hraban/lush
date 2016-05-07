@@ -6,9 +6,9 @@
 /// <reference path="utils.ts" />
 /// <reference path="Ctrl.ts" />
 
-import $ = require("jquery");
-import U = require("./utils");
-import Ctrl = require("./Ctrl");
+import * as $ from "jquery";
+import * as U from "./utils";
+import * as Ctrl from "./Ctrl";
 
 function createPathInput(dir) {
     return $('<li class="ui-state-default">').append([

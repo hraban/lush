@@ -31,11 +31,11 @@
 /// <reference path="refs/jquery.d.ts" />
 /// <reference path="refs/react-0.13.0.d.ts" />
 
-import $ = require("jquery");
-import React = require("react/addons");
+import * as $ from "jquery";
+import * as React from "react/addons";
 
-import Command = require("./Command");
-import U = require("./utils");
+import * as Command from "./Command";
+import * as U from "./utils";
  
 var StopButton = React.createClass({
     getInitialState: function () {
@@ -242,7 +242,7 @@ var RootContainer = React.createClass({
 });
 
 // create root widget for this command
-function createWidget(cmd: Command.Command, container: HTMLElement) {
+export default function createWidget(cmd: Command.Command, container: HTMLElement) {
     var wrapper = document.createElement('div');
     container.appendChild(wrapper);
     var props = {cmd: cmd, key: 'root' + cmd.nid};
@@ -257,5 +257,3 @@ function createWidget(cmd: Command.Command, container: HTMLElement) {
     });
     return wrapper;
 }
-
-export = createWidget;

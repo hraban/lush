@@ -10,11 +10,11 @@
 /// <reference path="lexer.ts" />
 /// <reference path="utils.ts" />
 
-import $ = require("jquery");
-import Ast = require("./Ast");
-import HistoryExpander = require("./HistoryExpander");
-import lexer = require("./lexer");
-import U = require("./utils");
+import * as $ from "jquery";
+import Ast from "./Ast";
+import HistoryExpander from "./HistoryExpander";
+import * as lexer from "./lexer";
+import * as U from "./utils";
 
 function startsWithDot(str: string): boolean {
     return str[0] == ".";
@@ -61,7 +61,7 @@ interface ParserContext {
 // Simple interface, "parse everything at once" parser. No callbacks, no state
 // between calls, just call .parse("your command string"), and access
 // .ctx.firstast. or .ctx.ast for the last node.
-class Parser {
+export default class Parser {
     public ctx: ParserContext = {
         firstast: null,
         ast: null
@@ -156,5 +156,3 @@ class Parser {
         parser._histExp.setlast(parser._raw);
     }
 }
-
-export = Parser;

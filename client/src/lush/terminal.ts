@@ -9,4 +9,4 @@ interface Terminal {
     error(msg: string);
 }
 
-export = Terminal
+export default Terminal;

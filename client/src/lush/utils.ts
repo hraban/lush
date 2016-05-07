@@ -7,7 +7,7 @@
 /// <reference path="refs/jquery.d.ts" />
 /// <reference path="Command.ts"/>
 
-import $ = require("jquery");
+import * as $ from "jquery";
 
 // prefix all special chars in arg by backslash
 export function parserEscape(txt) {
@@ -156,7 +156,7 @@ function isPromise(x: any) {
 // true, call last element first.
 export function mapf<T>(f: (node: T) => any, l: T, nextkey: (node: T) => T, reversed?: boolean): Promise<void> {
     if (l === undefined) {
-        return Promise.resolve<void>();
+        return Promise.resolve<void>(undefined);
     }
     var recurse = () => mapf(f, nextkey(l), nextkey, reversed);
     if (reversed) {
@@ -303,11 +303,6 @@ if (!Function.prototype.bind) {
 
     return fBound;
   };
-}
-
-if (typeof Promise === "undefined") {
-    var require: any;
-    require("es6-promise").polyfill();
 }
 
 // serialize html form to jquery object ready for jsoning

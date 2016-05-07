@@ -9,7 +9,7 @@ interface Callback<T> {
     (el: T): void
 }
 
-class Pool<T> {
+export default class Pool<T> {
     private _ar: T[] = [];
     private _pendingcbs: Callback<T>[] = [];
 
@@ -38,5 +38,3 @@ class Pool<T> {
     }
 
 }
-
-export = Pool;

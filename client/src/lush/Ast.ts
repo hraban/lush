@@ -5,7 +5,7 @@
 // An Ast node represents the (rich) argv of one command. the complete command
 // line consists of one or more commands chained by pipes. it is represented as
 // a linked list of AST nodes.
-class Ast {
+export default class Ast {
     // updated after each call to setprompt()
     argv: string[] = [];
     // true when newarg contains a globbing char
@@ -20,5 +20,3 @@ class Ast {
         return ast.argv.join(' ');
     }
 }
-
-export = Ast;

@@ -15,17 +15,17 @@
 /// <reference path="refs/jquery-lush.d.ts"/>
 /// <reference path="utils.ts" />
 
-import $ = require("jquery");
-import Command = require("./Command");
-import help = require("./help");
-import U = require("./utils");
+import * as $ from "jquery";
+import * as Command from "./Command";
+import help from "./help";
+import * as U from "./utils";
 
 // declare main.js
 declare var cmds: { [nid: number]: Command.Command };
 
 var numInstances = 0;
 
-class CmdConfig {
+export default class CmdConfig {
     private _cmd: Command.Command;
     private _initHandlers: { (ev: Command.CommandEvent): void }[];
     private _myid = 'CmdConfig' + U.guid();
@@ -315,5 +315,3 @@ class CmdConfig {
         conf._triggerInitHandlers();
     }
 }
-
-export = CmdConfig;

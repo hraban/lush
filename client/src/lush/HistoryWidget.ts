@@ -10,11 +10,11 @@
 /// <reference path="Command.ts"/>
 /// <reference path="utils.ts" />
 
-import React = require("react/addons");
-import $ = require("jquery");
-import Command = require("./Command");
-import globals = require("./globals");
-import U = require("./utils");
+import * as React from "react/addons";
+import * as $ from "jquery";
+import * as Command from "./Command";
+import globals from "./globals";
+import * as U from "./utils";
 
 // Getting a TS warning on the handleClick mixin---there's probably a better
 // way but I need to read up on the advancements in both TS and React since
@@ -99,7 +99,7 @@ function createHistoryEntry(cmd): HTMLElement {
 
 var numInstances = 0;
 
-class HistoryWidget {
+export default class HistoryWidget {
 
     constructor() {
         // history widget operates on the DOM directly (hard-coded IDs, certain
@@ -133,5 +133,3 @@ class HistoryWidget {
     }
 
 }
-
-export = HistoryWidget;

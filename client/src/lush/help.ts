@@ -16,8 +16,8 @@
 
 /// <reference path="refs/jquery.d.ts" />
 
-import $ = require("jquery");
-import Command = require("./Command");
+import * as $ from "jquery";
+import * as Command from "./Command";
 
 interface HelpHandler {
     (cmd: Command.Command, $help: JQuery): void;
@@ -69,8 +69,6 @@ function defaultHelp(cmd: Command.Command, $help: JQuery) {
     $help.html('This tab is intended for interactive management of command line flags. Currently only a proof of concept, if you happen to be a programmer willing to help me out here that would be great. Shoot me an e-mail at hraban@0brg.net or go to <a target=_blank href=http://github.com/hraban/lush>github.com/hraban/lush</a> and have a look around! Especially in the <a target=_blank href=http://github.com/hraban/lush/blob/master/static/js/lush/help.js>/static/js/lush/help.js</a> file.');
 }
 
-function getHelp(cmd: Command.Command): HelpHandler {
+export default function getHelp(cmd: Command.Command): HelpHandler {
     return actions[cmd.cmd] || defaultHelp;
 }
-
-export = getHelp;

@@ -12,13 +12,13 @@
 
 /// <reference path="refs/jquery.d.ts" />
 
-import $ = require("jquery");
-import Ast = require("./Ast");
-import globals = require("./globals");
-import Command = require("./Command");
-import Parser = require("./Parser");
-import Pool = require("./Pool");
-import U = require("./utils");
+import * as $ from "jquery";
+import Ast from "./Ast";
+import globals from "./globals";
+import * as Command from "./Command";
+import Parser from "./Parser";
+import Pool from "./Pool";
+import * as U from "./utils";
 
 // propagate changes in the prompt to the given cmd tree.
 //
@@ -128,7 +128,7 @@ function syncPromptToCmd(ast: Ast, cmd: Command.Command, updateGUID: string, get
 //
 // why not jQuery events? because this is simpler, and because it causes an
 // error if caller forgets to set the callbacks.
-class Cli {
+export default class Cli {
     // Locally identify this specific command line Prepared commands pool for
     // quicker turn-around after hitting enter
     private _cmdpool = new Pool<Command.Command>();
@@ -405,5 +405,3 @@ class Cli {
         filenameCallback(argv.pop());
     }
 }
-
-export = Cli;

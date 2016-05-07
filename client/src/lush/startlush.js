@@ -24,7 +24,7 @@ function startLush() {
         // continue on the success path (return ""; continues on fail path)
         return d;
     }).then(function (baseurl) {
-        main(baseurl + "/ctrl");
+        main.main(baseurl + "/ctrl");
     });
 }
 

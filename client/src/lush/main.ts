@@ -100,25 +100,24 @@
 //
 // good luck.
 
-/// <reference path="refs/es6-promise.d.ts"/>
 /// <reference path="refs/jquery.d.ts"/>
 /// <reference path="refs/jqueryui.d.ts"/>
 
-import $ = require("jquery");
-import jqueryui = require("jquery-ui");
+import * as $ from "jquery";
+import * as jqueryui from "jquery-ui";
 // prevent tsc from removing unused imports to safeguard dependency when
 // bundling
 var _: any = jqueryui;
 
-import CmdConfig = require("./CmdConfig");
-import Command = require("./Command");
-import Ctrl = require("./Ctrl");
-import HistoryWidget = require("./HistoryWidget");
-import globals = require("./globals");
-import path = require("./path");
-import Terminal = require("./terminal_jquery");
-import U = require("./utils");
-import Widget = require("./Widget");
+import CmdConfig from "./CmdConfig";
+import * as Command from "./Command";
+import * as Ctrl from "./Ctrl";
+import HistoryWidget from "./HistoryWidget";
+import globals from "./globals";
+import * as path from "./path";
+import Terminal from "./terminal_jquery";
+import * as U from "./utils";
+import Widget from "./Widget";
 
 // Reference to the history widget (needed for command initialization)
 var historyWidget: HistoryWidget;
@@ -249,15 +248,7 @@ function getInitData(nid) {
 }
 
 function sortArray(ar: number[]): number[] {
-    // oh my god javascript-dev what are you guys doing?
-    return ar.sort(function (a, b) {
-        if (a < b) {
-            return -1;
-        } else if (a > b) {
-            return 1;
-        }
-        return 0;
-    });
+    return ar.sort((a, b) => a < b ? -1 : a == b ? 0 : 1);
 }
 
 function isNumericalArray(obj): boolean {
@@ -548,7 +539,7 @@ function main_aux(ctrl: Ctrl.Ctrl, moi: string, existingCmdIds: number[]) {
     document.body.dataset['status'] = 'ok';
 }
 
-function lushMain(ctrlurl) {
+export function main(ctrlurl) {
     if (typeof ctrlurl !== "string") {
         throw new Error("invalid argument for lush: requires url of control stream");
     }
@@ -571,4 +562,3 @@ function lushMain(ctrlurl) {
     });
 }
 
-export = lushMain;

@@ -10,22 +10,22 @@
 
 // TERMINAL HANDLING
 
-import ansi_up = require("ansi_up");
-import $ = require("jquery");
-import jqueryui = require("jquery-ui");
-import jqueryterm = require("jquery.terminal");
+import * as ansi_up from "ansi_up";
+import * as $ from "jquery";
+import * as jqueryui from "jquery-ui";
+import * as jqueryterm from "jquery.terminal";
 // prevent tsc from removing unused imports to safeguard dependency when
 // bundling
 var _: any = jqueryui;
 _ = jqueryterm;
 
-import Cli = require("./Cli");
-import Command = require("./Command");
-import Ctrl = require("./Ctrl");
-import globals = require("./globals");
-import Parser = require("./Parser");
-import Terminal = require("./terminal");
-import U = require("./utils");
+import Cli from "./Cli";
+import * as Command from "./Command";
+import * as Ctrl from "./Ctrl";
+import globals from "./globals";
+import Parser from "./Parser";
+import Terminal from "./terminal";
+import * as U from "./utils";
 
 // prepare raw data for passing to jQuery.terminal's .echo method
 function escapeTerminalOutput(text) {
@@ -92,7 +92,7 @@ function tabcompleteCallback(term, partial: string, files: string[]) {
 
 
 // set up the terminal window
-function terminal(container: HTMLElement, processCmd: (init: any, callback?: (cmd: Command.Command) => void) => void, ctrl: Ctrl.Ctrl): Terminal {
+export default function terminal(container: HTMLElement, processCmd: (init: any, callback?: (cmd: Command.Command) => void) => void, ctrl: Ctrl.Ctrl): Terminal {
     var cli = new Cli(processCmd);
     var latestParseError;
     var $term = $(container).terminal(function (x: string) {
@@ -175,5 +175,3 @@ function terminal(container: HTMLElement, processCmd: (init: any, callback?: (cm
     globals.terminal = $term;
     return $term;
 }
-
-export = terminal;
